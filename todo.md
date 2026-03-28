@@ -162,3 +162,29 @@
 - [x] Enabled switchable prop on ThemeProvider in App.tsx
 - [x] Sun/Moon toggle button in sidebar footer (desktop) and mobile header
 - [x] Persisted in localStorage via ThemeContext
+
+## Role-Based Access Levels
+- [x] Extend user roles: admin, advisor, user (schema already has admin/user enum)
+- [x] Add 'advisor' to role enum in drizzle schema
+- [x] Create adminProcedure and advisorProcedure middleware in tRPC
+- [x] Admin dashboard page with user management (view, change roles, deactivate)
+- [x] Visibility controls: FS Toolkit only for advisor+ roles, admin dashboard for admin only
+- [x] Role-based sidebar navigation (hide restricted modules from unauthorized users)
+- [x] Navigation link for admin dashboard (admin only)
+
+## Shareable Playlist Links
+- [x] Add shareToken (unique UUID) column to playlists table
+- [x] Create playlist_shares table (playlistId, sharedWithUserId, permission: view/edit, grantedBy, createdAt)
+- [x] Public share URL: /shared/playlist/:shareToken (no auth required for viewing)
+- [x] Owner CRUD over shared access: grant/revoke/change permissions for shared users
+- [x] Share management UI in playlist detail view
+- [x] Copy shareable link button with toast confirmation
+- [x] Shared-with-me section in Playlists page
+
+## Continuous Self-Discovery Mode
+- [x] SelfDiscovery component that triggers after user inactivity (configurable timeout)
+- [x] Uses last studied topic as context for LLM-generated deeper follow-up question
+- [x] Toggle in settings to enable/disable continuous loop
+- [x] Configurable occurrence limit (default: 1, option for continuous)
+- [x] Subtle notification card that slides in with the follow-up question
+- [x] Links to relevant study content based on the generated question

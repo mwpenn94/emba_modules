@@ -103,12 +103,12 @@ function loadSession(): SessionStats {
       const parsed = JSON.parse(stored);
       const hoursSinceStart = (Date.now() - parsed.startTime) / (1000 * 60 * 60);
       if (hoursSinceStart > 4) {
-        return { termsStudied: 0, formulasPracticed: 0, quizScore: 0, quizTotal: 0, streak: 0, startTime: Date.now() };
+        return { termsStudied: 0, formulasPracticed: 0, quizScore: 0, quizTotal: 0, streak: 0, startTime: Date.now(), lastStudiedItem: null, currentDiscipline: null };
       }
-      return parsed;
+      return { ...parsed, lastStudiedItem: parsed.lastStudiedItem ?? null, currentDiscipline: parsed.currentDiscipline ?? null };
     }
   } catch { /* ignore */ }
-  return { termsStudied: 0, formulasPracticed: 0, quizScore: 0, quizTotal: 0, streak: 0, startTime: Date.now() };
+  return { termsStudied: 0, formulasPracticed: 0, quizScore: 0, quizTotal: 0, streak: 0, startTime: Date.now(), lastStudiedItem: null, currentDiscipline: null };
 }
 
 function todayKey(): string {
@@ -345,6 +345,11 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
       setTimeout(() => checkAchievements(next, session), 0);
       return next;
     });
+    // Track last studied item for self-discovery
+    const parts = key.split('-');
+    const discipline = parts.length > 1 ? parts[1] : null;
+    const itemName = parts.length > 2 ? parts.slice(2).join('-') : key;
+    setSession(prev => ({ ...prev, lastStudiedItem: itemName, currentDiscipline: discipline }));
     markDirty(key);
     setSession(prev => ({ ...prev, termsStudied: prev.termsStudied + 1 }));
     setDailyProgress((prev: { date: string; definitions: number; formulas: number; quizQuestions: number }) => {
@@ -415,7 +420,7 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
   }, [mastery]);
 
   const resetSession = useCallback(() => {
-    setSession({ termsStudied: 0, formulasPracticed: 0, quizScore: 0, quizTotal: 0, streak: 0, startTime: Date.now() });
+    setSession({ termsStudied: 0, formulasPracticed: 0, quizScore: 0, quizTotal: 0, streak: 0, startTime: Date.now(), lastStudiedItem: null, currentDiscipline: null });
   }, []);
 
   // SRS: Get items due for review

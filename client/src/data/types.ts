@@ -71,6 +71,8 @@ export interface SessionStats {
   quizTotal: number;
   streak: number;
   startTime: number;
+  lastStudiedItem: string | null;
+  currentDiscipline: string | null;
 }
 
 export const DISCIPLINE_COLORS: Record<string, string> = {

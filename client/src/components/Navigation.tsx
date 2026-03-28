@@ -19,8 +19,21 @@ import {
 import { useMastery } from '@/contexts/MasteryContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import NotificationCenter from './NotificationCenter';
+import { useAuth } from '@/_core/hooks/useAuth';
 
-const NAV_SECTIONS = [
+type NavItem = {
+  path: string;
+  label: string;
+  icon: any;
+  minRole?: 'advisor' | 'admin';
+};
+
+type NavSection = {
+  label: string;
+  items: NavItem[];
+};
+
+const NAV_SECTIONS: NavSection[] = [
   {
     label: 'Overview',
     items: [
@@ -35,7 +48,7 @@ const NAV_SECTIONS = [
       { path: '/formula-lab', label: 'Formula Lab', icon: Calculator },
       { path: '/case-simulator', label: 'Case Simulator', icon: GitBranch },
       { path: '/connection-map', label: 'Connection Map', icon: Map },
-      { path: '/fs-toolkit', label: 'FS Toolkit', icon: Shield },
+      { path: '/fs-toolkit', label: 'FS Toolkit', icon: Shield, minRole: 'advisor' },
     ]
   },
   {
@@ -55,8 +68,22 @@ const NAV_SECTIONS = [
       { path: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
       { path: '/playlists', label: 'Playlists', icon: ListMusic },
     ]
+  },
+  {
+    label: 'Administration',
+    items: [
+      { path: '/admin', label: 'Admin Dashboard', icon: Shield, minRole: 'admin' },
+    ]
   }
 ];
+
+const ROLE_HIERARCHY: Record<string, number> = { user: 0, advisor: 1, admin: 2 };
+
+function hasMinRole(userRole: string | undefined, minRole: string | undefined): boolean {
+  if (!minRole) return true;
+  if (!userRole) return false;
+  return (ROLE_HIERARCHY[userRole] ?? 0) >= (ROLE_HIERARCHY[minRole] ?? 0);
+}
 
 export default function Navigation({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -64,13 +91,20 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
   const [mobileOpen, setMobileOpen] = useState(false);
   const { session, totalStudyTime, getStudiedCount, getMasteredCount } = useMastery();
   const { theme, toggleTheme, switchable } = useTheme();
+  const { user } = useAuth();
 
   const studied = getStudiedCount();
   const mastered = getMasteredCount();
   const hours = Math.floor(totalStudyTime / 60);
   const mins = totalStudyTime % 60;
 
-  const allItems = NAV_SECTIONS.flatMap(s => s.items);
+  // Filter nav sections based on user role
+  const filteredSections = NAV_SECTIONS.map(section => ({
+    ...section,
+    items: section.items.filter(item => hasMinRole(user?.role, item.minRole)),
+  })).filter(section => section.items.length > 0);
+
+  const allItems = filteredSections.flatMap(s => s.items);
 
   const sidebar = (
     <motion.aside
@@ -106,7 +140,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
 
       {/* Nav Sections */}
       <nav className="flex-1 py-2 px-2 overflow-y-auto space-y-3">
-        {NAV_SECTIONS.map(section => (
+        {filteredSections.map(section => (
           <div key={section.label}>
             <AnimatePresence>
               {!collapsed && (
@@ -273,7 +307,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
             aria-label="Navigation menu"
           >
             <nav className="p-4 space-y-4">
-              {NAV_SECTIONS.map(section => (
+              {filteredSections.map(section => (
                 <div key={section.label}>
                   <p className="text-[10px] font-mono tracking-widest uppercase text-muted-foreground px-4 py-1">{section.label}</p>
                   <div className="space-y-0.5">

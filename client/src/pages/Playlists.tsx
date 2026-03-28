@@ -13,8 +13,10 @@ import { DISCIPLINE_COLORS } from '@/data/types';
 import {
   ListMusic, Plus, Trash2, GripVertical, Play, Globe, Lock,
   ChevronLeft, ChevronRight, ArrowRight, Search, BookOpen,
-  Edit2, Check, X, Share2, Copy
+  Edit2, Check, X, Share2, Copy, Link2, UserPlus, UserMinus,
+  Eye, Pencil, ExternalLink, Loader2, Users
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 /* ── Helpers ── */
 function getContentByKey(contentType: string, contentId: string) {
@@ -334,6 +336,7 @@ export default function Playlists() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [showSharePanel, setShowSharePanel] = useState(false);
 
   const utils = trpc.useUtils();
   const playlistsQuery = trpc.playlists.list.useQuery(undefined, { enabled: isAuthenticated });
@@ -380,6 +383,43 @@ export default function Playlists() {
       if (selectedPlaylistId) utils.playlists.getById.invalidate({ playlistId: selectedPlaylistId });
     },
   });
+
+  /* ── Share mutations ── */
+  const generateTokenMut = trpc.playlists.generateShareToken.useMutation({
+    onSuccess: (data) => {
+      if (selectedPlaylistId) utils.playlists.getById.invalidate({ playlistId: selectedPlaylistId });
+      const url = `${window.location.origin}/shared/playlist/${data.shareToken}`;
+      navigator.clipboard.writeText(url).then(() => toast.success('Share link copied to clipboard!'));
+    },
+  });
+
+  const revokeTokenMut = trpc.playlists.revokeShareToken.useMutation({
+    onSuccess: () => {
+      if (selectedPlaylistId) utils.playlists.getById.invalidate({ playlistId: selectedPlaylistId });
+      toast.success('Share link revoked');
+    },
+  });
+
+  const sharesQuery = trpc.playlists.getShares.useQuery(
+    { playlistId: selectedPlaylistId! },
+    { enabled: !!selectedPlaylistId && showSharePanel && isAuthenticated }
+  );
+
+  const updatePermMut = trpc.playlists.updateSharePermission.useMutation({
+    onSuccess: () => {
+      if (selectedPlaylistId) sharesQuery.refetch();
+      toast.success('Permission updated');
+    },
+  });
+
+  const revokeAccessMut = trpc.playlists.revokeAccess.useMutation({
+    onSuccess: () => {
+      if (selectedPlaylistId) sharesQuery.refetch();
+      toast.success('Access revoked');
+    },
+  });
+
+  const sharedWithMeQuery = trpc.playlists.sharedWithMe.useQuery(undefined, { enabled: isAuthenticated });
 
   const myPlaylists = playlistsQuery.data || [];
   const publicPlaylists = (publicQuery.data || []).filter(
@@ -508,6 +548,12 @@ export default function Playlists() {
               {isOwner && (
                 <>
                   <button
+                    onClick={() => setShowSharePanel(!showSharePanel)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm hover:bg-accent/80 transition-colors"
+                  >
+                    <Share2 className="w-4 h-4" /> Share
+                  </button>
+                  <button
                     onClick={() => setShowAddModal(true)}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm hover:bg-accent/80 transition-colors"
                   >
@@ -527,6 +573,126 @@ export default function Playlists() {
               )}
             </div>
           </div>
+
+          {/* Share Management Panel */}
+          <AnimatePresence>
+            {showSharePanel && isOwner && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden mb-6"
+              >
+                <div className="p-5 rounded-xl border border-border bg-card">
+                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-display)' }}>
+                    <Link2 className="w-4 h-4 text-primary" /> Share Settings
+                  </h3>
+
+                  {/* Share Link Section */}
+                  <div className="mb-5">
+                    <p className="text-xs text-muted-foreground mb-2">Shareable Link</p>
+                    {playlist.shareToken ? (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border">
+                          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <span className="text-xs font-mono text-muted-foreground truncate">
+                            {window.location.origin}/shared/playlist/{playlist.shareToken}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/shared/playlist/${playlist.shareToken}`);
+                            toast.success('Link copied!');
+                          }}
+                          className="p-2 rounded-lg bg-accent hover:bg-accent/80 transition-colors shrink-0"
+                          title="Copy link"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => generateTokenMut.mutate({ playlistId: playlist.id })}
+                          className="p-2 rounded-lg bg-accent hover:bg-accent/80 transition-colors shrink-0 text-xs"
+                          title="Regenerate link"
+                        >
+                          Regenerate
+                        </button>
+                        <button
+                          onClick={() => revokeTokenMut.mutate({ playlistId: playlist.id })}
+                          className="p-2 rounded-lg text-destructive hover:bg-destructive/10 transition-colors shrink-0 text-xs"
+                          title="Revoke link"
+                        >
+                          Revoke
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => generateTokenMut.mutate({ playlistId: playlist.id })}
+                        disabled={generateTokenMut.isPending}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:opacity-90 disabled:opacity-50 transition-all"
+                      >
+                        {generateTokenMut.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Link2 className="w-4 h-4" />
+                        )}
+                        Generate Share Link
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Shared Users Section */}
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                      <Users className="w-3 h-3" /> Shared With
+                    </p>
+                    {sharesQuery.isLoading ? (
+                      <div className="flex items-center gap-2 py-4 justify-center">
+                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Loading...</span>
+                      </div>
+                    ) : (sharesQuery.data?.length ?? 0) === 0 ? (
+                      <p className="text-xs text-muted-foreground py-3 text-center border border-dashed border-border rounded-lg">
+                        No users have been granted direct access yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {sharesQuery.data?.map((s: any) => (
+                          <div key={s.share.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-border">
+                            <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-xs font-bold">
+                              {(s.userName || 'U')[0].toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{s.userName || 'Unknown User'}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{s.userEmail || ''}</p>
+                            </div>
+                            <select
+                              value={s.share.permission}
+                              onChange={(e) => updatePermMut.mutate({
+                                playlistId: playlist.id,
+                                shareId: s.share.id,
+                                permission: e.target.value as 'view' | 'edit',
+                              })}
+                              className="text-xs px-2 py-1 rounded border border-border bg-background"
+                            >
+                              <option value="view">View</option>
+                              <option value="edit">Edit</option>
+                            </select>
+                            <button
+                              onClick={() => revokeAccessMut.mutate({ playlistId: playlist.id, shareId: s.share.id })}
+                              className="p-1.5 rounded text-destructive hover:bg-destructive/10 transition-colors"
+                              title="Revoke access"
+                            >
+                              <UserMinus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Items */}
           {items.length === 0 ? (
@@ -731,6 +897,42 @@ export default function Playlists() {
             </div>
           )}
         </section>
+
+        {/* Shared With Me */}
+        {(sharedWithMeQuery.data?.length ?? 0) > 0 && (
+          <section className="mb-8">
+            <h2 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <Share2 className="w-3.5 h-3.5" /> Shared With Me
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {sharedWithMeQuery.data?.map((s: any, i: number) => (
+                <motion.div
+                  key={s.share.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  onClick={() => setSelectedPlaylistId(s.playlist.id)}
+                  className="p-4 rounded-xl border border-border bg-card hover:border-primary/30 transition-all cursor-pointer group"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-sm font-semibold group-hover:text-primary transition-colors" style={{ fontFamily: 'var(--font-display)' }}>
+                      {s.playlist.name}
+                    </h3>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent text-accent-foreground">
+                      {s.share.permission === 'edit' ? 'Can Edit' : 'View Only'}
+                    </span>
+                  </div>
+                  {s.playlist.description && (
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{s.playlist.description}</p>
+                  )}
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    Shared {new Date(s.share.createdAt).toLocaleDateString()}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Public Playlists */}
         {publicPlaylists.length > 0 && (

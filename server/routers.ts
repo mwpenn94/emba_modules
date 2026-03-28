@@ -54,11 +54,23 @@ import {
   reorderPlaylistItems,
   getPlaylistItemCount,
 } from "./playlists-db";
+import {
+  setPlaylistShareToken,
+  getPlaylistByShareToken,
+  createPlaylistShare,
+  getPlaylistShares,
+  updateSharePermission,
+  deletePlaylistShare,
+  getSharesForUser,
+  getPublicPlaylistData,
+} from "./playlist-shares-db";
 import { nanoid } from "nanoid";
 import { TRPCError } from "@trpc/server";
+import { adminRouter } from "./routers/admin";
 
 export const appRouter = router({
   system: systemRouter,
+  admin: adminRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -505,6 +517,98 @@ export const appRouter = router({
         await reorderPlaylistItems(input.playlistId, input.itemIds);
         return { success: true };
       }),
+
+    /* ── Shareable Links ── */
+
+    /** Generate or regenerate a share token for a playlist */
+    generateShareToken: protectedProcedure
+      .input(z.object({ playlistId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) throw new TRPCError({ code: 'FORBIDDEN' });
+        const token = nanoid(16);
+        await setPlaylistShareToken(input.playlistId, token);
+        return { shareToken: token };
+      }),
+
+    /** Revoke a share token */
+    revokeShareToken: protectedProcedure
+      .input(z.object({ playlistId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) throw new TRPCError({ code: 'FORBIDDEN' });
+        await setPlaylistShareToken(input.playlistId, null);
+        return { success: true };
+      }),
+
+    /** Get share access list for a playlist (owner only) */
+    getShares: protectedProcedure
+      .input(z.object({ playlistId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) throw new TRPCError({ code: 'FORBIDDEN' });
+        return getPlaylistShares(input.playlistId);
+      }),
+
+    /** Grant share access to a user */
+    grantAccess: protectedProcedure
+      .input(z.object({
+        playlistId: z.number(),
+        sharedWithUserId: z.number(),
+        permission: z.enum(['view', 'edit']).default('view'),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) throw new TRPCError({ code: 'FORBIDDEN' });
+        const id = await createPlaylistShare({
+          playlistId: input.playlistId,
+          sharedWithUserId: input.sharedWithUserId,
+          permission: input.permission,
+          grantedBy: ctx.user.id,
+        });
+        return { id };
+      }),
+
+    /** Update share permission */
+    updateSharePermission: protectedProcedure
+      .input(z.object({
+        playlistId: z.number(),
+        shareId: z.number(),
+        permission: z.enum(['view', 'edit']),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) throw new TRPCError({ code: 'FORBIDDEN' });
+        await updateSharePermission(input.shareId, input.permission);
+        return { success: true };
+      }),
+
+    /** Revoke share access */
+    revokeAccess: protectedProcedure
+      .input(z.object({
+        playlistId: z.number(),
+        shareId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) throw new TRPCError({ code: 'FORBIDDEN' });
+        await deletePlaylistShare(input.shareId);
+        return { success: true };
+      }),
+
+    /** Get playlists shared with the current user */
+    sharedWithMe: protectedProcedure.query(async ({ ctx }) => {
+      return getSharesForUser(ctx.user.id);
+    }),
+
+    /** Get public playlist data by share token (no auth required) */
+    getByShareToken: publicProcedure
+      .input(z.object({ shareToken: z.string() }))
+      .query(async ({ input }) => {
+        const data = await getPublicPlaylistData(input.shareToken);
+        if (!data) throw new TRPCError({ code: 'NOT_FOUND', message: 'Shared playlist not found' });
+        return data;
+      }),
   }),
 
   /* ── AI-Powered Quiz Generation ── */
@@ -645,6 +749,84 @@ Return a JSON array of questions. Each question object must have:
           ...r,
           options: typeof r.options === "string" ? JSON.parse(r.options) : r.options,
         }));
+      }),
+  }),
+
+  /* ── Continuous Self-Discovery ── */
+  selfDiscovery: router({
+    /** Generate a deeper follow-up question based on last studied topic */
+    generateFollowUp: protectedProcedure
+      .input(
+        z.object({
+          lastTopic: z.string(),
+          discipline: z.string().optional(),
+          context: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const prompt = `You are a Socratic EMBA tutor. The student just studied the following topic:
+
+Topic: ${input.lastTopic}
+${input.discipline ? `Discipline: ${input.discipline}` : ''}
+${input.context ? `Context: ${input.context}` : ''}
+
+Generate ONE thought-provoking follow-up question that:
+1. Goes deeper into the topic or connects it to a related concept
+2. Encourages critical thinking and application to real business scenarios
+3. Is concise (1-2 sentences)
+4. Includes a brief hint about where to explore the answer
+
+Also suggest 1-2 related content areas the student should explore next.
+
+Return JSON with:
+- "question": the follow-up question text
+- "hint": a brief hint or starting point for thinking about the answer
+- "relatedTopics": array of {"topic": string, "discipline": string} objects to explore next
+- "difficulty": "foundational" | "intermediate" | "advanced" based on depth`;
+
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: "You are a Socratic EMBA tutor. Always respond with valid JSON." },
+            { role: "user", content: prompt },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "follow_up_question",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  question: { type: "string" },
+                  hint: { type: "string" },
+                  relatedTopics: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        topic: { type: "string" },
+                        discipline: { type: "string" },
+                      },
+                      required: ["topic", "discipline"],
+                      additionalProperties: false,
+                    },
+                  },
+                  difficulty: {
+                    type: "string",
+                    enum: ["foundational", "intermediate", "advanced"],
+                  },
+                },
+                required: ["question", "hint", "relatedTopics", "difficulty"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+
+        const content = response.choices?.[0]?.message?.content;
+        if (!content || typeof content !== 'string') throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to generate follow-up' });
+
+        return JSON.parse(content);
       }),
   }),
 });

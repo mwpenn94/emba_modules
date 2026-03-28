@@ -9,7 +9,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "advisor", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -211,12 +211,28 @@ export const playlists = mysqlTable("playlists", {
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   isPublic: boolean("isPublic").default(false).notNull(),
+  shareToken: varchar("shareToken", { length: 64 }).unique(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type PlaylistRow = typeof playlists.$inferSelect;
 export type InsertPlaylist = typeof playlists.$inferInsert;
+
+/**
+ * Playlist shares — tracks who has access to a shared playlist and their permission level.
+ */
+export const playlistShares = mysqlTable("playlist_shares", {
+  id: int("id").autoincrement().primaryKey(),
+  playlistId: int("playlistId").notNull(),
+  sharedWithUserId: int("sharedWithUserId"),
+  permission: mysqlEnum("permission", ["view", "edit"]).default("view").notNull(),
+  grantedBy: int("grantedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PlaylistShareRow = typeof playlistShares.$inferSelect;
+export type InsertPlaylistShare = typeof playlistShares.$inferInsert;
 
 /**
  * Playlist items — ordered content items within a playlist.

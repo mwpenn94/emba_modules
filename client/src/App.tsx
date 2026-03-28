@@ -8,6 +8,7 @@ import AchievementToast from "./components/AchievementToast";
 import OfflineBanner from "./components/OfflineBanner";
 import OnboardingTour, { useOnboardingTour } from "./components/OnboardingTour";
 import PomodoroTimer from "./components/PomodoroTimer";
+import SelfDiscovery from "./components/SelfDiscovery";
 import { lazy, Suspense } from "react";
 
 /* ── Lazy-loaded pages for code-splitting ── */
@@ -33,6 +34,8 @@ const Analytics = lazy(() => import("./pages/Analytics"));
 const StudyGroups = lazy(() => import("./pages/StudyGroups"));
 const Bookmarks = lazy(() => import("./pages/Bookmarks"));
 const Playlists = lazy(() => import("./pages/Playlists"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const SharedPlaylist = lazy(() => import("./pages/SharedPlaylist"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /* ── Loading fallback ── */
@@ -75,6 +78,8 @@ function Router() {
         <Route path="/case-simulator" component={CaseSimulator} />
         <Route path="/connection-map" component={ConnectionMap} />
         <Route path="/fs-toolkit" component={FSToolkit} />
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/shared/playlist/:token" component={SharedPlaylist} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -101,6 +106,7 @@ function App() {
             <OfflineBanner />
             <OnboardingManager />
             <PomodoroTimer />
+            <SelfDiscovery />
             <main id="main-content" role="main">
               <Router />
             </main>
