@@ -36,6 +36,7 @@ const Bookmarks = lazy(() => import("./pages/Bookmarks"));
 const Playlists = lazy(() => import("./pages/Playlists"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const SharedPlaylist = lazy(() => import("./pages/SharedPlaylist"));
+const DiscoveryHistory = lazy(() => import("./pages/DiscoveryHistory"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /* ── Loading fallback ── */
@@ -80,6 +81,7 @@ function Router() {
         <Route path="/fs-toolkit" component={FSToolkit} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/shared/playlist/:token" component={SharedPlaylist} />
+        <Route path="/discovery-history" component={DiscoveryHistory} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

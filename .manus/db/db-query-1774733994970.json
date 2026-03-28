@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, openId, name, email, role FROM users ORDER BY id ASC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3S2TaCfAdzc6QNm.9f0b43de05f8 --database ZA65jNeda6DFiE5Ah4cq4b --execute SELECT id, openId, name, email, role FROM users ORDER BY id ASC LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "J8fcU6Dh4j3KtkM6WSBtee",
+      "name": "Michael Penn",
+      "email": "mwpenn94@gmail.com",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\trole\n1\tJ8fcU6Dh4j3KtkM6WSBtee\tMichael Penn\tmwpenn94@gmail.com\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

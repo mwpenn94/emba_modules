@@ -296,6 +296,14 @@ export default function SelfDiscovery() {
                   </div>
                 </div>
               )}
+
+              {/* View History Link */}
+              <button
+                onClick={() => { dismiss(); navigate('/discovery-history'); }}
+                className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-border text-xs text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors mt-1"
+              >
+                <Brain className="w-3 h-3" /> View Discovery Log
+              </button>
             </div>
           </motion.div>
         )}

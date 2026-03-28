@@ -188,3 +188,21 @@
 - [x] Configurable occurrence limit (default: 1, option for continuous)
 - [x] Subtle notification card that slides in with the follow-up question
 - [x] Links to relevant study content based on the generated question
+
+## Promote Owner to Admin
+- [x] Set owner user role to 'admin' via SQL using OWNER_OPEN_ID
+
+## Email-Based Share Invites
+- [x] Add invite-by-email tRPC procedure (owner sends email, creates pending share)
+- [x] Email invite UI in playlist share panel (input field + send button)
+- [x] Auto-grant access when invited user signs in (match by email)
+- [x] Show pending invites in share management panel
+- [x] Revoke pending invites
+
+## Self-Discovery History Log
+- [x] Create discovery_history table (userId, topic, discipline, question, hint, relatedTopics, difficulty, createdAt)
+- [x] Save generated follow-up questions to database on generation
+- [x] Discovery History page with timeline view of past questions
+- [x] Delete individual entries and clear all history
+- [x] Link from SelfDiscovery card to history page
+- [x] Navigation sidebar link to Discovery Log

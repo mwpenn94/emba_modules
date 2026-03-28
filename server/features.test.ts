@@ -243,7 +243,98 @@ describe("playlist sharing", () => {
 });
 
 /* ═══════════════════════════════════════════════════
-   4. Self-Discovery — Follow-Up Generation
+   4. Email-Based Share Invites
+   ═══════════════════════════════════════════════════ */
+
+describe("playlist email invites", () => {
+  describe("playlists.sendInvite", () => {
+    it("rejects unauthenticated users", async () => {
+      const caller = appRouter.createCaller(createUnauthContext());
+      await expect(
+        caller.playlists.sendInvite({
+          playlistId: 1,
+          email: "test@example.com",
+          permission: "view",
+        })
+      ).rejects.toThrow();
+    });
+
+    it("validates email format", async () => {
+      const caller = appRouter.createCaller(createUserContext());
+      await expect(
+        caller.playlists.sendInvite({
+          playlistId: 1,
+          email: "not-an-email",
+          permission: "view",
+        })
+      ).rejects.toThrow();
+    });
+
+    it("validates permission enum", async () => {
+      const caller = appRouter.createCaller(createUserContext());
+      await expect(
+        caller.playlists.sendInvite({
+          playlistId: 1,
+          email: "test@example.com",
+          permission: "delete" as any,
+        })
+      ).rejects.toThrow();
+    });
+
+    it("requires positive playlistId", async () => {
+      const caller = appRouter.createCaller(createUserContext());
+      await expect(
+        caller.playlists.sendInvite({
+          playlistId: -1,
+          email: "test@example.com",
+          permission: "view",
+        })
+      ).rejects.toThrow();
+    });
+  });
+
+  describe("playlists.listInvites", () => {
+    it("rejects unauthenticated users", async () => {
+      const caller = appRouter.createCaller(createUnauthContext());
+      await expect(
+        caller.playlists.listInvites({ playlistId: 1 })
+      ).rejects.toThrow();
+    });
+  });
+
+  describe("playlists.revokeInvite", () => {
+    it("rejects unauthenticated users", async () => {
+      const caller = appRouter.createCaller(createUnauthContext());
+      await expect(
+        caller.playlists.revokeInvite({ playlistId: 1, inviteId: 1 })
+      ).rejects.toThrow();
+    });
+
+    it("requires positive IDs", async () => {
+      const caller = appRouter.createCaller(createUserContext());
+      await expect(
+        caller.playlists.revokeInvite({ playlistId: 0, inviteId: 0 })
+      ).rejects.toThrow();
+    });
+  });
+
+  describe("playlists.acceptInvites", () => {
+    it("rejects unauthenticated users", async () => {
+      const caller = appRouter.createCaller(createUnauthContext());
+      await expect(caller.playlists.acceptInvites()).rejects.toThrow();
+    });
+
+    it("returns accepted count for authenticated users", async () => {
+      const caller = appRouter.createCaller(createUserContext());
+      const result = await caller.playlists.acceptInvites();
+      expect(result).toHaveProperty("accepted");
+      expect(typeof result.accepted).toBe("number");
+    });
+  });
+});
+
+/* ═══════════════════════════════════════════════════
+   5. Self-Discovery — Follow-Up Generation
    ═══════════════════════════════════════════════════ */
 
 describe("selfDiscovery", () => {
@@ -292,6 +383,74 @@ describe("selfDiscovery", () => {
         expect(e.message).not.toContain("Expected string");
         expect(e.code).not.toBe("BAD_REQUEST");
       }
+    });
+  });
+});
+
+/* ═══════════════════════════════════════════════════
+   6. Self-Discovery History Log
+   ═══════════════════════════════════════════════════ */
+
+describe("selfDiscovery history", () => {
+  describe("selfDiscovery.history", () => {
+    it("rejects unauthenticated users", async () => {
+      const caller = appRouter.createCaller(createUnauthContext());
+      await expect(caller.selfDiscovery.history()).rejects.toThrow();
+    });
+
+    it("returns array for authenticated users", async () => {
+      const caller = appRouter.createCaller(createUserContext());
+      const result = await caller.selfDiscovery.history();
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("accepts limit and offset parameters", async () => {
+      const caller = appRouter.createCaller(createUserContext());
+      const result = await caller.selfDiscovery.history({ limit: 10, offset: 0 });
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("validates limit range", async () => {
+      const caller = appRouter.createCaller(createUserContext());
+      await expect(
+        caller.selfDiscovery.history({ limit: 200, offset: 0 })
+      ).rejects.toThrow();
+    });
+
+    it("validates offset is non-negative", async () => {
+      const caller = appRouter.createCaller(createUserContext());
+      await expect(
+        caller.selfDiscovery.history({ limit: 10, offset: -1 })
+      ).rejects.toThrow();
+    });
+  });
+
+  describe("selfDiscovery.deleteEntry", () => {
+    it("rejects unauthenticated users", async () => {
+      const caller = appRouter.createCaller(createUnauthContext());
+      await expect(
+        caller.selfDiscovery.deleteEntry({ entryId: 1 })
+      ).rejects.toThrow();
+    });
+
+    it("requires positive entryId", async () => {
+      const caller = appRouter.createCaller(createUserContext());
+      await expect(
+        caller.selfDiscovery.deleteEntry({ entryId: 0 })
+      ).rejects.toThrow();
+    });
+  });
+
+  describe("selfDiscovery.clearHistory", () => {
+    it("rejects unauthenticated users", async () => {
+      const caller = appRouter.createCaller(createUnauthContext());
+      await expect(caller.selfDiscovery.clearHistory()).rejects.toThrow();
+    });
+
+    it("returns success for authenticated users", async () => {
+      const caller = appRouter.createCaller(createUserContext());
+      const result = await caller.selfDiscovery.clearHistory();
+      expect(result).toEqual({ success: true });
     });
   });
 });

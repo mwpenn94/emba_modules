@@ -421,6 +421,48 @@ export default function Playlists() {
 
   const sharedWithMeQuery = trpc.playlists.sharedWithMe.useQuery(undefined, { enabled: isAuthenticated });
 
+  /* ── Email Invite state & mutations ── */
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePermission, setInvitePermission] = useState<'view' | 'edit'>('view');
+
+  const invitesQuery = trpc.playlists.listInvites.useQuery(
+    { playlistId: selectedPlaylistId! },
+    { enabled: !!selectedPlaylistId && showSharePanel && isAuthenticated }
+  );
+
+  const sendInviteMut = trpc.playlists.sendInvite.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setInviteEmail('');
+      if (selectedPlaylistId) invitesQuery.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const revokeInviteMut = trpc.playlists.revokeInvite.useMutation({
+    onSuccess: () => {
+      toast.success('Invite revoked');
+      if (selectedPlaylistId) invitesQuery.refetch();
+    },
+  });
+
+  // Auto-accept pending invites on load
+  const acceptInvitesMut = trpc.playlists.acceptInvites.useMutation({
+    onSuccess: (data) => {
+      if (data.accepted > 0) {
+        toast.success(`${data.accepted} playlist invite(s) accepted!`);
+        sharedWithMeQuery.refetch();
+      }
+    },
+  });
+
+  // Trigger accept on mount for authenticated users
+  const [hasAccepted, setHasAccepted] = useState(false);
+  if (isAuthenticated && !hasAccepted) {
+    setHasAccepted(true);
+    acceptInvitesMut.mutate();
+  }
+
   const myPlaylists = playlistsQuery.data || [];
   const publicPlaylists = (publicQuery.data || []).filter(
     (p) => !myPlaylists.some((m) => m.id === p.id)
@@ -637,6 +679,74 @@ export default function Playlists() {
                         )}
                         Generate Share Link
                       </button>
+                    )}
+                  </div>
+
+                  {/* Email Invite Section */}
+                  <div className="mb-5">
+                    <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                      <UserPlus className="w-3 h-3" /> Invite by Email
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        placeholder="colleague@example.com"
+                        className="flex-1 px-3 py-2 rounded-lg bg-background border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <select
+                        value={invitePermission}
+                        onChange={(e) => setInvitePermission(e.target.value as 'view' | 'edit')}
+                        className="text-xs px-2 py-2 rounded-lg border border-border bg-background"
+                      >
+                        <option value="view">View</option>
+                        <option value="edit">Edit</option>
+                      </select>
+                      <button
+                        onClick={() => {
+                          if (!inviteEmail.trim()) return;
+                          sendInviteMut.mutate({
+                            playlistId: playlist.id,
+                            email: inviteEmail.trim(),
+                            permission: invitePermission,
+                          });
+                        }}
+                        disabled={sendInviteMut.isPending || !inviteEmail.trim()}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:opacity-90 disabled:opacity-50 transition-all shrink-0"
+                      >
+                        {sendInviteMut.isPending ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <UserPlus className="w-3.5 h-3.5" />
+                        )}
+                        Send
+                      </button>
+                    </div>
+
+                    {/* Pending Invites */}
+                    {(invitesQuery.data?.length ?? 0) > 0 && (
+                      <div className="mt-3 space-y-1.5">
+                        <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Pending Invites</p>
+                        {invitesQuery.data?.map((inv: any) => (
+                          <div key={inv.id} className="flex items-center gap-3 p-2 rounded-lg border border-dashed border-border">
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                              ✉
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs truncate">{inv.invitedEmail}</p>
+                              <p className="text-[10px] text-muted-foreground">{inv.permission} · pending</p>
+                            </div>
+                            <button
+                              onClick={() => revokeInviteMut.mutate({ playlistId: playlist.id, inviteId: inv.id })}
+                              className="p-1 rounded text-destructive hover:bg-destructive/10 transition-colors"
+                              title="Revoke invite"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
 

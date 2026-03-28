@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET role = 'admin' WHERE id = (SELECT min_id FROM (SELECT MIN(id) as min_id FROM users) t);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3S2TaCfAdzc6QNm.9f0b43de05f8 --database ZA65jNeda6DFiE5Ah4cq4b --execute UPDATE users SET role = 'admin' WHERE id = (SELECT min_id FROM (SELECT MIN(id) as min_id FROM users) t);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 62
+}

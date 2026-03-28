@@ -64,6 +64,18 @@ import {
   getSharesForUser,
   getPublicPlaylistData,
 } from "./playlist-shares-db";
+import {
+  createShareInvite,
+  getPendingInvites,
+  revokeShareInvite,
+  acceptPendingInvites,
+} from "./invite-db";
+import {
+  saveDiscoveryEntry,
+  getDiscoveryHistory,
+  deleteDiscoveryEntry,
+  clearDiscoveryHistory,
+} from "./discovery-db";
 import { nanoid } from "nanoid";
 import { TRPCError } from "@trpc/server";
 import { adminRouter } from "./routers/admin";
@@ -609,6 +621,66 @@ export const appRouter = router({
         if (!data) throw new TRPCError({ code: 'NOT_FOUND', message: 'Shared playlist not found' });
         return data;
       }),
+
+    /** Send an email-based share invite */
+    sendInvite: protectedProcedure
+      .input(
+        z.object({
+          playlistId: z.number().min(1),
+          email: z.string().email(),
+          permission: z.enum(["view", "edit"]).default("view"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Only the playlist owner can send invites" });
+        }
+        // Don't allow inviting yourself
+        if (input.email.toLowerCase() === ctx.user.email?.toLowerCase()) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "You cannot invite yourself" });
+        }
+        const result = await createShareInvite({
+          playlistId: input.playlistId,
+          invitedEmail: input.email.toLowerCase(),
+          permission: input.permission,
+          invitedBy: ctx.user.id,
+        });
+        if (result?.alreadyExists) {
+          return { success: true, message: "Invite already sent to this email" };
+        }
+        return { success: true, message: "Invite sent successfully" };
+      }),
+
+    /** List pending invites for a playlist */
+    listInvites: protectedProcedure
+      .input(z.object({ playlistId: z.number().min(1) }))
+      .query(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Only the playlist owner can view invites" });
+        }
+        return getPendingInvites(input.playlistId);
+      }),
+
+    /** Revoke a pending invite */
+    revokeInvite: protectedProcedure
+      .input(z.object({ playlistId: z.number().min(1), inviteId: z.number().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Only the playlist owner can revoke invites" });
+        }
+        await revokeShareInvite(input.inviteId);
+        return { success: true };
+      }),
+
+    /** Accept pending invites for current user (called on login/page load) */
+    acceptInvites: protectedProcedure.mutation(async ({ ctx }) => {
+      if (!ctx.user.email) return { accepted: 0 };
+      const accepted = await acceptPendingInvites(ctx.user.id, ctx.user.email);
+      return { accepted };
+    }),
   }),
 
   /* ── AI-Powered Quiz Generation ── */
@@ -763,7 +835,7 @@ Return a JSON array of questions. Each question object must have:
           context: z.string().optional(),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         const prompt = `You are a Socratic EMBA tutor. The student just studied the following topic:
 
 Topic: ${input.lastTopic}
@@ -826,8 +898,50 @@ Return JSON with:
         const content = response.choices?.[0]?.message?.content;
         if (!content || typeof content !== 'string') throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to generate follow-up' });
 
-        return JSON.parse(content);
+        const parsed = JSON.parse(content);
+
+        // Auto-save to discovery history
+        await saveDiscoveryEntry({
+          userId: ctx.user.id,
+          topic: input.lastTopic,
+          discipline: input.discipline ?? null,
+          question: parsed.question,
+          hint: parsed.hint,
+          difficulty: parsed.difficulty,
+          relatedTopics: parsed.relatedTopics,
+        });
+
+        return parsed;
       }),
+
+    /** Get discovery history for the current user */
+    history: protectedProcedure
+      .input(
+        z.object({
+          limit: z.number().min(1).max(100).default(50),
+          offset: z.number().min(0).default(0),
+        }).optional()
+      )
+      .query(async ({ ctx, input }) => {
+        return getDiscoveryHistory(ctx.user.id, {
+          limit: input?.limit ?? 50,
+          offset: input?.offset ?? 0,
+        });
+      }),
+
+    /** Delete a single discovery entry */
+    deleteEntry: protectedProcedure
+      .input(z.object({ entryId: z.number().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        await deleteDiscoveryEntry(input.entryId, ctx.user.id);
+        return { success: true };
+      }),
+
+    /** Clear all discovery history */
+    clearHistory: protectedProcedure.mutation(async ({ ctx }) => {
+      await clearDiscoveryHistory(ctx.user.id);
+      return { success: true };
+    }),
   }),
 });
 

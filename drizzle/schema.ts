@@ -250,3 +250,38 @@ export const playlistItems = mysqlTable("playlist_items", {
 
 export type PlaylistItemRow = typeof playlistItems.$inferSelect;
 export type InsertPlaylistItem = typeof playlistItems.$inferInsert;
+
+/**
+ * Pending share invites — email-based invitations for playlist access.
+ * When the invited user signs in (matched by email), the invite is auto-granted.
+ */
+export const pendingShareInvites = mysqlTable("pending_share_invites", {
+  id: int("id").autoincrement().primaryKey(),
+  playlistId: int("playlistId").notNull(),
+  invitedEmail: varchar("invitedEmail", { length: 320 }).notNull(),
+  permission: mysqlEnum("invitePermission", ["view", "edit"]).default("view").notNull(),
+  invitedBy: int("invitedBy").notNull(),
+  status: mysqlEnum("inviteStatus", ["pending", "accepted", "revoked"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PendingShareInviteRow = typeof pendingShareInvites.$inferSelect;
+export type InsertPendingShareInvite = typeof pendingShareInvites.$inferInsert;
+
+/**
+ * Discovery history — persisted self-discovery follow-up questions.
+ */
+export const discoveryHistory = mysqlTable("discovery_history", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  topic: varchar("topic", { length: 512 }).notNull(),
+  discipline: varchar("discipline", { length: 255 }),
+  question: text("question").notNull(),
+  hint: text("hint"),
+  difficulty: varchar("difficulty", { length: 32 }),
+  relatedTopics: json("relatedTopics"), // array of { topic, discipline }
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DiscoveryHistoryRow = typeof discoveryHistory.$inferSelect;
+export type InsertDiscoveryHistory = typeof discoveryHistory.$inferInsert;

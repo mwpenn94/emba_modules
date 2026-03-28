@@ -67,6 +67,7 @@ const NAV_SECTIONS: NavSection[] = [
       { path: '/groups', label: 'Study Groups', icon: Users },
       { path: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
       { path: '/playlists', label: 'Playlists', icon: ListMusic },
+      { path: '/discovery-history', label: 'Discovery Log', icon: Clock },
     ]
   },
   {
