@@ -226,3 +226,52 @@ html {
   background: oklch(0.78 0.08 75 / 0.3);
   color: oklch(0.98 0.01 75);
 }
+
+/* Mobile responsiveness polish */
+@media (max-width: 640px) {
+  /* Tighter padding on small screens */
+  .px-6 { padding-left: 1rem; padding-right: 1rem; }
+  .lg\:px-10 { padding-left: 1rem; padding-right: 1rem; }
+
+  /* Audio player compact mode */
+  .audio-compact .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Ensure touch targets are at least 44px */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Exception for inline/icon buttons that are explicitly sized */
+  button.p-1\.5, button.p-2, a.p-1\.5, a.p-2 {
+    min-height: 36px;
+    min-width: 36px;
+  }
+}
+
+/* Print styles for progress export */
+@media print {
+  nav, .skip-to-content, button, .audio-player {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .bg-card, .bg-background {
+    background: white !important;
+  }
+}
+
+/* Smooth transitions for tab switching */
+.tab-content-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.tab-content-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms ease, transform 200ms ease;
+}

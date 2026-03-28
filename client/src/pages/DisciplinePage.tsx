@@ -10,7 +10,7 @@ import { useState, useMemo } from 'react';
 import { useMastery } from '@/contexts/MasteryContext';
 import embaData from '@/data/emba_data.json';
 import { DISCIPLINE_COLORS, DISCIPLINE_ICONS } from '@/data/types';
-import { ArrowLeft, Check, Eye, Star, Filter, Search, ChevronDown, ChevronUp, Lightbulb, PlayCircle, BookOpen } from 'lucide-react';
+import { ArrowLeft, Check, Eye, Star, Filter, Search, ChevronDown, ChevronUp, Lightbulb, PlayCircle, BookOpen, Layers } from 'lucide-react';
 
 function slugify(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -143,6 +143,26 @@ export default function DisciplinePage() {
               <div className="flex-1">
                 <h3 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Start Study Session</h3>
                 <p className="text-xs text-muted-foreground">Flashcard-style study with spaced repetition for {discipline}</p>
+              </div>
+              <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180 group-hover:text-primary transition-colors" />
+            </motion.div>
+          </Link>
+
+          {/* Deep Dive CTA */}
+          <Link href={`/learn/${slug}`}>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              whileHover={{ y: -2 }}
+              className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/30 transition-all cursor-pointer group"
+            >
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: `${color}20` }}>
+                <Layers className="w-5 h-5" style={{ color }} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Deep Dive Learning</h3>
+                <p className="text-xs text-muted-foreground">Tabbed learning path with personalized sequencing, audio narration, and mastery tracking</p>
               </div>
               <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180 group-hover:text-primary transition-colors" />
             </motion.div>

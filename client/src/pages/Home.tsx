@@ -14,7 +14,7 @@ import { DISCIPLINE_COLORS, DISCIPLINE_ICONS, CORE_DISCIPLINES, SPECIALIZATION_D
 import {
   BookOpen, FlaskConical, Brain, Network, Briefcase, ArrowRight,
   Sparkles, GraduationCap, Calculator, GitBranch, Map, Shield,
-  Search, Trophy, Target, Zap, PlayCircle, Clock
+  Search, Trophy, Target, Zap, PlayCircle, Clock, Download
 } from 'lucide-react';
 
 const HERO_IMG = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663357378777/ZA65jNeda6DFiE5Ah4cq4b/hero-atelier-Km2x6YRTYjX2VzD9gFdG5C.webp';
@@ -269,6 +269,7 @@ export default function Home() {
               <QuickAction href="/connections" icon={Network} label="Concept Links" desc="Cross-discipline connections" delay={0.2} />
               <QuickAction href="/cases" icon={Briefcase} label="Case Library" desc={`${cases.length} real-world scenarios`} delay={0.25} />
               <QuickAction href="/achievements" icon={Trophy} label="Achievements" desc={`${unlockedAchievements.length} unlocked — track your progress`} delay={0.3} />
+              <QuickAction href="/progress" icon={Download} label="Progress Export" desc="Download CSV or formatted report of your study data" delay={0.35} />
             </div>
           </section>
 

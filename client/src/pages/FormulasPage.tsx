@@ -9,12 +9,14 @@ import { Link } from 'wouter';
 import { useState, useMemo } from 'react';
 import embaData from '@/data/emba_data.json';
 import { DISCIPLINE_COLORS } from '@/data/types';
-import { ArrowLeft, Search, FlaskConical, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Search, FlaskConical, ChevronDown, ChevronUp, Volume2 } from 'lucide-react';
+import AudioPlayer from '@/components/AudioPlayer';
 
 export default function FormulasPage() {
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all');
+  const [showAudio, setShowAudio] = useState(false);
 
   const formulas = embaData.formulas || [];
   const disciplines = useMemo(() =>
@@ -56,6 +58,19 @@ export default function FormulasPage() {
               </div>
             </div>
 
+            {showAudio && (
+              <div className="mb-3">
+                <AudioPlayer
+                  items={filtered.map((f: any) => ({
+                    label: f.name,
+                    text: `${f.name}. The formula is ${f.formula}. Variables: ${f.variables.join(', ')}.`,
+                  }))}
+                  title={`Formula Reference${selectedDiscipline !== 'all' ? ` — ${selectedDiscipline}` : ''}`}
+                  onClose={() => setShowAudio(false)}
+                />
+              </div>
+            )}
+
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -77,6 +92,13 @@ export default function FormulasPage() {
                   <option key={d} value={d}>{d}</option>
                 ))}
               </select>
+              <button
+                onClick={() => setShowAudio(!showAudio)}
+                className={`p-2 rounded-lg transition-colors ${showAudio ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
+                title="Listen to formulas"
+              >
+                <Volume2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
