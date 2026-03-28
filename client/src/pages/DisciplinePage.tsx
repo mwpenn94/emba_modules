@@ -11,6 +11,7 @@ import { useMastery } from '@/contexts/MasteryContext';
 import embaData from '@/data/emba_data.json';
 import { DISCIPLINE_COLORS, DISCIPLINE_ICONS } from '@/data/types';
 import { ArrowLeft, Check, Eye, Star, Filter, Search, ChevronDown, ChevronUp, Lightbulb, PlayCircle, BookOpen, Layers } from 'lucide-react';
+import BookmarkButton from '@/components/BookmarkButton';
 
 function slugify(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -184,7 +185,15 @@ export default function DisciplinePage() {
                     transition={{ delay: i * 0.03 }}
                     className="p-4 rounded-xl border border-border bg-card"
                   >
+                    <div className="flex items-start justify-between">
                     <h4 className="text-sm font-semibold mb-1" style={{ fontFamily: 'var(--font-display)' }}>{f.name}</h4>
+                    <BookmarkButton
+                      contentType="formula"
+                      contentId={`${discipline}-${f.id}`}
+                      contentTitle={f.name}
+                      discipline={discipline}
+                    />
+                    </div>
                     <p className="text-sm font-mono px-3 py-2 rounded-lg bg-accent mb-2" style={{ color }}>{f.formula}</p>
                     <div className="flex flex-wrap gap-1">
                       {f.variables.map((v: string) => (
@@ -213,7 +222,15 @@ export default function DisciplinePage() {
                     transition={{ delay: i * 0.05 }}
                     className="p-4 rounded-xl border border-border bg-card"
                   >
+                    <div className="flex items-start justify-between">
                     <h4 className="text-sm font-semibold mb-2" style={{ fontFamily: 'var(--font-display)' }}>{app.title}</h4>
+                    <BookmarkButton
+                      contentType="fs_application"
+                      contentId={`${discipline}-${app.id}`}
+                      contentTitle={app.title}
+                      discipline={discipline}
+                    />
+                    </div>
                     <p className="text-sm text-muted-foreground leading-relaxed">{app.content}</p>
                   </motion.div>
                 ))}
@@ -296,7 +313,8 @@ export default function DisciplinePage() {
                           <div className="px-4 pb-4 pt-1 border-t border-border/50">
                             <p className="text-sm text-muted-foreground leading-relaxed mb-3">{d.definition}</p>
 
-                            {/* Confidence Rating */}
+                            {/* Bookmark + Confidence Rating */}
+                            <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-muted-foreground">Confidence:</span>
                               <div className="flex gap-1">
@@ -314,6 +332,13 @@ export default function DisciplinePage() {
                                   </button>
                                 ))}
                               </div>
+                            </div>
+                            <BookmarkButton
+                              contentType="definition"
+                              contentId={`${discipline}-${d.id}`}
+                              contentTitle={d.term}
+                              discipline={discipline}
+                            />
                             </div>
                           </div>
                         </motion.div>

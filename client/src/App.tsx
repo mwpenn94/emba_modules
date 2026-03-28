@@ -6,6 +6,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { MasteryProvider } from "./contexts/MasteryContext";
 import AchievementToast from "./components/AchievementToast";
 import OfflineBanner from "./components/OfflineBanner";
+import OnboardingTour, { useOnboardingTour } from "./components/OnboardingTour";
 import { lazy, Suspense } from "react";
 
 /* ── Lazy-loaded pages for code-splitting ── */
@@ -29,6 +30,7 @@ const AIQuiz = lazy(() => import("./pages/AIQuiz"));
 const HandsFreeStudy = lazy(() => import("./pages/HandsFreeStudy"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const StudyGroups = lazy(() => import("./pages/StudyGroups"));
+const Bookmarks = lazy(() => import("./pages/Bookmarks"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /* ── Loading fallback ── */
@@ -59,6 +61,7 @@ function Router() {
         <Route path="/hands-free/:slug" component={HandsFreeStudy} />
         <Route path="/analytics" component={Analytics} />
         <Route path="/groups" component={StudyGroups} />
+        <Route path="/bookmarks" component={Bookmarks} />
         <Route path="/formulas" component={FormulasPage} />
         <Route path="/quiz" component={QuizPage} />
         <Route path="/connections" component={ConnectionsPage} />
@@ -76,6 +79,11 @@ function Router() {
   );
 }
 
+function OnboardingManager() {
+  const { isActive, completeTour } = useOnboardingTour();
+  return <OnboardingTour isActive={isActive} onComplete={completeTour} />;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -88,6 +96,7 @@ function App() {
             <Toaster />
             <AchievementToast />
             <OfflineBanner />
+            <OnboardingManager />
             <main id="main-content" role="main">
               <Router />
             </main>

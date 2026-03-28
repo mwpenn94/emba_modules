@@ -182,3 +182,88 @@ export async function insertQuizQuestionsBatch(questions: InsertAiQuizQuestion[]
     await db.insert(aiQuizQuestions).values(q);
   }
 }
+
+/* ── Bookmarks ── */
+
+import { bookmarks, type InsertBookmark } from "../drizzle/schema";
+import { desc } from "drizzle-orm";
+
+export async function getUserBookmarks(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(bookmarks)
+    .where(eq(bookmarks.userId, userId))
+    .orderBy(desc(bookmarks.createdAt));
+}
+
+export async function getBookmarksByType(userId: number, contentType: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(bookmarks)
+    .where(and(eq(bookmarks.userId, userId), eq(bookmarks.contentType, contentType)))
+    .orderBy(desc(bookmarks.createdAt));
+}
+
+export async function createBookmark(data: InsertBookmark) {
+  const db = await getDb();
+  if (!db) return null;
+  // Check for existing bookmark
+  const existing = await db
+    .select()
+    .from(bookmarks)
+    .where(
+      and(
+        eq(bookmarks.userId, data.userId),
+        eq(bookmarks.contentType, data.contentType),
+        eq(bookmarks.contentId, data.contentId)
+      )
+    );
+  if (existing.length > 0) {
+    // Update note if bookmark exists
+    await db
+      .update(bookmarks)
+      .set({ note: data.note })
+      .where(eq(bookmarks.id, existing[0].id));
+    return existing[0].id;
+  }
+  const result = await db.insert(bookmarks).values(data).$returningId();
+  return result[0]?.id ?? null;
+}
+
+export async function updateBookmarkNote(bookmarkId: number, userId: number, note: string | null) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(bookmarks)
+    .set({ note })
+    .where(and(eq(bookmarks.id, bookmarkId), eq(bookmarks.userId, userId)));
+}
+
+export async function deleteBookmark(bookmarkId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .delete(bookmarks)
+    .where(and(eq(bookmarks.id, bookmarkId), eq(bookmarks.userId, userId)));
+}
+
+export async function isBookmarked(userId: number, contentType: string, contentId: string) {
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db
+    .select()
+    .from(bookmarks)
+    .where(
+      and(
+        eq(bookmarks.userId, userId),
+        eq(bookmarks.contentType, contentType),
+        eq(bookmarks.contentId, contentId)
+      )
+    )
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}

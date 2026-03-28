@@ -15,7 +15,7 @@ import {
   BookOpen, FlaskConical, Brain, Network, Briefcase, ArrowRight,
   Sparkles, GraduationCap, Calculator, GitBranch, Map, Shield,
   Search, Trophy, Target, Zap, PlayCircle, Clock, Download, Headphones,
-  Users, BarChart3
+  Users, BarChart3, Bookmark
 } from 'lucide-react';
 
 const HERO_IMG = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663357378777/ZA65jNeda6DFiE5Ah4cq4b/hero-atelier-Km2x6YRTYjX2VzD9gFdG5C.webp';
@@ -275,6 +275,7 @@ export default function Home() {
               <QuickAction href="/progress" icon={Download} label="Progress Export" desc="Download CSV or formatted report of your study data" delay={0.45} />
               <QuickAction href="/analytics" icon={BarChart3} label="Analytics" desc="Study time trends, mastery velocity, and SRS effectiveness" delay={0.5} />
               <QuickAction href="/groups" icon={Users} label="Study Groups" desc="Collaborate, share quizzes, and challenge peers" delay={0.55} />
+              <QuickAction href="/bookmarks" icon={Bookmark} label="Bookmarks" desc="Saved definitions, formulas, and cases with personal notes" delay={0.6} />
             </div>
           </section>
 

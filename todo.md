@@ -114,3 +114,27 @@
 - [x] OfflineBanner component: offline indicator + update-available prompt
 - [x] PWA manifest.json with standalone display mode
 - [x] Apple mobile web app meta tags for iOS support
+
+## AI-Guided Onboarding Tour
+- [x] OnboardingTour component with 13-step interactive walkthrough
+- [x] Highlights all key modules: Dashboard, Exam Simulator, Formula Lab, Case Simulator, Connection Map, AI Quiz, Hands-Free, Study Groups, Analytics
+- [x] Recommends starting path based on learning science (Deep Dive → Formula Lab → Exam Sim → SRS)
+- [x] Persists "tour completed" in localStorage, auto-starts for first-time users
+- [x] Smooth card animations, progress bar, step indicators, keyboard navigation (arrows, Enter, Escape)
+
+## Toggle-able Spaced Repetition Notifications
+- [x] NotificationCenter component with bell icon and badge count
+- [x] Expandable panel showing due items grouped by discipline with color-coded badges
+- [x] Toggle switch to enable/disable SRS notifications (persisted in localStorage)
+- [x] Dismiss individual items or all at once, auto-resets every 5 minutes
+- [x] Links directly to study session for each discipline
+- [x] In-app only (no email) per notification preferences
+
+## Content Bookmarking and Notes
+- [x] Database schema for bookmarks table (userId, contentType, contentId, contentTitle, discipline, note, createdAt)
+- [x] tRPC procedures for bookmark CRUD (list, check, create, delete, updateNote)
+- [x] BookmarkButton component on definitions, formulas, cases, and FS applications in DisciplinePage
+- [x] Inline note editor with save/cancel in BookmarkButton popover
+- [x] Bookmarks page with search, filter by type/discipline, and note editing
+- [x] Navigation link in sidebar
+- [x] 7 vitest tests for auth protection and input validation

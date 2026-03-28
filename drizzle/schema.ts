@@ -183,3 +183,21 @@ export const challengeResults = mysqlTable("challenge_results", {
 
 export type ChallengeResultRow = typeof challengeResults.$inferSelect;
 export type InsertChallengeResult = typeof challengeResults.$inferInsert;
+
+/**
+ * Content bookmarks — users can bookmark definitions, formulas, cases, and FS applications with personal notes.
+ */
+export const bookmarks = mysqlTable("bookmarks", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  contentType: varchar("contentType", { length: 64 }).notNull(), // "definition", "formula", "case", "fs_application"
+  contentId: varchar("contentId", { length: 255 }).notNull(), // unique key for the content item
+  contentTitle: varchar("contentTitle", { length: 512 }).notNull(),
+  discipline: varchar("discipline", { length: 255 }),
+  note: text("note"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BookmarkRow = typeof bookmarks.$inferSelect;
+export type InsertBookmark = typeof bookmarks.$inferInsert;

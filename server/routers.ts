@@ -14,6 +14,12 @@ import {
   upsertUserSetting,
   getQuizQuestions,
   insertQuizQuestionsBatch,
+  getUserBookmarks,
+  getBookmarksByType,
+  createBookmark,
+  updateBookmarkNote,
+  deleteBookmark,
+  isBookmarked,
 } from "./mastery-db";
 import { invokeLLM } from "./_core/llm";
 import {
@@ -309,6 +315,67 @@ export const appRouter = router({
       .input(z.object({ challengeId: z.number() }))
       .query(async ({ input }) => {
         return getChallengeResults(input.challengeId);
+      }),
+  }),
+
+  /* ── Content Bookmarks ── */
+  bookmarks: router({
+    /** Get all user bookmarks */
+    list: protectedProcedure
+      .input(z.object({ contentType: z.string().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        if (input?.contentType) {
+          return getBookmarksByType(ctx.user.id, input.contentType);
+        }
+        return getUserBookmarks(ctx.user.id);
+      }),
+
+    /** Check if content is bookmarked */
+    check: protectedProcedure
+      .input(z.object({ contentType: z.string(), contentId: z.string() }))
+      .query(async ({ ctx, input }) => {
+        const result = await isBookmarked(ctx.user.id, input.contentType, input.contentId);
+        return { bookmarked: !!result, bookmark: result };
+      }),
+
+    /** Create or update a bookmark */
+    create: protectedProcedure
+      .input(z.object({
+        contentType: z.string(),
+        contentId: z.string(),
+        contentTitle: z.string(),
+        discipline: z.string().optional(),
+        note: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await createBookmark({
+          userId: ctx.user.id,
+          contentType: input.contentType,
+          contentId: input.contentId,
+          contentTitle: input.contentTitle,
+          discipline: input.discipline ?? null,
+          note: input.note ?? null,
+        });
+        return { id };
+      }),
+
+    /** Update bookmark note */
+    updateNote: protectedProcedure
+      .input(z.object({
+        bookmarkId: z.number(),
+        note: z.string().nullable(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await updateBookmarkNote(input.bookmarkId, ctx.user.id, input.note);
+        return { success: true };
+      }),
+
+    /** Delete a bookmark */
+    delete: protectedProcedure
+      .input(z.object({ bookmarkId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await deleteBookmark(input.bookmarkId, ctx.user.id);
+        return { success: true };
       }),
   }),
 

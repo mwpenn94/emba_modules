@@ -16,6 +16,8 @@ import {
   Trophy, PlayCircle, Download, Sparkles, Headphones, BarChart3, Users
 } from 'lucide-react';
 import { useMastery } from '@/contexts/MasteryContext';
+import { Bookmark } from 'lucide-react';
+import NotificationCenter from './NotificationCenter';
 
 const NAV_SECTIONS = [
   {
@@ -49,6 +51,7 @@ const NAV_SECTIONS = [
       { path: '/progress', label: 'Progress Export', icon: Download },
       { path: '/analytics', label: 'Analytics', icon: BarChart3 },
       { path: '/groups', label: 'Study Groups', icon: Users },
+      { path: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
     ]
   }
 ];
@@ -195,13 +198,16 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         </AnimatePresence>
       </div>
 
-      {/* Collapse Toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-center py-3 border-t border-border text-muted-foreground hover:text-foreground transition-colors"
-      >
-        {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-      </button>
+      {/* Notification Bell + Collapse Toggle */}
+      <div className="flex items-center justify-between px-3 py-2 border-t border-border">
+        <NotificationCenter />
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
+      </div>
     </motion.aside>
   );
 
