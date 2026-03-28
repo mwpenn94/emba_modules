@@ -13,7 +13,7 @@ import {
   BookOpen, FlaskConical, Brain, Network, Briefcase,
   Search, Home, ChevronLeft, ChevronRight, Flame, Clock,
   GraduationCap, Menu, X, Calculator, GitBranch, Map, Shield,
-  Trophy, PlayCircle, Download
+  Trophy, PlayCircle, Download, Sparkles, Headphones
 } from 'lucide-react';
 import { useMastery } from '@/contexts/MasteryContext';
 
@@ -43,6 +43,8 @@ const NAV_SECTIONS = [
       { path: '/quiz', label: 'Quick Quiz', icon: Brain },
       { path: '/connections', label: 'Concept Links', icon: Network },
       { path: '/cases', label: 'Case Library', icon: Briefcase },
+      { path: '/ai-quiz', label: 'AI Quiz', icon: Sparkles },
+      { path: '/hands-free', label: 'Hands-Free', icon: Headphones },
       { path: '/achievements', label: 'Achievements', icon: Trophy },
       { path: '/progress', label: 'Progress Export', icon: Download },
     ]

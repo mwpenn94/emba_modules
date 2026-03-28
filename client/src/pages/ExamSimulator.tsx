@@ -42,13 +42,13 @@ function generateQuestionBank(): Question[] {
   });
 
   const fsContexts: Record<string, string> = {
-    'Accounting': 'At WealthBridge Financial Group, understanding this concept helps analyze carrier financial statements and commission structures.',
-    'Markets & Economies': 'As a Managing Director in Arizona, economic conditions directly impact client investment decisions and insurance product positioning.',
+    'Accounting': 'In financial services, understanding this concept helps analyze carrier financial statements and commission structures.',
+    'Markets & Economies': 'In practice, economic conditions directly impact client investment decisions and insurance product positioning.',
     'Finance': 'Premium financing, IUL illustrations, and capital allocation decisions all depend on mastering this financial principle.',
     'Strategy': 'Building a regional practice requires strategic frameworks to analyze competition, position services, and allocate resources.',
     'Leading Organizations': 'Recruiting and retaining financial advisors demands leadership skills in motivation, culture, and team development.',
     'Data & Decisions': 'Data-driven decisions improve client outcomes, practice management, and compliance in financial services.',
-    'Marketing & Pricing': 'Client acquisition, digital marketing, and service pricing are critical for growing a WealthBridge practice.',
+    'Marketing & Pricing': 'Client acquisition, digital marketing, and service pricing are critical for growing a financial services practice.',
     'Supply Chain & Operations': 'Operational efficiency in case processing, client onboarding, and service delivery drives practice profitability.',
   };
 
@@ -334,7 +334,7 @@ export default function ExamSimulator() {
                 </div>
                 <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>EMBA Exam Simulator</h2>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  Scenario-based questions testing application and analysis — just like the real Quantic exams. Open-book format means recall is trivial; understanding is everything.
+                  Scenario-based questions testing application and analysis — designed for real-world mastery. Open-book format means recall is trivial; understanding is everything.
                 </p>
               </div>
 

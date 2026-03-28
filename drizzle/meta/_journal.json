@@ -8,6 +8,13 @@
       "when": 1774725942747,
       "tag": "0000_same_whiplash",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1774727363899,
+      "tag": "0001_early_warstar",
+      "breakpoints": true
     }
   ]
 }

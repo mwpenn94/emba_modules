@@ -450,7 +450,7 @@ export default function FSToolkit() {
             <Briefcase className="w-5 h-5 text-primary" />
             <div>
               <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Financial Services Toolkit</h1>
-              <p className="text-xs text-muted-foreground font-mono">6 operational tools · EMBA-integrated · WealthBridge practice</p>
+              <p className="text-xs text-muted-foreground font-mono">6 operational tools · EMBA-integrated · Financial services practice</p>
             </div>
           </div>
         </div>
@@ -463,7 +463,7 @@ export default function FSToolkit() {
                 <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--accent)' }}>
                   <Building2 className="w-8 h-8 text-primary" />
                 </div>
-                <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>WealthBridge Practice Tools</h2>
+                <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>Financial Services Practice Tools</h2>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
                   Operational artifacts for daily practice, each cross-referenced to EMBA concepts you're mastering
                 </p>

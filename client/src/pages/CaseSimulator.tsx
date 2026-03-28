@@ -45,11 +45,11 @@ interface CaseScenario {
 const cases: CaseScenario[] = [
   {
     id: 'market-entry',
-    title: 'Arizona Market Expansion',
+    title: 'Regional Market Expansion',
     discipline: 'Strategy',
     difficulty: 'advanced',
     color: 'var(--discipline-strategy)',
-    context: 'WealthBridge Financial Group is evaluating expansion from its current Phoenix metro base into Tucson and Flagstaff markets. You must analyze competitive dynamics, resource allocation, and market timing.',
+    context: 'A financial services firm is evaluating expansion from its current metro base into two neighboring regional markets. You must analyze competitive dynamics, resource allocation, and market timing.',
     fsConnection: 'This directly mirrors your real-world challenge: building a regional practice requires strategic market selection, competitive positioning, and phased resource deployment.',
     phases: [
       {
@@ -104,7 +104,7 @@ const cases: CaseScenario[] = [
     discipline: 'Marketing & Pricing',
     difficulty: 'intermediate',
     color: 'var(--discipline-marketing)',
-    context: 'WealthBridge currently charges a flat 1% AUM fee. Client acquisition has slowed and competitors are offering tiered pricing. You need to redesign the fee structure.',
+    context: 'The firm currently charges a flat 1% AUM fee. Client acquisition has slowed and competitors are offering tiered pricing. You need to redesign the fee structure.',
     fsConnection: 'Fee restructuring is a real challenge in financial services. The right pricing model balances client acquisition, retention, profitability, and regulatory compliance.',
     phases: [
       {
@@ -159,7 +159,7 @@ const cases: CaseScenario[] = [
     discipline: 'Leading Organizations',
     difficulty: 'advanced',
     color: 'var(--discipline-leadership)',
-    context: 'WealthBridge has lost 3 of 8 financial advisors in 6 months. Remaining team morale is low. You need to stabilize the team and rebuild.',
+    context: 'The firm has lost 3 of 8 financial advisors in 6 months. Remaining team morale is low. You need to stabilize the team and rebuild.',
     fsConnection: 'Advisor recruitment and retention is the #1 challenge in financial services. Your leadership approach directly determines practice growth trajectory.',
     phases: [
       {
@@ -431,7 +431,7 @@ export default function CaseSimulator() {
               <div className="p-4 rounded-xl border border-border/50 bg-card/50">
                 <div className="flex items-center gap-2 mb-2">
                   <Building2 className="w-4 h-4" style={{ color: scenario.color }} />
-                  <span className="text-xs font-semibold">WealthBridge Application</span>
+                  <span className="text-xs font-semibold">FS Application</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">{scenario.fsConnection}</p>
               </div>

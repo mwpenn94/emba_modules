@@ -24,6 +24,8 @@ const StudySession = lazy(() => import("./pages/StudySession"));
 const Achievements = lazy(() => import("./pages/Achievements"));
 const ProgressExport = lazy(() => import("./pages/ProgressExport"));
 const DisciplineDeepDive = lazy(() => import("./pages/DisciplineDeepDive"));
+const AIQuiz = lazy(() => import("./pages/AIQuiz"));
+const HandsFreeStudy = lazy(() => import("./pages/HandsFreeStudy"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /* ── Loading fallback ── */
@@ -49,6 +51,9 @@ function Router() {
         <Route path="/achievements" component={Achievements} />
         <Route path="/progress" component={ProgressExport} />
         <Route path="/learn/:slug" component={DisciplineDeepDive} />
+        <Route path="/ai-quiz" component={AIQuiz} />
+        <Route path="/hands-free" component={HandsFreeStudy} />
+        <Route path="/hands-free/:slug" component={HandsFreeStudy} />
         <Route path="/formulas" component={FormulasPage} />
         <Route path="/quiz" component={QuizPage} />
         <Route path="/connections" component={ConnectionsPage} />

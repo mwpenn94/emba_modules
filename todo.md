@@ -59,3 +59,34 @@
 - [x] Final accessibility review (ARIA, focus-visible, skip-to-content, reduced-motion, print styles)
 - [x] Edge case testing for TTS with long text (auto-chunking at 4500 chars with sentence-boundary splitting)
 - [x] Mobile responsiveness polish (touch targets, compact padding, print styles)
+
+## Cloud Progress Sync
+- [x] Database schema for mastery_progress, study_sessions, user_achievements, user_settings, quiz_questions tables
+- [x] tRPC procedures for mastery sync, sessions, achievements, settings, and AI quiz
+- [x] Migrate MasteryContext from localStorage-only to cloud-first with localStorage cache
+- [x] Sync on login with server-wins merge strategy for newer timestamps
+- [x] 14 vitest tests for input validation and auth protection
+
+## AI-Powered Quiz Generation
+- [x] tRPC procedure using LLM with structured JSON schema for question generation
+- [x] AI Quiz page with discipline/topic selector, difficulty control, question type selector
+- [x] Dynamic question types: multiple choice, fill-in-blank, scenario-based, explain-concept
+- [x] Feedback loop with detailed explanations and self-assessment for non-MC types
+- [x] Question caching in database for reuse
+- [x] Keyboard navigation (A-D for MC, Enter/N for next)
+
+## Hands-Free Study Mode
+- [x] HandsFreeStudy page with auto-play TTS through discipline content
+- [x] Audible progress cues (Web Audio API chimes: start, section transition, complete)
+- [x] Auto-advance through definitions → formulas → cases → FS applications with section announcements
+- [x] Transport controls: play/pause, skip forward/back, stop
+- [x] Keyboard shortcuts: Space pause, arrows skip, Esc stop
+- [x] Settings: voice selection, speed (0.75x-2x), engine (Edge/Browser), repeat mode
+- [x] Section toggle to include/exclude content types
+- [x] Navigation links in sidebar, Home dashboard, and DisciplinePage
+
+## Branding Cleanup
+- [x] Remove all Quantic references from Home.tsx hero section
+- [x] Remove Quantic/WealthBridge/National Life from ExamSimulator, FormulaLab, CaseSimulator, FSToolkit, ConnectionMap
+- [x] Replace all branded labels with generic FS Application terminology
+- [x] Update to generic EMBA Knowledge Explorer branding

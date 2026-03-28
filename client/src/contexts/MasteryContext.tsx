@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import type { MasteryState, SessionStats } from '@/data/types';
+import { trpc } from '@/lib/trpc';
 
 /* ── Spaced Repetition Intervals (hours) ── */
 const SRS_INTERVALS = [0, 4, 24, 72, 168, 336, 720]; // 0h, 4h, 1d, 3d, 7d, 14d, 30d
@@ -65,19 +66,16 @@ interface MasteryContextType {
   getMasteredCount: (discipline?: string) => number;
   resetSession: () => void;
   totalStudyTime: number;
-  // New: SRS
   getDueItems: () => string[];
   getNextReviewTime: (key: string) => number | null;
-  // New: Achievements
   unlockedAchievements: string[];
   newAchievement: Achievement | null;
   dismissAchievement: () => void;
-  // New: Daily Goals
   dailyGoal: DailyGoal;
   setDailyGoal: (goal: DailyGoal) => void;
   dailyProgress: { definitions: number; formulas: number; quizQuestions: number };
-  // New: Study History
-  studyHistory: Record<string, number>; // date string -> minutes studied
+  studyHistory: Record<string, number>;
+  cloudSyncStatus: 'idle' | 'syncing' | 'synced' | 'error';
 }
 
 const MasteryContext = createContext<MasteryContextType | null>(null);
@@ -89,6 +87,7 @@ const ACHIEVEMENTS_KEY = 'emba-achievements';
 const GOAL_KEY = 'emba-daily-goal';
 const DAILY_PROGRESS_KEY = 'emba-daily-progress';
 const HISTORY_KEY = 'emba-study-history';
+const DIRTY_KEY = 'emba-mastery-dirty';
 
 function loadMastery(): MasteryState {
   try {
@@ -139,6 +138,108 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
   const [studyHistory, setStudyHistory] = useState<Record<string, number>>(() => {
     try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}'); } catch { return {}; }
   });
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
+  const dirtyKeysRef = useRef<Set<string>>(new Set());
+  const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  /* ── Cloud Sync: tRPC mutations ── */
+  const authQuery = trpc.auth.me.useQuery(undefined, { retry: false });
+  const isAuthenticated = !!authQuery.data;
+
+  const cloudMasteryQuery = trpc.mastery.getAll.useQuery(undefined, {
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 min
+    retry: 1,
+  });
+
+  const syncBatchMutation = trpc.mastery.syncBatch.useMutation();
+  const syncAchievementsMutation = trpc.achievements.syncBatch.useMutation();
+  const createSessionMutation = trpc.sessions.create.useMutation();
+
+  /* ── Initial cloud pull: merge server data into local ── */
+  useEffect(() => {
+    if (!cloudMasteryQuery.data || cloudMasteryQuery.data.length === 0) return;
+
+    setMastery(prev => {
+      const merged = { ...prev };
+      let changed = false;
+      for (const row of cloudMasteryQuery.data) {
+        const local = merged[row.itemKey];
+        const serverUpdatedAt = row.updatedAt || 0;
+        const localUpdatedAt = local?.lastReviewed || 0;
+
+        // Server wins if newer, or if local doesn't have this item
+        if (!local || serverUpdatedAt > localUpdatedAt) {
+          merged[row.itemKey] = {
+            seen: row.seen,
+            mastered: row.mastered,
+            confidence: row.confidence,
+            reviewCount: row.reviewCount,
+            lastReviewed: row.lastReviewed,
+          };
+          changed = true;
+        }
+      }
+      if (changed) return merged;
+      return prev;
+    });
+  }, [cloudMasteryQuery.data]);
+
+  /* ── Cloud sync: push dirty items every 30 seconds ── */
+  const flushDirtyItems = useCallback(() => {
+    if (!isAuthenticated || dirtyKeysRef.current.size === 0) return;
+
+    const keys = Array.from(dirtyKeysRef.current);
+    dirtyKeysRef.current.clear();
+
+    // Read current mastery state from localStorage (most up-to-date)
+    const currentMastery = loadMastery();
+    const items = keys
+      .filter(k => currentMastery[k])
+      .map(k => ({
+        itemKey: k,
+        seen: currentMastery[k].seen || false,
+        mastered: currentMastery[k].mastered || false,
+        confidence: currentMastery[k].confidence || 0,
+        reviewCount: currentMastery[k].reviewCount || 0,
+        lastReviewed: currentMastery[k].lastReviewed || 0,
+        updatedAt: currentMastery[k].lastReviewed || Date.now(),
+      }));
+
+    if (items.length === 0) return;
+
+    setCloudSyncStatus('syncing');
+    syncBatchMutation.mutate(
+      { items },
+      {
+        onSuccess: () => setCloudSyncStatus('synced'),
+        onError: () => {
+          // Re-add failed keys for next sync attempt
+          keys.forEach(k => dirtyKeysRef.current.add(k));
+          setCloudSyncStatus('error');
+        },
+      }
+    );
+  }, [isAuthenticated, syncBatchMutation]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    syncTimerRef.current = setInterval(flushDirtyItems, 30000);
+    return () => { if (syncTimerRef.current) clearInterval(syncTimerRef.current); };
+  }, [isAuthenticated, flushDirtyItems]);
+
+  // Flush on page unload
+  useEffect(() => {
+    const handler = () => flushDirtyItems();
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [flushDirtyItems]);
+
+  /* ── Sync achievements to cloud ── */
+  useEffect(() => {
+    if (!isAuthenticated || unlockedAchievements.length === 0) return;
+    syncAchievementsMutation.mutate({ achievementIds: unlockedAchievements });
+  }, [isAuthenticated, unlockedAchievements.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Safe localStorage writer with quota error handling
   const safeSave = useCallback((key: string, data: unknown) => {
@@ -146,7 +247,6 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(key, JSON.stringify(data));
     } catch (e) {
       if (e instanceof DOMException && (e.name === 'QuotaExceededError' || e.code === 22)) {
-        // Prune oldest study history entries to free space
         try {
           const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
           const keys = Object.keys(hist).sort();
@@ -161,7 +261,7 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Persist all state
+  // Persist all state to localStorage
   useEffect(() => { safeSave(STORAGE_KEY, mastery); }, [mastery, safeSave]);
   useEffect(() => { safeSave(SESSION_KEY, session); }, [session, safeSave]);
   useEffect(() => { safeSave(ACHIEVEMENTS_KEY, unlockedAchievements); }, [unlockedAchievements, safeSave]);
@@ -172,7 +272,7 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
   // Study time ticker — only counts when tab is visible
   useEffect(() => {
     const interval = setInterval(() => {
-      if (document.hidden) return; // Don't count background time
+      if (document.hidden) return;
       setTotalStudyTime(prev => {
         const next = prev + 1;
         try { localStorage.setItem(TIME_KEY, String(next)); } catch { /* quota */ }
@@ -191,7 +291,6 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
     const studied = Object.keys(masteryState).filter(k => masteryState[k]?.seen).length;
     const mastered = Object.keys(masteryState).filter(k => masteryState[k]?.mastered).length;
 
-    // Count disciplines where >80% of definitions are mastered
     const disciplineCounts: Record<string, { total: number; mastered: number }> = {};
     Object.keys(masteryState).forEach(k => {
       const parts = k.split('-');
@@ -220,10 +319,15 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
         setUnlockedAchievements(updated);
         localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updated));
         setNewAchievement(achievement);
-        break; // Show one at a time
+        break;
       }
     }
   }, [totalStudyTime]);
+
+  // Helper: mark a key as dirty for cloud sync
+  const markDirty = useCallback((key: string) => {
+    dirtyKeysRef.current.add(key);
+  }, []);
 
   const markSeen = useCallback((key: string) => {
     setMastery(prev => {
@@ -241,13 +345,14 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
       setTimeout(() => checkAchievements(next, session), 0);
       return next;
     });
+    markDirty(key);
     setSession(prev => ({ ...prev, termsStudied: prev.termsStudied + 1 }));
     setDailyProgress((prev: { date: string; definitions: number; formulas: number; quizQuestions: number }) => {
       const today = todayKey();
       if (prev.date !== today) return { date: today, definitions: 1, formulas: 0, quizQuestions: 0 };
       return { ...prev, definitions: prev.definitions + 1 };
     });
-  }, [checkAchievements, session]);
+  }, [checkAchievements, session, markDirty]);
 
   const markMastered = useCallback((key: string) => {
     setMastery(prev => {
@@ -258,7 +363,8 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
       setTimeout(() => checkAchievements(next, session), 0);
       return next;
     });
-  }, [checkAchievements, session]);
+    markDirty(key);
+  }, [checkAchievements, session, markDirty]);
 
   const setConfidence = useCallback((key: string, level: number) => {
     setMastery(prev => {
@@ -269,7 +375,8 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
       setTimeout(() => checkAchievements(next, session), 0);
       return next;
     });
-  }, [checkAchievements, session]);
+    markDirty(key);
+  }, [checkAchievements, session, markDirty]);
 
   const incrementQuiz = useCallback((correct: boolean) => {
     setSession(prev => {
@@ -347,7 +454,7 @@ export function MasteryProvider({ children }: { children: ReactNode }) {
       getDueItems, getNextReviewTime,
       unlockedAchievements, newAchievement, dismissAchievement,
       dailyGoal, setDailyGoal, dailyProgress,
-      studyHistory,
+      studyHistory, cloudSyncStatus,
     }}>
       {children}
     </MasteryContext.Provider>

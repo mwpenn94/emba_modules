@@ -35,7 +35,7 @@ const nodes: ConceptNode[] = [
   { id: 'breakeven', name: 'Breakeven Analysis', discipline: 'Accounting', description: 'Point where revenue equals total costs', fsApplication: 'Practice profitability analysis, new market entry decisions' },
   { id: 'ratio', name: 'Financial Ratios', discipline: 'Accounting', description: 'Liquidity, profitability, and efficiency metrics', fsApplication: 'Client business health assessment, AM Best carrier analysis' },
   { id: 'amortization', name: 'Amortization', discipline: 'Accounting', description: 'Systematic allocation of costs over time', fsApplication: 'Premium financing loan schedules, DAC accounting' },
-  { id: 'porter', name: "Porter's Five Forces", discipline: 'Strategy', description: 'Industry competitive analysis framework', fsApplication: 'Arizona market competitive analysis for WealthBridge expansion' },
+  { id: 'porter', name: "Porter's Five Forces", discipline: 'Strategy', description: 'Industry competitive analysis framework', fsApplication: 'Regional market competitive analysis for practice expansion' },
   { id: 'swot', name: 'SWOT Analysis', discipline: 'Strategy', description: 'Strengths, weaknesses, opportunities, threats', fsApplication: 'Practice strategic planning, annual business review' },
   { id: 'bcg', name: 'BCG Matrix', discipline: 'Strategy', description: 'Portfolio classification: stars, cash cows, dogs, question marks', fsApplication: 'Product line analysis, client segment prioritization' },
   { id: 'segmentation', name: 'Market Segmentation', discipline: 'Marketing', description: 'Dividing market into distinct customer groups', fsApplication: 'HNW vs. mass affluent targeting, business owner niche' },
@@ -229,7 +229,7 @@ export default function ConnectionMap() {
                     <div className="p-3 rounded-lg border border-border/50 bg-accent/30">
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <Building2 className="w-3 h-3 text-primary" />
-                        <span className="text-[10px] font-semibold">WealthBridge Application</span>
+                        <span className="text-[10px] font-semibold">FS Application</span>
                       </div>
                       <p className="text-[10px] text-muted-foreground leading-relaxed">{selectedNodeData.fsApplication}</p>
                     </div>

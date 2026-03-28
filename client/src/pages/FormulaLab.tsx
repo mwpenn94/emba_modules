@@ -49,7 +49,7 @@ const calculators: CalculatorDef[] = [
     icon: TrendingUp,
     color: 'var(--chart-1)',
     description: 'Calculate the present value of future cash flows minus the initial investment.',
-    fsContext: 'At WealthBridge, NPV analysis helps evaluate premium financing proposals, comparing the present value of policy benefits against financing costs over the projection period.',
+    fsContext: 'In financial services, NPV analysis helps evaluate premium financing proposals, comparing the present value of policy benefits against financing costs over the projection period.',
     inputs: [
       { key: 'initial', label: 'Initial Investment', unit: '$', defaultValue: 100000, min: 0, step: 10000 },
       { key: 'rate', label: 'Discount Rate', unit: '%', defaultValue: 10, min: 0, max: 50, step: 0.5 },
@@ -124,7 +124,7 @@ const calculators: CalculatorDef[] = [
     icon: BarChart3,
     color: 'var(--chart-3)',
     description: 'Find the sales volume where total revenue equals total costs.',
-    fsContext: 'For WealthBridge practice planning: how many clients or policies are needed to cover fixed costs (office, staff, licensing) before generating profit.',
+    fsContext: 'For practice planning: how many clients or policies are needed to cover fixed costs (office, staff, licensing) before generating profit.',
     inputs: [
       { key: 'fixedCosts', label: 'Fixed Costs', unit: '$', defaultValue: 120000, min: 0, step: 10000 },
       { key: 'pricePerUnit', label: 'Revenue per Unit', unit: '$', defaultValue: 5000, min: 1, step: 500 },
@@ -191,7 +191,7 @@ const calculators: CalculatorDef[] = [
     icon: Building2,
     color: 'var(--chart-5)',
     description: 'Evaluate premium financing feasibility: policy crediting rate vs. borrowing cost spread.',
-    fsContext: 'Core WealthBridge product: clients borrow to fund large IUL policies. The spread between policy crediting rate and loan rate determines if the arrangement creates value.',
+    fsContext: 'A key financial services product: clients borrow to fund large IUL policies. The spread between policy crediting rate and loan rate determines if the arrangement creates value.',
     inputs: [
       { key: 'premium', label: 'Annual Premium', unit: '$', defaultValue: 250000, min: 0, step: 25000 },
       { key: 'years', label: 'Financing Period', unit: 'years', defaultValue: 10, min: 1, max: 30, step: 1 },
@@ -321,7 +321,7 @@ export default function FormulaLab() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>Choose a Calculator</h2>
-                <p className="text-sm text-muted-foreground">Interactive financial calculators with step-by-step breakdowns and WealthBridge applications</p>
+                <p className="text-sm text-muted-foreground">Interactive financial calculators with step-by-step breakdowns and financial services applications</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {calculators.map((c, i) => (
@@ -448,7 +448,7 @@ export default function FormulaLab() {
                     className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <Building2 className="w-3.5 h-3.5" style={{ color: 'var(--discipline-operations)' }} />
-                    WealthBridge Application
+                    FS Application
                     <ChevronRight className={`w-3 h-3 transition-transform ${showFS ? 'rotate-90' : ''}`} />
                   </button>
                   <AnimatePresence>
