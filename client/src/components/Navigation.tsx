@@ -13,7 +13,7 @@ import {
   BookOpen, FlaskConical, Brain, Network, Briefcase,
   Search, Home, ChevronLeft, ChevronRight, Flame, Clock,
   GraduationCap, Menu, X, Calculator, GitBranch, Map, Shield,
-  Trophy, PlayCircle, Download, Sparkles, Headphones
+  Trophy, PlayCircle, Download, Sparkles, Headphones, BarChart3, Users
 } from 'lucide-react';
 import { useMastery } from '@/contexts/MasteryContext';
 
@@ -47,6 +47,8 @@ const NAV_SECTIONS = [
       { path: '/hands-free', label: 'Hands-Free', icon: Headphones },
       { path: '/achievements', label: 'Achievements', icon: Trophy },
       { path: '/progress', label: 'Progress Export', icon: Download },
+      { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+      { path: '/groups', label: 'Study Groups', icon: Users },
     ]
   }
 ];

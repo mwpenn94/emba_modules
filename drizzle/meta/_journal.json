@@ -15,6 +15,13 @@
       "when": 1774727363899,
       "tag": "0001_early_warstar",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774728986374,
+      "tag": "0002_deep_sasquatch",
+      "breakpoints": true
     }
   ]
 }

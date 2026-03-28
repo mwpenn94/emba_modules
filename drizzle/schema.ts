@@ -101,3 +101,85 @@ export const aiQuizQuestions = mysqlTable("ai_quiz_questions", {
 
 export type AiQuizQuestionRow = typeof aiQuizQuestions.$inferSelect;
 export type InsertAiQuizQuestion = typeof aiQuizQuestions.$inferInsert;
+
+/**
+ * Study groups — collaborative study spaces.
+ */
+export const studyGroups = mysqlTable("study_groups", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  inviteCode: varchar("inviteCode", { length: 32 }).notNull().unique(),
+  ownerId: int("ownerId").notNull(),
+  isPublic: boolean("isPublic").default(true).notNull(),
+  maxMembers: int("maxMembers").default(50).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudyGroupRow = typeof studyGroups.$inferSelect;
+export type InsertStudyGroup = typeof studyGroups.$inferInsert;
+
+/**
+ * Group members — tracks membership in study groups.
+ */
+export const groupMembers = mysqlTable("group_members", {
+  id: int("id").autoincrement().primaryKey(),
+  groupId: int("groupId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("memberRole", ["owner", "admin", "member"]).default("member").notNull(),
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+});
+
+export type GroupMemberRow = typeof groupMembers.$inferSelect;
+export type InsertGroupMember = typeof groupMembers.$inferInsert;
+
+/**
+ * Shared quizzes — quiz sets shared within a group.
+ */
+export const sharedQuizzes = mysqlTable("shared_quizzes", {
+  id: int("id").autoincrement().primaryKey(),
+  groupId: int("groupId").notNull(),
+  creatorId: int("creatorId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  discipline: varchar("discipline", { length: 255 }).notNull(),
+  difficulty: varchar("difficulty", { length: 32 }).default("medium").notNull(),
+  questionIds: json("questionIds").notNull(), // array of aiQuizQuestions IDs
+  timeLimit: int("timeLimit"), // seconds, null = no limit
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SharedQuizRow = typeof sharedQuizzes.$inferSelect;
+export type InsertSharedQuiz = typeof sharedQuizzes.$inferInsert;
+
+/**
+ * Quiz challenges — timed competitions between group members.
+ */
+export const quizChallenges = mysqlTable("quiz_challenges", {
+  id: int("id").autoincrement().primaryKey(),
+  sharedQuizId: int("sharedQuizId").notNull(),
+  groupId: int("groupId").notNull(),
+  challengerId: int("challengerId").notNull(),
+  status: mysqlEnum("challengeStatus", ["open", "active", "completed"]).default("open").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  endsAt: timestamp("endsAt"),
+});
+
+export type QuizChallengeRow = typeof quizChallenges.$inferSelect;
+export type InsertQuizChallenge = typeof quizChallenges.$inferInsert;
+
+/**
+ * Challenge results — individual scores for challenge participants.
+ */
+export const challengeResults = mysqlTable("challenge_results", {
+  id: int("id").autoincrement().primaryKey(),
+  challengeId: int("challengeId").notNull(),
+  userId: int("userId").notNull(),
+  score: int("score").default(0).notNull(),
+  totalQuestions: int("totalQuestions").default(0).notNull(),
+  completedAt: timestamp("completedAt"),
+  timeTaken: int("timeTaken"), // seconds
+});
+
+export type ChallengeResultRow = typeof challengeResults.$inferSelect;
+export type InsertChallengeResult = typeof challengeResults.$inferInsert;

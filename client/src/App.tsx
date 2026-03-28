@@ -5,6 +5,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { MasteryProvider } from "./contexts/MasteryContext";
 import AchievementToast from "./components/AchievementToast";
+import OfflineBanner from "./components/OfflineBanner";
 import { lazy, Suspense } from "react";
 
 /* ── Lazy-loaded pages for code-splitting ── */
@@ -26,6 +27,8 @@ const ProgressExport = lazy(() => import("./pages/ProgressExport"));
 const DisciplineDeepDive = lazy(() => import("./pages/DisciplineDeepDive"));
 const AIQuiz = lazy(() => import("./pages/AIQuiz"));
 const HandsFreeStudy = lazy(() => import("./pages/HandsFreeStudy"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const StudyGroups = lazy(() => import("./pages/StudyGroups"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /* ── Loading fallback ── */
@@ -54,6 +57,8 @@ function Router() {
         <Route path="/ai-quiz" component={AIQuiz} />
         <Route path="/hands-free" component={HandsFreeStudy} />
         <Route path="/hands-free/:slug" component={HandsFreeStudy} />
+        <Route path="/analytics" component={Analytics} />
+        <Route path="/groups" component={StudyGroups} />
         <Route path="/formulas" component={FormulasPage} />
         <Route path="/quiz" component={QuizPage} />
         <Route path="/connections" component={ConnectionsPage} />
@@ -82,6 +87,7 @@ function App() {
             </a>
             <Toaster />
             <AchievementToast />
+            <OfflineBanner />
             <main id="main-content" role="main">
               <Router />
             </main>

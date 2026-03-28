@@ -90,3 +90,27 @@
 - [x] Remove Quantic/WealthBridge/National Life from ExamSimulator, FormulaLab, CaseSimulator, FSToolkit, ConnectionMap
 - [x] Replace all branded labels with generic FS Application terminology
 - [x] Update to generic EMBA Knowledge Explorer branding
+
+## Study Analytics Dashboard
+- [x] Analytics page with study time trends (Area chart), mastery velocity (Bar chart), SRS effectiveness (Pie chart)
+- [x] Session history table with discipline, duration, items studied/mastered
+- [x] Summary stat cards: total study time, mastery rate, streak, items due
+- [x] Uses local mastery data + cloud session data
+- [x] Navigation link and Home dashboard entry
+
+## Collaborative Study Groups
+- [x] Database schema: study_groups, group_members, shared_quizzes, quiz_challenges tables
+- [x] tRPC procedures for group CRUD, join via invite code, quiz sharing, challenge creation, result submission, leaderboard
+- [x] Study Groups listing page with create/join functionality and invite code system
+- [x] Group detail page with shared quizzes, member list, and challenge leaderboard
+- [x] 12 vitest tests for auth protection and input validation
+- [x] Navigation link and Home dashboard entry
+
+## Offline Mode
+- [x] Service Worker (sw.js) with cache-first for static assets, network-first for API
+- [x] Content data caching via postMessage (CACHE_CONTENT_DATA, CACHE_MASTERY_DATA)
+- [x] SPA fallback: navigation requests serve cached index.html when offline
+- [x] useOffline hook for SW registration, offline detection, and update management
+- [x] OfflineBanner component: offline indicator + update-available prompt
+- [x] PWA manifest.json with standalone display mode
+- [x] Apple mobile web app meta tags for iOS support
