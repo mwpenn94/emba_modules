@@ -201,3 +201,36 @@ export const bookmarks = mysqlTable("bookmarks", {
 
 export type BookmarkRow = typeof bookmarks.$inferSelect;
 export type InsertBookmark = typeof bookmarks.$inferInsert;
+
+/**
+ * Study playlists — user-curated ordered lists of content items.
+ */
+export const playlists = mysqlTable("playlists", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  isPublic: boolean("isPublic").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PlaylistRow = typeof playlists.$inferSelect;
+export type InsertPlaylist = typeof playlists.$inferInsert;
+
+/**
+ * Playlist items — ordered content items within a playlist.
+ */
+export const playlistItems = mysqlTable("playlist_items", {
+  id: int("id").autoincrement().primaryKey(),
+  playlistId: int("playlistId").notNull(),
+  contentType: varchar("contentType", { length: 64 }).notNull(),
+  contentId: varchar("contentId", { length: 255 }).notNull(),
+  contentTitle: varchar("contentTitle", { length: 512 }).notNull(),
+  discipline: varchar("discipline", { length: 255 }),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PlaylistItemRow = typeof playlistItems.$inferSelect;
+export type InsertPlaylistItem = typeof playlistItems.$inferInsert;

@@ -7,6 +7,7 @@ import { MasteryProvider } from "./contexts/MasteryContext";
 import AchievementToast from "./components/AchievementToast";
 import OfflineBanner from "./components/OfflineBanner";
 import OnboardingTour, { useOnboardingTour } from "./components/OnboardingTour";
+import PomodoroTimer from "./components/PomodoroTimer";
 import { lazy, Suspense } from "react";
 
 /* ── Lazy-loaded pages for code-splitting ── */
@@ -31,6 +32,7 @@ const HandsFreeStudy = lazy(() => import("./pages/HandsFreeStudy"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const StudyGroups = lazy(() => import("./pages/StudyGroups"));
 const Bookmarks = lazy(() => import("./pages/Bookmarks"));
+const Playlists = lazy(() => import("./pages/Playlists"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /* ── Loading fallback ── */
@@ -62,6 +64,7 @@ function Router() {
         <Route path="/analytics" component={Analytics} />
         <Route path="/groups" component={StudyGroups} />
         <Route path="/bookmarks" component={Bookmarks} />
+        <Route path="/playlists" component={Playlists} />
         <Route path="/formulas" component={FormulasPage} />
         <Route path="/quiz" component={QuizPage} />
         <Route path="/connections" component={ConnectionsPage} />
@@ -87,7 +90,7 @@ function OnboardingManager() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="dark">
+      <ThemeProvider defaultTheme="dark" switchable>
         <MasteryProvider>
           <TooltipProvider>
             <a href="#main-content" className="skip-to-content">
@@ -97,6 +100,7 @@ function App() {
             <AchievementToast />
             <OfflineBanner />
             <OnboardingManager />
+            <PomodoroTimer />
             <main id="main-content" role="main">
               <Router />
             </main>

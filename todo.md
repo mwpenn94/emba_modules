@@ -138,3 +138,27 @@
 - [x] Bookmarks page with search, filter by type/discipline, and note editing
 - [x] Navigation link in sidebar
 - [x] 7 vitest tests for auth protection and input validation
+
+## Custom Study Playlists
+- [x] Database schema: playlists and playlist_items tables
+- [x] tRPC procedures: CRUD, add/remove/reorder items, public discovery
+- [x] Playlists page with create, browse, study mode, and item management
+- [x] AddItemModal with type tabs, search, and playlist selector
+- [x] Study mode with flashcard-style reveal, progress bar, navigation
+- [x] Public/private toggle and sharing support
+- [x] Navigation link in sidebar and route in App.tsx
+
+## Pomodoro Timer
+- [x] PomodoroTimer floating widget with SVG progress ring
+- [x] Configurable focus/break intervals (25/5 default, custom 1-60 min)
+- [x] Web Audio API chimes for session transitions
+- [x] Session counter and total focus time tracking
+- [x] Auto-break and streak tracking via MasteryContext
+- [x] Minimize/expand toggle, keyboard shortcut (P), fixed bottom-right position
+
+## Dark/Light Theme Toggle
+- [x] Added .dark CSS class with warm charcoal dark theme variables
+- [x] Converted :root to warm cream light theme with adjusted discipline colors
+- [x] Enabled switchable prop on ThemeProvider in App.tsx
+- [x] Sun/Moon toggle button in sidebar footer (desktop) and mobile header
+- [x] Persisted in localStorage via ThemeContext

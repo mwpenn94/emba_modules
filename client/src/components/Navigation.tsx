@@ -13,10 +13,11 @@ import {
   BookOpen, FlaskConical, Brain, Network, Briefcase,
   Search, Home, ChevronLeft, ChevronRight, Flame, Clock,
   GraduationCap, Menu, X, Calculator, GitBranch, Map, Shield,
-  Trophy, PlayCircle, Download, Sparkles, Headphones, BarChart3, Users
+  Trophy, PlayCircle, Download, Sparkles, Headphones, BarChart3, Users,
+  Bookmark, ListMusic, Sun, Moon
 } from 'lucide-react';
 import { useMastery } from '@/contexts/MasteryContext';
-import { Bookmark } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 import NotificationCenter from './NotificationCenter';
 
 const NAV_SECTIONS = [
@@ -52,6 +53,7 @@ const NAV_SECTIONS = [
       { path: '/analytics', label: 'Analytics', icon: BarChart3 },
       { path: '/groups', label: 'Study Groups', icon: Users },
       { path: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
+      { path: '/playlists', label: 'Playlists', icon: ListMusic },
     ]
   }
 ];
@@ -61,6 +63,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { session, totalStudyTime, getStudiedCount, getMasteredCount } = useMastery();
+  const { theme, toggleTheme, switchable } = useTheme();
 
   const studied = getStudiedCount();
   const mastered = getMasteredCount();
@@ -198,9 +201,21 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         </AnimatePresence>
       </div>
 
-      {/* Notification Bell + Collapse Toggle */}
+      {/* Notification Bell + Theme Toggle + Collapse Toggle */}
       <div className="flex items-center justify-between px-3 py-2 border-t border-border">
-        <NotificationCenter />
+        <div className="flex items-center gap-1">
+          <NotificationCenter />
+          {switchable && toggleTheme && (
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+          )}
+        </div>
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="p-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -223,14 +238,25 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
           </div>
           <span className="text-sm font-semibold" style={{ fontFamily: 'var(--font-display)' }}>EMBA Explorer</span>
         </div>
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2"
-          aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          aria-expanded={mobileOpen}
-        >
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-1">
+          {switchable && toggleTheme && (
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+          )}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="p-2"
+            aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile nav overlay */}

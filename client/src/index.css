@@ -47,6 +47,58 @@
 
 :root {
   --radius: 0.5rem;
+  /* Light theme (default for :root, overridden by .dark) */
+  --background: oklch(0.97 0.003 75);
+  --foreground: oklch(0.18 0.005 60);
+  --card: oklch(0.99 0.002 75);
+  --card-foreground: oklch(0.18 0.005 60);
+  --popover: oklch(0.99 0.002 75);
+  --popover-foreground: oklch(0.18 0.005 60);
+  --primary: oklch(0.55 0.10 75);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.93 0.005 75);
+  --secondary-foreground: oklch(0.30 0.01 60);
+  --muted: oklch(0.94 0.004 75);
+  --muted-foreground: oklch(0.50 0.02 60);
+  --accent: oklch(0.92 0.006 75);
+  --accent-foreground: oklch(0.18 0.005 60);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.88 0.006 75);
+  --input: oklch(0.90 0.005 75);
+  --ring: oklch(0.55 0.10 75);
+  --chart-1: oklch(0.55 0.12 145);
+  --chart-2: oklch(0.55 0.10 350);
+  --chart-3: oklch(0.50 0.10 250);
+  --chart-4: oklch(0.55 0.10 75);
+  --chart-5: oklch(0.55 0.12 30);
+  --sidebar: oklch(0.95 0.004 75);
+  --sidebar-foreground: oklch(0.18 0.005 60);
+  --sidebar-primary: oklch(0.55 0.10 75);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.92 0.005 75);
+  --sidebar-accent-foreground: oklch(0.18 0.005 60);
+  --sidebar-border: oklch(0.88 0.005 75);
+  --sidebar-ring: oklch(0.55 0.10 75);
+
+  /* Discipline colors (shared) */
+  --discipline-accounting: oklch(0.55 0.12 145);
+  --discipline-markets: oklch(0.50 0.10 250);
+  --discipline-finance: oklch(0.55 0.10 75);
+  --discipline-strategy: oklch(0.55 0.12 30);
+  --discipline-leadership: oklch(0.55 0.10 350);
+  --discipline-data: oklch(0.50 0.14 280);
+  --discipline-marketing: oklch(0.55 0.10 20);
+  --discipline-operations: oklch(0.52 0.10 170);
+  --discipline-law: oklch(0.48 0.08 60);
+  --discipline-communications: oklch(0.55 0.08 300);
+  --discipline-entrepreneurship: oklch(0.55 0.12 100);
+  --discipline-blockchain: oklch(0.48 0.14 260);
+  --discipline-ai: oklch(0.52 0.16 200);
+  --discipline-software: oklch(0.50 0.12 230);
+}
+
+.dark {
   --background: oklch(0.18 0.005 60);
   --foreground: oklch(0.92 0.01 75);
   --card: oklch(0.22 0.006 60);
@@ -80,7 +132,7 @@
   --sidebar-border: oklch(0.28 0.006 60);
   --sidebar-ring: oklch(0.78 0.08 75);
 
-  /* Discipline colors */
+  /* Discipline colors (dark) */
   --discipline-accounting: oklch(0.72 0.10 145);
   --discipline-markets: oklch(0.65 0.08 250);
   --discipline-finance: oklch(0.78 0.08 75);

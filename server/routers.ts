@@ -41,6 +41,19 @@ import {
   submitChallengeResult,
   getChallengeResults,
 } from "./groups-db";
+import {
+  createPlaylist,
+  getUserPlaylists,
+  getPlaylistById,
+  getPublicPlaylists,
+  updatePlaylist,
+  deletePlaylist,
+  getPlaylistItems,
+  addPlaylistItem,
+  removePlaylistItem,
+  reorderPlaylistItems,
+  getPlaylistItemCount,
+} from "./playlists-db";
 import { nanoid } from "nanoid";
 import { TRPCError } from "@trpc/server";
 
@@ -375,6 +388,121 @@ export const appRouter = router({
       .input(z.object({ bookmarkId: z.number() }))
       .mutation(async ({ ctx, input }) => {
         await deleteBookmark(input.bookmarkId, ctx.user.id);
+        return { success: true };
+      }),
+  }),
+
+  /* ── Custom Study Playlists ── */
+  playlists: router({
+    /** List user's playlists */
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return getUserPlaylists(ctx.user.id);
+    }),
+
+    /** Discover public playlists */
+    discover: protectedProcedure
+      .input(z.object({ limit: z.number().min(1).max(50).default(20) }).optional())
+      .query(async ({ input }) => {
+        return getPublicPlaylists(input?.limit ?? 20);
+      }),
+
+    /** Get playlist with items */
+    getById: protectedProcedure
+      .input(z.object({ playlistId: z.number() }))
+      .query(async ({ input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist) throw new TRPCError({ code: 'NOT_FOUND', message: 'Playlist not found' });
+        const items = await getPlaylistItems(input.playlistId);
+        return { playlist, items };
+      }),
+
+    /** Create a new playlist */
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1).max(255),
+        description: z.string().max(1000).optional(),
+        isPublic: z.boolean().default(false),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await createPlaylist({
+          userId: ctx.user.id,
+          name: input.name,
+          description: input.description ?? null,
+          isPublic: input.isPublic,
+        });
+        return { id };
+      }),
+
+    /** Update a playlist */
+    update: protectedProcedure
+      .input(z.object({
+        playlistId: z.number(),
+        name: z.string().min(1).max(255).optional(),
+        description: z.string().max(1000).optional(),
+        isPublic: z.boolean().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) throw new TRPCError({ code: 'FORBIDDEN' });
+        const { playlistId, ...data } = input;
+        await updatePlaylist(playlistId, data);
+        return { success: true };
+      }),
+
+    /** Delete a playlist */
+    delete: protectedProcedure
+      .input(z.object({ playlistId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) throw new TRPCError({ code: 'FORBIDDEN' });
+        await deletePlaylist(input.playlistId);
+        return { success: true };
+      }),
+
+    /** Add an item to a playlist */
+    addItem: protectedProcedure
+      .input(z.object({
+        playlistId: z.number(),
+        contentType: z.string(),
+        contentId: z.string(),
+        contentTitle: z.string(),
+        discipline: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) throw new TRPCError({ code: 'FORBIDDEN' });
+        const count = await getPlaylistItemCount(input.playlistId);
+        const id = await addPlaylistItem({
+          playlistId: input.playlistId,
+          contentType: input.contentType,
+          contentId: input.contentId,
+          contentTitle: input.contentTitle,
+          discipline: input.discipline ?? null,
+          sortOrder: count,
+        });
+        return { id };
+      }),
+
+    /** Remove an item from a playlist */
+    removeItem: protectedProcedure
+      .input(z.object({ itemId: z.number(), playlistId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) throw new TRPCError({ code: 'FORBIDDEN' });
+        await removePlaylistItem(input.itemId);
+        return { success: true };
+      }),
+
+    /** Reorder items in a playlist */
+    reorder: protectedProcedure
+      .input(z.object({
+        playlistId: z.number(),
+        itemIds: z.array(z.number()),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const playlist = await getPlaylistById(input.playlistId);
+        if (!playlist || playlist.userId !== ctx.user.id) throw new TRPCError({ code: 'FORBIDDEN' });
+        await reorderPlaylistItems(input.playlistId, input.itemIds);
         return { success: true };
       }),
   }),
