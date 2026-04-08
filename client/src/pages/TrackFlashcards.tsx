@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useTrack } from '@/hooks/useTracks';
 import { useMastery } from '@/contexts/MasteryContext';
+import BookmarkButton from '@/components/BookmarkButton';
 import { TRACK_META, type TrackFlashcard } from '@/data/types';
 import NotFound from './NotFound';
 
@@ -275,7 +276,16 @@ export default function TrackFlashcards() {
                   />
                 </div>
 
-                <div className="p-8 rounded-2xl border border-border bg-card min-h-[240px] flex flex-col items-center justify-center text-center">
+                <div className="relative p-8 rounded-2xl border border-border bg-card min-h-[240px] flex flex-col items-center justify-center text-center">
+                  <div className="absolute top-3 right-3">
+                    <BookmarkButton
+                      contentType="track_card"
+                      contentId={`${track.key}-${current.id}`}
+                      contentTitle={`${track.name}: ${current.term}`}
+                      discipline={track.name}
+                      size="md"
+                    />
+                  </div>
                   <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-3">
                     {current.chapter || 'Term'}
                   </p>

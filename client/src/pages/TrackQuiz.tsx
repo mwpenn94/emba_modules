@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useTrack } from '@/hooks/useTracks';
 import { useMastery } from '@/contexts/MasteryContext';
+import BookmarkButton from '@/components/BookmarkButton';
 import { TRACK_META, type TrackPracticeQuestion } from '@/data/types';
 import NotFound from './NotFound';
 
@@ -368,13 +369,22 @@ export default function TrackQuiz() {
                           : 'border-destructive bg-destructive/10'
                       }`}
                     >
-                      <p className="text-sm font-semibold mb-1">
-                        {selected === current.correct
-                          ? 'Correct.'
-                          : `Answer: ${String.fromCharCode(
-                              65 + current.correct,
-                            )} — ${current.options[current.correct]}`}
-                      </p>
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <p className="text-sm font-semibold">
+                          {selected === current.correct
+                            ? 'Correct.'
+                            : `Answer: ${String.fromCharCode(
+                                65 + current.correct,
+                              )} — ${current.options[current.correct]}`}
+                        </p>
+                        <BookmarkButton
+                          contentType="track_question"
+                          contentId={`${track.key}-${current.number}`}
+                          contentTitle={`${track.name} Q${current.number}: ${current.prompt.slice(0, 80)}`}
+                          discipline={track.name}
+                          size="sm"
+                        />
+                      </div>
                       {current.explanation && (
                         <p className="text-xs text-foreground/85">
                           {current.explanation}

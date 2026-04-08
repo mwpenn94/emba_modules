@@ -206,3 +206,50 @@
 - [x] Delete individual entries and clear all history
 - [x] Link from SelfDiscovery card to history page
 - [x] Navigation sidebar link to Discovery Log
+
+## WealthBridge Exam & Learning Tracks (12 licenses)
+Sourced from `WealthBridgeLibraryv11_QA.zip` (DOCX manuals + flashcards) and the
+EMBA master manual. The pipeline (`scripts/build_tracks_data.py`) parses the raw
+documents into `client/src/data/tracks_data.json` (12 tracks · 68 chapters ·
+187 subsections · 104 practice questions · 593 flashcards · ~60K words).
+
+### Pipeline
+- [x] Pure-stdlib DOCX parser (`zipfile` + `xml.etree`) — no extra deps
+- [x] Heading1/2/3 + table-aware body walker
+- [x] Practice exam extractor (numbered headings + glued A/B/C/D options + MASTERY CHECK answer in cell)
+- [x] Position-based option splitter (handles "investment adviceB)" run-ons)
+- [x] Single-cell callout flattening (SCENARIO / EXAM TIP / COMMON TRAP)
+- [x] Auto-promoted "Appendix:" chapters when leaving practice mode
+- [x] Consecutive practice Heading1 merging (SIE duplicate fix)
+- [x] Empty study chapter pruning
+- [x] Exam-overview fallback (Exam Overview / Exam Format / How to Use / 2-col table scan)
+- [x] Master manual + verified tax reference passthrough
+
+### Frontend
+- [x] `client/src/data/types.ts`: `ExamTrack` / `TrackChapter` / `TrackPracticeQuestion` / `TrackFlashcard` types + `TRACK_META` display config
+- [x] `client/src/hooks/useTracks.ts`: typed access layer with key + category lookups
+- [x] `client/src/pages/TracksIndex.tsx`: category-grouped landing page with per-track progress bars + Cross-Track Reference (tax + master manual)
+- [x] `client/src/pages/TrackPage.tsx`: chapter sidebar (mobile `<details>`, desktop sticky) + main reader + exam-overview rail
+- [x] `client/src/pages/TrackQuiz.tsx`: shuffle-able practice exam runner with A/B/C/D keyboard shortcuts + per-answer mastery wiring + bookmark button
+- [x] `client/src/pages/TrackFlashcards.tsx`: term/definition cards with chapter filter + reveal/rate flow + per-card mastery wiring + bookmark button
+- [x] `client/src/App.tsx`: 4 new lazy routes (`/tracks`, `/track/:key`, `/track/:key/quiz`, `/track/:key/flashcards`)
+- [x] `client/src/components/Navigation.tsx`: new "Exam Tracks" sidebar section (Library icon)
+- [x] `client/src/pages/Home.tsx`: new "Exam & Learning Tracks" dashboard section
+- [x] `client/src/pages/SearchPage.tsx`: indexes track sections / flashcards / practice questions with per-track caps + new filter pills
+- [x] `client/src/pages/Bookmarks.tsx`: `CONTENT_TYPE_META` extended with `track_card`, `track_question`, `track_section` icons/labels
+- [x] BookmarkButton wired into TrackFlashcards (top-right of card), TrackQuiz (next to answer reveal), TrackPage subsections (visible on hover)
+- [x] Mastery namespacing — `track-${key}-card-${id}` and `track-${key}-q-${number}` keys piggyback on existing localStorage + cloud sync
+
+### Tests
+- [x] `server/tracks.test.ts` — 9 invariants: schema version, all 12 tracks, every track has chapters + ≥5 practice questions, every question has 4 options + valid correct index, every flashcard non-empty, no empty subsections, aggregate stats consistent, every track key URL-safe.
+
+### Universal Holistic Optimization (9 passes, converged)
+- [x] Pass 1 Landscape — callout flattening, exam-overview fallback, "Appendix:" prefixes, merged consecutive practice headings, dropped empty chapters
+- [x] Pass 2 Depth — mastery wiring, per-track progress bars
+- [x] Pass 3 Adversarial — caught silent regression dropping body paragraphs in SIE-style manuals (saw_h1 gate), removed phantom practice dividers, added invariant tests
+- [x] Pass 4 Synthesis — verified single source of truth + cohesion across consumers
+- [x] Pass 5 Polish — TrackPage chapter sidebar collapses to `<details>` on mobile
+- [x] Pass 6 Convergence audit — 0 issues found, 0 actions
+- [x] Pass 7 Deep sweep — bookmark integration across all 3 track pages + Bookmarks page meta
+- [x] Pass 8 Convergence audit — 0 issues found, 0 actions
+- [x] Pass 9 Convergence audit — 0 issues found, 0 actions (2-pass streak confirmed)

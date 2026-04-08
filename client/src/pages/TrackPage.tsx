@@ -21,6 +21,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { useTrack } from '@/hooks/useTracks';
+import BookmarkButton from '@/components/BookmarkButton';
 import { TRACK_META } from '@/data/types';
 import NotFound from './NotFound';
 
@@ -282,19 +283,30 @@ export default function TrackPage() {
                 ))}
 
                 {activeChapter.subsections.map((sub) => (
-                  <section key={sub.id} className="mt-6">
-                    {sub.level === 2 ? (
-                      <h3
-                        className="text-lg font-semibold mb-2"
-                        style={{ fontFamily: 'var(--font-display)' }}
-                      >
-                        {sub.title}
-                      </h3>
-                    ) : (
-                      <h4 className="text-base font-semibold mb-2 text-primary">
-                        {sub.title}
-                      </h4>
-                    )}
+                  <section key={sub.id} className="mt-6 group/section">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      {sub.level === 2 ? (
+                        <h3
+                          className="text-lg font-semibold"
+                          style={{ fontFamily: 'var(--font-display)' }}
+                        >
+                          {sub.title}
+                        </h3>
+                      ) : (
+                        <h4 className="text-base font-semibold text-primary">
+                          {sub.title}
+                        </h4>
+                      )}
+                      <div className="opacity-0 group-hover/section:opacity-100 transition-opacity">
+                        <BookmarkButton
+                          contentType="track_section"
+                          contentId={`${track.key}-${activeChapter.id}-${sub.id}`}
+                          contentTitle={`${track.name}: ${sub.title}`}
+                          discipline={track.name}
+                          size="sm"
+                        />
+                      </div>
+                    </div>
                     {sub.paragraphs.map((p, i) => (
                       <p
                         key={`sp-${sub.id}-${i}`}
