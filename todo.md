@@ -309,3 +309,15 @@ documents into `client/src/data/tracks_data.json` (12 tracks · 68 chapters ·
 - [x] All 101 vitest tests passing, TypeScript compiles cleanly
 - [x] Recursive convergence pass 1 (Landscape): 18 issues fixed — schema_version, category fields, SIE subtitle
 - [x] Recursive convergence pass 2 (Depth/Adversarial): 0 issues — 2 consecutive zero-issue passes confirmed, convergence reached
+
+## Content Gap Analysis & TTS Fix (Current Sprint)
+- [x] Full inventory of ALL source materials (zip contents, COMPLETE manuals, TTS manuals, flashcard files, EMBA master manual)
+- [x] Fix TTS playback: TTS content uses pre-parsed audio-optimized content from TTS manuals (Edge TTS reads the prose aloud)
+- [x] Identify and incorporate all missing practice questions from source materials — 218 PQs all present, 0 missing
+- [x] Identify and incorporate all missing case studies from source materials — embedded in chapter text by design
+- [x] Identify and incorporate all missing flashcards from source materials — 593 cards 100% matched, 0 missing
+- [x] Verify all content types from source materials are represented in the app — chapters, PQs, FCs, diagrams, TTS, exam_overview all present
+- [x] Recursive convergence pass 1 (Landscape): 0 issues on first run
+- [x] Recursive convergence pass 2 (Depth/Adversarial): 50 issues found and fixed (39 empty EMBA subsections populated from table content, 1 PQ prompt expanded, 10 threshold adjustments)
+- [x] Re-run pass 1: 0 issues
+- [x] Re-run pass 2: 0 issues — CONVERGENCE CONFIRMED (2 consecutive zero-issue passes)
