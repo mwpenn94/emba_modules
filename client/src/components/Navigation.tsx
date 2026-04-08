@@ -14,7 +14,7 @@ import {
   Search, Home, ChevronLeft, ChevronRight, Flame, Clock,
   GraduationCap, Menu, X, Calculator, GitBranch, Map, Shield,
   Trophy, PlayCircle, Download, Sparkles, Headphones, BarChart3, Users,
-  Bookmark, ListMusic, Sun, Moon
+  Bookmark, ListMusic, Sun, Moon, Library
 } from 'lucide-react';
 import { useMastery } from '@/contexts/MasteryContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -49,6 +49,12 @@ const NAV_SECTIONS: NavSection[] = [
       { path: '/case-simulator', label: 'Case Simulator', icon: GitBranch },
       { path: '/connection-map', label: 'Connection Map', icon: Map },
       { path: '/fs-toolkit', label: 'FS Toolkit', icon: Shield, minRole: 'advisor' },
+    ]
+  },
+  {
+    label: 'Exam Tracks',
+    items: [
+      { path: '/tracks', label: 'Track Library', icon: Library },
     ]
   },
   {
