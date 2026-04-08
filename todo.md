@@ -278,3 +278,17 @@ documents into `client/src/data/tracks_data.json` (12 tracks · 68 chapters ·
 - [x] Recursive convergence pass 2 (Depth): 124 single-row tables converted to paragraphs, category metadata added
 - [x] Recursive convergence pass 3 (Adversarial): 0 issues — all 14 checks pass
 - [x] Recursive convergence pass 4 (Synthesis): 0 issues — 2 consecutive zero-action passes confirmed, convergence reached
+
+## Full Content Incorporation (COMPLETE Manuals + Diagrams)
+- [x] Audit current tracks flashcard counts vs new flashcard files (12 tracks)
+- [x] Parse all 12 COMPLETE study manuals for enriched chapter content (v4 parser handling Format A + B)
+- [x] Upload 20 educational diagrams to CDN
+- [x] Map diagrams to 8 tracks (SIE:6, S7:2, S66:2, CFP:2, EP:2, LH:2, PC:2, GI:2)
+- [x] Replace/enrich track chapters with COMPLETE manual content (54 chapters, 256 subsections)
+- [x] Normalize chapter data to match TrackChapter interface (intro, subsections, tables)
+- [x] Add diagram gallery UI to TrackPage with expand/collapse
+- [x] Add TrackDiagram interface to types.ts and diagrams field to ExamTrack
+- [x] Recursive convergence pass 1 (Landscape): 32 issues fixed — 12 FC gaps, 20 broken PQs, 9 correct answers
+- [x] Recursive convergence pass 2 (Depth): 25 issues fixed — 9 FC dupes, 4 PQ dupes, 18 diagram descriptions
+- [x] Recursive convergence pass 3 (Adversarial): 6 issues fixed — PQ number sequencing
+- [x] Recursive convergence pass 4 (Synthesis): 0 issues — 2 consecutive zero-issue passes confirmed, convergence reached

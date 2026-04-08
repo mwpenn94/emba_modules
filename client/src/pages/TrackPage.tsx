@@ -23,7 +23,59 @@ import {
 import { useTrack } from '@/hooks/useTracks';
 import BookmarkButton from '@/components/BookmarkButton';
 import { TRACK_META } from '@/data/types';
+import type { TrackDiagram } from '@/data/types';
 import NotFound from './NotFound';
+
+function DiagramGallery({ diagrams, color }: { diagrams: TrackDiagram[]; color: string }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  if (!diagrams || diagrams.length === 0) return null;
+  return (
+    <div className="px-6 lg:px-10 py-4 border-b border-border bg-muted/20">
+      <div className="flex items-center gap-2 mb-3">
+        <svg className="w-4 h-4" style={{ color }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+        <h2 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">
+          Study Diagrams ({diagrams.length})
+        </h2>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {diagrams.map((d) => (
+          <button
+            key={d.id}
+            onClick={() => setExpanded(expanded === d.id ? null : d.id)}
+            className="group rounded-lg border border-border bg-card overflow-hidden hover:border-primary/30 transition-all"
+          >
+            <img
+              src={d.url}
+              alt={d.title}
+              className="w-full h-auto object-contain bg-white p-1"
+              loading="lazy"
+            />
+            <p className="text-[10px] font-semibold text-center py-1.5 px-2 truncate text-muted-foreground group-hover:text-foreground transition-colors">
+              {d.title}
+            </p>
+          </button>
+        ))}
+      </div>
+      {expanded && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="mt-3 rounded-lg border border-border bg-card p-4"
+        >
+          <img
+            src={diagrams.find(d => d.id === expanded)?.url}
+            alt={diagrams.find(d => d.id === expanded)?.title}
+            className="max-w-full mx-auto rounded-lg bg-white p-2"
+          />
+          <p className="text-center text-sm font-semibold mt-2">
+            {diagrams.find(d => d.id === expanded)?.title}
+          </p>
+        </motion.div>
+      )}
+    </div>
+  );
+}
 
 function TrackTable({ rows }: { rows: string[][] }) {
   if (!rows || rows.length === 0) return null;
@@ -159,6 +211,9 @@ export default function TrackPage() {
             </span>
           </div>
         </div>
+
+        {/* Diagram gallery */}
+        <DiagramGallery diagrams={track.diagrams ?? []} color={meta.color} />
 
         {/* Exam overview rail */}
         {track.exam_overview && track.exam_overview.length > 0 && (

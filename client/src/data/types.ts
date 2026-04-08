@@ -209,6 +209,12 @@ export interface TrackCounts {
   flashcards: number;
 }
 
+export interface TrackDiagram {
+  id: string;
+  title: string;
+  url: string;
+}
+
 export interface ExamTrack {
   key: string;
   name: string;
@@ -219,6 +225,7 @@ export interface ExamTrack {
   practice_questions: TrackPracticeQuestion[];
   exam_overview: string[][];
   flashcards: TrackFlashcard[];
+  diagrams: TrackDiagram[];
   counts: TrackCounts;
 }
 
