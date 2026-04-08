@@ -35,7 +35,7 @@ export interface TTSState {
   error: string | null;
 }
 
-const STORAGE_KEY = 'emba-tts-settings';
+const STORAGE_KEY = 'ke-tts-settings';
 const DEFAULT_OPTIONS: TTSOptions = {
   rate: '+0%',
   pitch: '+0Hz',

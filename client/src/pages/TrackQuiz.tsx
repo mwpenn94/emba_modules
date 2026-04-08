@@ -5,7 +5,7 @@
  * shuffles them, and walks the user through one at a time with immediate
  * feedback.  Score is reported at the end with per-question review.  This
  * intentionally lives outside the existing global QuizPage so the user can
- * focus on a single exam track without filtering across all 2,000 EMBA
+ * focus on a single exam track without filtering across all 2,000+
  * definitions.
  */
 

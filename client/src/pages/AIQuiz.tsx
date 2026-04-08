@@ -1,6 +1,6 @@
 /**
  * AI-Powered Quiz Generation
- * Uses LLM to dynamically generate questions from EMBA content.
+ * Uses LLM to dynamically generate questions from learning content.
  * Supports: multiple choice, fill-in-blank, scenario-based, explain-concept
  * Features: discipline/topic selector, difficulty control, feedback loop, question rating
  */

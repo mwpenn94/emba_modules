@@ -107,7 +107,7 @@ export default function ProgressExport() {
     const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const overallProgress = definitions.length > 0 ? Math.round((mastered / definitions.length) * 100) : 0;
 
-    let report = `EMBA Knowledge Explorer — Progress Report\n`;
+    let report = `Knowledge Explorer — Progress Report\n`;
     report += `Generated: ${date}\n`;
     report += `${'='.repeat(50)}\n\n`;
 

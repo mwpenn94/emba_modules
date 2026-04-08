@@ -137,7 +137,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
               className="overflow-hidden"
             >
               <h1 className="text-sm font-semibold tracking-tight whitespace-nowrap" style={{ fontFamily: 'var(--font-display)' }}>
-                EMBA Knowledge
+                Knowledge
               </h1>
               <p className="text-[10px] text-muted-foreground tracking-widest uppercase">Explorer</p>
             </motion.div>
@@ -277,7 +277,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
           <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--primary)' }}>
             <GraduationCap className="w-4 h-4" style={{ color: 'var(--primary-foreground)' }} />
           </div>
-          <span className="text-sm font-semibold" style={{ fontFamily: 'var(--font-display)' }}>EMBA Explorer</span>
+          <span className="text-sm font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Knowledge Explorer</span>
         </div>
         <div className="flex items-center gap-1">
           {switchable && toggleTheme && (

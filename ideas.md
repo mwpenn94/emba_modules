@@ -1,7 +1,7 @@
-# EMBA Knowledge Explorer — Design Brainstorm
+# Knowledge Explorer — Design Brainstorm
 
 ## Context
-A self-contained, highly engaging standalone mastery module for an Executive MBA curriculum. It must feel like a premium learning platform — not a generic study tool. The user is a Managing Director at WealthBridge Financial Group who needs to master 8 core disciplines + 14 specializations with 2,000+ definitions, 124 formulas, case studies, and financial services applications.
+A self-contained, highly engaging standalone mastery module for a professional learning curriculum. It must feel like a premium learning platform — not a generic study tool. The user is a Managing Director at WealthBridge Financial Group who needs to master 8 core disciplines + 14 specializations with 2,000+ definitions, 124 formulas, case studies, and financial services applications.
 
 ---
 

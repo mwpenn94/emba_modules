@@ -81,7 +81,7 @@ export default function TracksIndex() {
             {stats.total_practice_questions.toLocaleString()} practice questions ·
             {' '}
             {stats.total_flashcards.toLocaleString()} flashcards. Sourced from the
-            WealthBridge Library and the EMBA Master Study Manual.
+            WealthBridge Library and the Master Study Manual.
           </p>
         </div>
 
@@ -285,14 +285,14 @@ export default function TracksIndex() {
                     className="text-sm font-semibold"
                     style={{ fontFamily: 'var(--font-display)' }}
                   >
-                    EMBA Master Study Manual
+                    Master Study Manual
                   </h3>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {dataset.master_manual.sections_count} sections ·{' '}
                   {dataset.master_manual.word_count.toLocaleString()} words from
-                  the EMBA capstone manual — high-level frameworks that map
-                  every track back to MBA fundamentals.
+                  the capstone manual — high-level frameworks that map
+                  every track back to core fundamentals.
                 </p>
                 <p className="text-[10px] font-mono text-primary mt-2">
                   {showMaster ? 'Hide' : 'Show'} sections

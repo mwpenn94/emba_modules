@@ -1,10 +1,10 @@
 /**
  * Service Worker — Offline Mode
- * Caches app shell, static assets, and EMBA content data for offline access.
+ * Caches app shell, static assets, and content data for offline access.
  * Strategy: Network-first for API, Cache-first for static assets.
  */
 
-const CACHE_VERSION = 'emba-v1';
+const CACHE_VERSION = 'ke-v1';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -30,7 +30,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys
-          .filter((key) => key.startsWith('emba-') && key !== STATIC_CACHE && key !== DATA_CACHE && key !== API_CACHE)
+          .filter((key) => key.startsWith('ke-') && key !== STATIC_CACHE && key !== DATA_CACHE && key !== API_CACHE)
           .map((key) => caches.delete(key))
       );
     }).then(() => self.clients.claim())
@@ -83,14 +83,14 @@ self.addEventListener('fetch', (event) => {
 // Listen for messages from the app
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'CACHE_CONTENT_DATA') {
-    // Cache the EMBA content data JSON for offline access
+    // Cache the content data JSON for offline access
     const data = event.data.payload;
     if (data) {
       caches.open(DATA_CACHE).then((cache) => {
         const response = new Response(JSON.stringify(data), {
           headers: { 'Content-Type': 'application/json' },
         });
-        cache.put('/offline/emba-data', response);
+        cache.put('/offline/content-data', response);
       });
     }
   }

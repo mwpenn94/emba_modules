@@ -19,7 +19,7 @@ interface BookmarkButtonProps {
   showNote?: boolean;
 }
 
-const LOCAL_KEY = 'emba-bookmarks-local';
+const LOCAL_KEY = 'ke-bookmarks-local';
 
 function getLocalBookmarks(): Record<string, { note?: string }> {
   try {

@@ -28,7 +28,7 @@ interface TourStep {
 const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to EMBA Knowledge Explorer',
+    title: 'Welcome to Knowledge Explorer',
     description: 'Your complete mastery companion with 2,000+ definitions, 88 formulas, 12 case studies, and 6 interactive modules. This tour will show you how to get the most out of every feature.',
     icon: Rocket,
     tip: 'You can replay this tour anytime from the sidebar.',
@@ -118,13 +118,13 @@ const TOUR_STEPS: TourStep[] = [
   {
     id: 'complete',
     title: 'You\'re All Set!',
-    description: 'You now know every tool at your disposal. Start exploring, and remember: mastery comes from consistent practice across all modules. Good luck on your EMBA journey!',
+    description: 'You now know every tool at your disposal. Start exploring, and remember: mastery comes from consistent practice across all modules. Good luck on your learning journey!',
     icon: CheckCircle2,
     action: { label: 'Start Learning', path: '/' },
   },
 ];
 
-const STORAGE_KEY = 'emba-onboarding-completed';
+const STORAGE_KEY = 'ke-onboarding-completed';
 
 export function useOnboardingTour() {
   const [isActive, setIsActive] = useState(false);

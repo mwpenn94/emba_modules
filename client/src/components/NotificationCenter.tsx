@@ -17,8 +17,8 @@ import { useMastery } from '@/contexts/MasteryContext';
 import embaData from '@/data/emba_data.json';
 import { DISCIPLINE_COLORS, DISCIPLINE_ICONS } from '@/data/types';
 
-const NOTIF_ENABLED_KEY = 'emba-srs-notifications-enabled';
-const NOTIF_DISMISSED_KEY = 'emba-srs-notifications-dismissed';
+const NOTIF_ENABLED_KEY = 'ke-srs-notifications-enabled';
+const NOTIF_DISMISSED_KEY = 'ke-srs-notifications-dismissed';
 const CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
 interface DueGroup {

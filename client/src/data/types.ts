@@ -35,7 +35,7 @@ export interface Connection {
   relationship: string;
 }
 
-export interface EMBAData {
+export interface ContentData {
   definitions: Definition[];
   formulas: Formula[];
   cases: CaseStudy[];

@@ -332,7 +332,7 @@ export default function ExamSimulator() {
                 <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--accent)' }}>
                   <Brain className="w-8 h-8 text-primary" />
                 </div>
-                <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>EMBA Exam Simulator</h2>
+                <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>Exam Simulator</h2>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
                   Scenario-based questions testing application and analysis — designed for real-world mastery. Open-book format means recall is trivial; understanding is everything.
                 </p>

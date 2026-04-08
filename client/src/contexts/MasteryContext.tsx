@@ -80,14 +80,14 @@ interface MasteryContextType {
 
 const MasteryContext = createContext<MasteryContextType | null>(null);
 
-const STORAGE_KEY = 'emba-mastery-state';
-const SESSION_KEY = 'emba-session-stats';
-const TIME_KEY = 'emba-total-study-time';
-const ACHIEVEMENTS_KEY = 'emba-achievements';
-const GOAL_KEY = 'emba-daily-goal';
-const DAILY_PROGRESS_KEY = 'emba-daily-progress';
-const HISTORY_KEY = 'emba-study-history';
-const DIRTY_KEY = 'emba-mastery-dirty';
+const STORAGE_KEY = 'ke-mastery-state';
+const SESSION_KEY = 'ke-session-stats';
+const TIME_KEY = 'ke-total-study-time';
+const ACHIEVEMENTS_KEY = 'ke-achievements';
+const GOAL_KEY = 'ke-daily-goal';
+const DAILY_PROGRESS_KEY = 'ke-daily-progress';
+const HISTORY_KEY = 'ke-study-history';
+const DIRTY_KEY = 'ke-mastery-dirty';
 
 function loadMastery(): MasteryState {
   try {

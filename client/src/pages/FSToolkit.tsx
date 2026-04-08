@@ -2,7 +2,7 @@
  * DESIGN: The Atelier — Financial Services Practice Toolkit
  * 6 operational tools: Client Discovery, Case Design, Compliance Checklist,
  * Recruiting ROI, Practice Dashboard, Meeting Prep
- * All cross-referenced to EMBA concepts
+ * All cross-referenced to learning concepts
  */
 
 import React from 'react';
@@ -24,16 +24,16 @@ interface ToolDef {
   icon: any;
   color: string;
   description: string;
-  embaLink: string;
+  conceptLink: string;
 }
 
 const tools: ToolDef[] = [
-  { id: 'discovery', name: 'Client Discovery', icon: Users, color: 'var(--chart-1)', description: 'Comprehensive fact finder with HNW and business owner supplements', embaLink: 'Marketing & Pricing → Customer Discovery, Strategy → Stakeholder Analysis' },
-  { id: 'case-design', name: 'Case Design', icon: FileText, color: 'var(--chart-2)', description: 'IUL analysis, premium financing feasibility, estate planning needs', embaLink: 'Finance → NPV/IRR, Accounting → Present Value, Data → Decision Trees' },
-  { id: 'compliance', name: 'Compliance Checklist', icon: Shield, color: 'var(--chart-3)', description: 'Suitability documentation, regulatory requirements, audit trail', embaLink: 'US Business Law → Fiduciary Duty, Ethics → Compliance Frameworks' },
-  { id: 'recruiting', name: 'Recruiting ROI', icon: UserPlus, color: 'var(--chart-4)', description: 'Calculate cost-to-hire, time-to-productivity, and retention economics', embaLink: 'Leading Organizations → Recruitment, Finance → ROI Analysis, HR → Retention' },
-  { id: 'dashboard', name: 'Practice Dashboard', icon: BarChart3, color: 'var(--chart-5)', description: 'KPI tracking, pipeline management, revenue forecasting', embaLink: 'Data & Decisions → KPIs, Strategy → Balanced Scorecard, Operations → Metrics' },
-  { id: 'meeting-prep', name: 'Meeting Prep', icon: Calendar, color: 'var(--discipline-communications)', description: 'Pre-meeting research template, agenda builder, follow-up tracker', embaLink: 'Business Communications → Presentation, Strategy → Stakeholder Management' },
+  { id: 'discovery', name: 'Client Discovery', icon: Users, color: 'var(--chart-1)', description: 'Comprehensive fact finder with HNW and business owner supplements', conceptLink: 'Marketing & Pricing → Customer Discovery, Strategy → Stakeholder Analysis' },
+  { id: 'case-design', name: 'Case Design', icon: FileText, color: 'var(--chart-2)', description: 'IUL analysis, premium financing feasibility, estate planning needs', conceptLink: 'Finance → NPV/IRR, Accounting → Present Value, Data → Decision Trees' },
+  { id: 'compliance', name: 'Compliance Checklist', icon: Shield, color: 'var(--chart-3)', description: 'Suitability documentation, regulatory requirements, audit trail', conceptLink: 'US Business Law → Fiduciary Duty, Ethics → Compliance Frameworks' },
+  { id: 'recruiting', name: 'Recruiting ROI', icon: UserPlus, color: 'var(--chart-4)', description: 'Calculate cost-to-hire, time-to-productivity, and retention economics', conceptLink: 'Leading Organizations → Recruitment, Finance → ROI Analysis, HR → Retention' },
+  { id: 'dashboard', name: 'Practice Dashboard', icon: BarChart3, color: 'var(--chart-5)', description: 'KPI tracking, pipeline management, revenue forecasting', conceptLink: 'Data & Decisions → KPIs, Strategy → Balanced Scorecard, Operations → Metrics' },
+  { id: 'meeting-prep', name: 'Meeting Prep', icon: Calendar, color: 'var(--discipline-communications)', description: 'Pre-meeting research template, agenda builder, follow-up tracker', conceptLink: 'Business Communications → Presentation, Strategy → Stakeholder Management' },
 ];
 
 // ── Client Discovery Tool ──────────────────────────────────────
@@ -179,7 +179,7 @@ function CaseDesign() {
 
       <div className="p-3 rounded-lg border border-border/50 bg-card/50">
         <p className="text-[10px] text-muted-foreground leading-relaxed">
-          <strong>EMBA Connection:</strong> This worksheet applies Finance (NPV, time value of money), Accounting (present value, amortization), and Data & Decisions (scenario analysis) concepts to real IUL case design.
+          <strong>Concept Connection:</strong> This worksheet applies Finance (NPV, time value of money), Accounting (present value, amortization), and Data & Decisions (scenario analysis) concepts to real IUL case design.
         </p>
       </div>
     </div>
@@ -306,7 +306,7 @@ function RecruitingROI() {
       </div>
       <div className="p-3 rounded-lg border border-border/50 bg-card/50">
         <p className="text-[10px] text-muted-foreground leading-relaxed">
-          <strong>EMBA Connection:</strong> Applies Finance (ROI, breakeven), Leading Organizations (recruitment strategy, Herzberg theory), and Data & Decisions (expected value calculations) to advisor recruiting decisions.
+          <strong>Concept Connection:</strong> Applies Finance (ROI, breakeven), Leading Organizations (recruitment strategy, Herzberg theory), and Data & Decisions (expected value calculations) to advisor recruiting decisions.
         </p>
       </div>
     </div>
@@ -351,7 +351,7 @@ function PracticeDashboard() {
       </div>
       <div className="p-3 rounded-lg border border-border/50 bg-card/50">
         <p className="text-[10px] text-muted-foreground leading-relaxed">
-          <strong>EMBA Connection:</strong> Applies Data & Decisions (KPI selection, dashboard design), Strategy (Balanced Scorecard), and Operations (process metrics) to practice management.
+          <strong>Concept Connection:</strong> Applies Data & Decisions (KPI selection, dashboard design), Strategy (Balanced Scorecard), and Operations (process metrics) to practice management.
         </p>
       </div>
     </div>
@@ -450,7 +450,7 @@ export default function FSToolkit() {
             <Briefcase className="w-5 h-5 text-primary" />
             <div>
               <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Financial Services Toolkit</h1>
-              <p className="text-xs text-muted-foreground font-mono">6 operational tools · EMBA-integrated · Financial services practice</p>
+              <p className="text-xs text-muted-foreground font-mono">6 operational tools · Concept-integrated · Financial services practice</p>
             </div>
           </div>
         </div>
@@ -465,7 +465,7 @@ export default function FSToolkit() {
                 </div>
                 <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>Financial Services Practice Tools</h2>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  Operational artifacts for daily practice, each cross-referenced to EMBA concepts you're mastering
+                  Operational artifacts for daily practice, each cross-referenced to concepts you're mastering
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -484,7 +484,7 @@ export default function FSToolkit() {
                     </div>
                     <h3 className="text-sm font-semibold mb-1" style={{ fontFamily: 'var(--font-display)' }}>{t.name}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed mb-2">{t.description}</p>
-                    <p className="text-[10px] font-mono text-muted-foreground/70">{t.embaLink}</p>
+                    <p className="text-[10px] font-mono text-muted-foreground/70">{t.conceptLink}</p>
                   </motion.button>
                 ))}
               </div>
@@ -501,7 +501,7 @@ export default function FSToolkit() {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>{currentTool.name}</h2>
-                  <p className="text-[10px] font-mono text-muted-foreground">{currentTool.embaLink}</p>
+                  <p className="text-[10px] font-mono text-muted-foreground">{currentTool.conceptLink}</p>
                 </div>
               </div>
               {toolComponents[activeTool]}

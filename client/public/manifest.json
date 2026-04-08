@@ -1,7 +1,7 @@
 {
-  "name": "EMBA Knowledge Explorer",
-  "short_name": "EMBA Explorer",
-  "description": "Complete EMBA mastery companion with interactive learning modules",
+  "name": "Knowledge Explorer",
+  "short_name": "KE",
+  "description": "Complete mastery companion with interactive learning modules",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a1a",

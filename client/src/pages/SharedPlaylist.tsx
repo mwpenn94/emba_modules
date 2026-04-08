@@ -146,7 +146,7 @@ export default function SharedPlaylist() {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-muted-foreground mb-2">
-            Want to study this playlist? Sign in to the EMBA Knowledge Explorer.
+            Want to study this playlist? Sign in to the Knowledge Explorer.
           </p>
           <a
             href="/"

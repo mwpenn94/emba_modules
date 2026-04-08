@@ -32,14 +32,14 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
 
 function loadSettings(): PomodoroSettings {
   try {
-    const saved = localStorage.getItem('emba-pomodoro-settings');
+    const saved = localStorage.getItem('ke-pomodoro-settings');
     if (saved) return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
   } catch {}
   return DEFAULT_SETTINGS;
 }
 
 function saveSettings(s: PomodoroSettings) {
-  try { localStorage.setItem('emba-pomodoro-settings', JSON.stringify(s)); } catch {}
+  try { localStorage.setItem('ke-pomodoro-settings', JSON.stringify(s)); } catch {}
 }
 
 /* ── Audio chime via Web Audio API ── */

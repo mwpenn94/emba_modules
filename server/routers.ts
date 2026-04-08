@@ -705,7 +705,7 @@ export const appRouter = router({
           explain: 'Generate open-ended questions asking the student to explain a concept, its significance, and practical applications.',
         };
 
-        const prompt = `You are an expert EMBA professor creating assessment questions.
+        const prompt = `You are an expert professor creating assessment questions.
 
 Discipline: ${input.discipline}
 ${input.topic ? `Topic: ${input.topic}` : ''}
@@ -728,11 +728,11 @@ Return a JSON array of questions. Each question object must have:
 - "questionText": the question stem
 - "options": array of {text, isCorrect} objects (for MC) or null (for fill_blank/explain)
 - "correctAnswer": the correct answer text
-- "explanation": detailed explanation connecting to EMBA concepts`;
+- "explanation": detailed explanation connecting to key concepts`;
 
         const response = await invokeLLM({
           messages: [
-            { role: "system", content: "You are an expert EMBA assessment creator. Always respond with valid JSON." },
+            { role: "system", content: "You are an expert assessment creator. Always respond with valid JSON." },
             { role: "user", content: prompt },
           ],
           response_format: {
@@ -836,7 +836,7 @@ Return a JSON array of questions. Each question object must have:
         })
       )
       .mutation(async ({ ctx, input }) => {
-        const prompt = `You are a Socratic EMBA tutor. The student just studied the following topic:
+        const prompt = `You are a Socratic tutor. The student just studied the following topic:
 
 Topic: ${input.lastTopic}
 ${input.discipline ? `Discipline: ${input.discipline}` : ''}
@@ -858,7 +858,7 @@ Return JSON with:
 
         const response = await invokeLLM({
           messages: [
-            { role: "system", content: "You are a Socratic EMBA tutor. Always respond with valid JSON." },
+            { role: "system", content: "You are a Socratic tutor. Always respond with valid JSON." },
             { role: "user", content: prompt },
           ],
           response_format: {

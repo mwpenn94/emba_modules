@@ -3,7 +3,7 @@
  *
  * The dataset is built by `scripts/build_tracks_data.py` from the
  * WealthBridgeLibraryv11_QA.zip archive (study manuals + flashcards) plus the
- * EMBA master manual at the repo root.  This hook layers display metadata
+ * master manual at the repo root.  This hook layers display metadata
  * (colors, taglines) on top of the raw JSON and exposes lookup helpers.
  */
 

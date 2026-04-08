@@ -253,3 +253,15 @@ documents into `client/src/data/tracks_data.json` (12 tracks · 68 chapters ·
 - [x] Pass 7 Deep sweep — bookmark integration across all 3 track pages + Bookmarks page meta
 - [x] Pass 8 Convergence audit — 0 issues found, 0 actions
 - [x] Pass 9 Convergence audit — 0 issues found, 0 actions (2-pass streak confirmed)
+## Abstract EMBA Branding
+- [x] Replace "EMBA Knowledge Explorer" with "Knowledge Explorer" in tab title (index.html)
+- [x] Update manifest.json name and short_name
+- [x] Update Navigation.tsx sidebar branding
+- [x] Update OnboardingTour.tsx welcome text
+- [x] Update Home.tsx hero section text
+- [x] Update ExamSimulator.tsx header
+- [x] Update FSToolkit.tsx references (embaLink → conceptLink, "EMBA Connection" → "Concept Connection")
+- [x] Update server/routers.ts LLM prompts (EMBA professor → expert professor)
+- [x] Update localStorage key prefixes (emba- → ke-)
+- [x] Update service worker cache version and comments
+- [x] Update ideas.md, screenshot-notes.md references

@@ -145,13 +145,13 @@ export default function Home() {
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: 'easeOut' }}>
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-xs font-mono tracking-widest uppercase text-primary">EMBA Knowledge Explorer</span>
+                <span className="text-xs font-mono tracking-widest uppercase text-primary">Knowledge Explorer</span>
               </div>
               <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mb-2" style={{ fontFamily: 'var(--font-display)' }}>
                 Knowledge Explorer
               </h1>
               <p className="text-base text-muted-foreground max-w-xl" style={{ fontFamily: 'var(--font-body)' }}>
-                {definitions.length.toLocaleString()} definitions · {formulas.length} formulas · {cases.length} case studies — your complete EMBA mastery companion.
+                {definitions.length.toLocaleString()} definitions · {formulas.length} formulas · {cases.length} case studies — your complete mastery companion.
               </p>
             </motion.div>
 
