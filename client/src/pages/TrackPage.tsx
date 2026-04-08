@@ -19,11 +19,14 @@ import {
   ListMusic,
   ChevronRight,
   ClipboardList,
+  Headphones,
 } from 'lucide-react';
+import AudioPlayer from '@/components/AudioPlayer';
+import { AnimatePresence } from 'framer-motion';
 import { useTrack } from '@/hooks/useTracks';
 import BookmarkButton from '@/components/BookmarkButton';
 import { TRACK_META } from '@/data/types';
-import type { TrackDiagram } from '@/data/types';
+import type { TrackDiagram, TTSSection } from '@/data/types';
 import NotFound from './NotFound';
 
 function DiagramGallery({ diagrams, color }: { diagrams: TrackDiagram[]; color: string }) {
@@ -143,6 +146,18 @@ export default function TrackPage() {
   const [activeChapterId, setActiveChapterId] = useState<string | null>(
     initialChapterId,
   );
+  const [showAudio, setShowAudio] = useState(false);
+
+  // Build TTS items from tts_content
+  const ttsItems = useMemo(() => {
+    if (!track?.tts_content) return [];
+    return track.tts_content.flatMap((section: TTSSection) =>
+      section.paragraphs.map((p, i) => ({
+        label: i === 0 ? section.title : `${section.title} (cont.)`,
+        text: p,
+      }))
+    );
+  }, [track]);
 
   if (!track) {
     return <NotFound />;
@@ -205,12 +220,37 @@ export default function TrackPage() {
                 </span>
               </span>
             </Link>
+            {ttsItems.length > 0 && (
+              <button
+                onClick={() => setShowAudio(!showAudio)}
+                className={`inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                  showAudio
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground'
+                }`}
+              >
+                <Headphones className="w-3.5 h-3.5" /> Audio Study
+              </button>
+            )}
             <span className="inline-flex items-center gap-2 text-xs font-mono px-3 py-1.5 rounded-lg bg-accent text-muted-foreground">
               <BookOpen className="w-3.5 h-3.5" /> {track.counts.chapters} chapters ·{' '}
               {track.counts.subsections} sections
             </span>
           </div>
         </div>
+
+        {/* Audio Study panel */}
+        <AnimatePresence>
+          {showAudio && ttsItems.length > 0 && (
+            <div className="px-6 lg:px-10 py-4 border-b border-border bg-muted/10">
+              <AudioPlayer
+                items={ttsItems}
+                title={`${track.name} — Audio Study`}
+                onClose={() => setShowAudio(false)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Diagram gallery */}
         <DiagramGallery diagrams={track.diagrams ?? []} color={meta.color} />

@@ -213,6 +213,12 @@ export interface TrackDiagram {
   id: string;
   title: string;
   url: string;
+  description?: string;
+}
+
+export interface TTSSection {
+  title: string;
+  paragraphs: string[];
 }
 
 export interface ExamTrack {
@@ -227,6 +233,7 @@ export interface ExamTrack {
   flashcards: TrackFlashcard[];
   diagrams: TrackDiagram[];
   counts: TrackCounts;
+  tts_content?: TTSSection[];
 }
 
 export interface TrackCategoryMeta {
