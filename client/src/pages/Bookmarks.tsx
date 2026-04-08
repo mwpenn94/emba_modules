@@ -14,7 +14,8 @@ import { getLoginUrl } from '@/const';
 import {
   Bookmark, BookmarkCheck, Search, Filter, Trash2,
   MessageSquare, Save, X, BookOpen, Calculator,
-  GitBranch, Shield, ChevronDown, StickyNote, LogIn
+  GitBranch, Shield, ChevronDown, StickyNote, LogIn,
+  Library, Brain, ListMusic
 } from 'lucide-react';
 import { DISCIPLINE_COLORS, DISCIPLINE_ICONS } from '@/data/types';
 
@@ -23,6 +24,9 @@ const CONTENT_TYPE_META: Record<string, { label: string; icon: React.ElementType
   formula: { label: 'Formulas', icon: Calculator, color: '#10B981' },
   case: { label: 'Case Studies', icon: GitBranch, color: '#F59E0B' },
   fs_application: { label: 'FS Applications', icon: Shield, color: '#EF4444' },
+  track_card: { label: 'Track Flashcards', icon: ListMusic, color: '#0E6655' },
+  track_question: { label: 'Practice Questions', icon: Brain, color: '#6C3483' },
+  track_section: { label: 'Track Sections', icon: Library, color: '#1B4F72' },
 };
 
 export default function Bookmarks() {

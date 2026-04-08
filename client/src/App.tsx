@@ -37,6 +37,10 @@ const Playlists = lazy(() => import("./pages/Playlists"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const SharedPlaylist = lazy(() => import("./pages/SharedPlaylist"));
 const DiscoveryHistory = lazy(() => import("./pages/DiscoveryHistory"));
+const TracksIndex = lazy(() => import("./pages/TracksIndex"));
+const TrackPage = lazy(() => import("./pages/TrackPage"));
+const TrackQuiz = lazy(() => import("./pages/TrackQuiz"));
+const TrackFlashcards = lazy(() => import("./pages/TrackFlashcards"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /* ── Loading fallback ── */
@@ -82,6 +86,10 @@ function Router() {
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/shared/playlist/:token" component={SharedPlaylist} />
         <Route path="/discovery-history" component={DiscoveryHistory} />
+        <Route path="/tracks" component={TracksIndex} />
+        <Route path="/track/:key/quiz" component={TrackQuiz} />
+        <Route path="/track/:key/flashcards" component={TrackFlashcards} />
+        <Route path="/track/:key" component={TrackPage} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

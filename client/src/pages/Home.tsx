@@ -10,12 +10,13 @@ import { motion } from 'framer-motion';
 import { Link } from 'wouter';
 import { useMastery } from '@/contexts/MasteryContext';
 import embaData from '@/data/emba_data.json';
-import { DISCIPLINE_COLORS, DISCIPLINE_ICONS, CORE_DISCIPLINES, SPECIALIZATION_DISCIPLINES } from '@/data/types';
+import { DISCIPLINE_COLORS, DISCIPLINE_ICONS, CORE_DISCIPLINES, SPECIALIZATION_DISCIPLINES, TRACK_META } from '@/data/types';
+import { useTracks } from '@/hooks/useTracks';
 import {
   BookOpen, FlaskConical, Brain, Network, Briefcase, ArrowRight,
   Sparkles, GraduationCap, Calculator, GitBranch, Map, Shield,
   Search, Trophy, Target, Zap, PlayCircle, Clock, Download, Headphones,
-  Users, BarChart3, Bookmark
+  Users, BarChart3, Bookmark, Library
 } from 'lucide-react';
 
 const HERO_IMG = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663357378777/ZA65jNeda6DFiE5Ah4cq4b/hero-atelier-Km2x6YRTYjX2VzD9gFdG5C.webp';
@@ -121,6 +122,7 @@ export default function Home() {
   const formulas = embaData.formulas || [];
   const cases = embaData.cases || [];
   const { getStudiedCount, getMasteredCount, getDueItems, unlockedAchievements } = useMastery();
+  const { tracks, stats: trackStats } = useTracks();
   const dueCount = getDueItems().length;
 
   const disciplineCounts: Record<string, number> = {};
@@ -235,6 +237,55 @@ export default function Home() {
                 accent="#6366F1"
                 delay={0.3}
               />
+            </div>
+          </section>
+
+          {/* ── Exam & Learning Tracks ── */}
+          <section>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <Library className="w-4 h-4 text-primary" />
+                <h2 className="text-lg font-semibold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Exam &amp; Learning Tracks</h2>
+              </div>
+              <Link href="/tracks">
+                <span className="text-xs font-mono text-primary hover:underline flex items-center gap-1">
+                  Browse all <ArrowRight className="w-3 h-3" />
+                </span>
+              </Link>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              {trackStats.total_tracks} licensed tracks · {trackStats.total_chapters} chapters · {trackStats.total_practice_questions.toLocaleString()} practice questions · {trackStats.total_flashcards.toLocaleString()} flashcards
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {tracks.slice(0, 6).map((track, i) => {
+                const meta = TRACK_META[track.key] ?? { color: 'var(--primary)', tagline: track.subtitle, emoji: '📘' };
+                return (
+                  <Link key={track.key} href={`/track/${track.key}`}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      whileHover={{ y: -2 }}
+                      className="group relative bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-all overflow-hidden cursor-pointer"
+                    >
+                      <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: meta.color }} />
+                      <div className="flex items-start justify-between mb-2">
+                        <span className="text-xl" aria-hidden>{meta.emoji}</span>
+                        <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
+                          {track.counts.practice_questions} qs
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-semibold mb-1 group-hover:text-primary transition-colors line-clamp-1" style={{ fontFamily: 'var(--font-display)' }}>
+                        {track.name}
+                      </h3>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2">{meta.tagline}</p>
+                      <p className="text-[10px] font-mono text-muted-foreground">
+                        {track.counts.chapters} ch · {track.counts.subsections} sec · {track.counts.flashcards} cards
+                      </p>
+                    </motion.div>
+                  </Link>
+                );
+              })}
             </div>
           </section>
 
