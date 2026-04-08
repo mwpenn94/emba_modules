@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Health — Interactive Training Module</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, Helvetica, sans-serif; background: #F4F6F9; color: #2C3E50; line-height: 1.6; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #1B4F72, #2E75B6); color: white; padding: 20px 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.header h1 { font-size: 1.4em; margin-bottom: 5px; }
+.header .subtitle { font-size: 0.85em; opacity: 0.85; }
+.progress-bar { background: rgba(255,255,255,0.2); border-radius: 10px; height: 8px; margin-top: 10px; }
+.progress-fill { background: #27AE60; height: 100%; border-radius: 10px; transition: width 0.5s ease; width: 0%; }
+.progress-text { font-size: 0.75em; margin-top: 4px; opacity: 0.8; }
+
+/* Layout */
+.container { display: flex; margin-top: 100px; min-height: calc(100vh - 100px); }
+
+/* Sidebar */
+.sidebar { width: 280px; background: white; border-right: 1px solid #E5E8EB; padding: 20px 0; position: fixed; top: 100px; bottom: 0; overflow-y: auto; }
+.sidebar .nav-title { padding: 10px 20px; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #95A5A6; font-weight: bold; }
+.nav-item { display: block; padding: 10px 20px; color: #2C3E50; text-decoration: none; font-size: 0.9em; border-left: 3px solid transparent; transition: all 0.2s; cursor: pointer; }
+.nav-item:hover { background: #F0F3F5; border-left-color: #2E75B6; }
+.nav-item.active { background: #E8F0FE; border-left-color: #1B4F72; color: #1B4F72; font-weight: bold; }
+.nav-item.completed { color: #27AE60; }
+.nav-item.completed::after { content: " ✓"; color: #27AE60; }
+.nav-quiz { display: block; padding: 12px 20px; color: #E67E22; text-decoration: none; font-size: 0.9em; font-weight: bold; border-left: 3px solid #E67E22; cursor: pointer; margin-top: 10px; }
+.nav-quiz:hover { background: #FFF3E0; }
+
+/* Main Content */
+.main { margin-left: 280px; padding: 30px 40px; max-width: 900px; flex: 1; }
+.section h2 { color: #1B4F72; font-size: 1.6em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #1B4F72; }
+.section h3 { color: #2E75B6; font-size: 1.2em; margin: 20px 0 10px; }
+.section h4 { color: #2C3E50; font-size: 1.05em; margin: 15px 0 8px; }
+.section p { margin-bottom: 12px; text-align: justify; }
+
+/* Tables */
+.table-wrapper { overflow-x: auto; margin: 15px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+th { background: #1B4F72; color: white; padding: 10px 12px; text-align: left; font-weight: bold; }
+td { padding: 8px 12px; border-bottom: 1px solid #E5E8EB; }
+tr:nth-child(even) td { background: #F8F9FA; }
+tr:hover td { background: #E8F0FE; }
+
+/* Buttons */
+.section-footer { display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #E5E8EB; }
+.btn-complete { background: #27AE60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: bold; transition: all 0.2s; }
+.btn-complete:hover { background: #219A52; transform: translateY(-1px); }
+.btn-complete.done { background: #95A5A6; cursor: default; }
+.btn-next { background: #2E75B6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: bold; transition: all 0.2s; }
+.btn-next:hover { background: #1A5F8B; transform: translateY(-1px); }
+
+/* Quiz */
+.quiz-container { display: none; }
+.quiz-container h2 { color: #E67E22; border-bottom-color: #E67E22; }
+.question { background: white; border: 1px solid #E5E8EB; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.question-text { font-weight: bold; margin-bottom: 12px; color: #1B4F72; }
+.option { display: block; padding: 10px 15px; margin: 5px 0; border: 2px solid #E5E8EB; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+.option:hover { border-color: #2E75B6; background: #F0F7FF; }
+.option.selected { border-color: #2E75B6; background: #E8F0FE; }
+.option.correct { border-color: #27AE60; background: #E8F5E9; }
+.option.incorrect { border-color: #E74C3C; background: #FDEDEC; }
+.explanation { display: none; margin-top: 10px; padding: 10px; background: #FFF3E0; border-left: 3px solid #E67E22; border-radius: 4px; font-size: 0.9em; }
+.quiz-score { text-align: center; padding: 30px; background: white; border-radius: 8px; border: 2px solid #27AE60; margin-top: 20px; }
+.quiz-score h3 { color: #27AE60; font-size: 1.5em; }
+.btn-submit { background: #E67E22; color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin-top: 20px; }
+.btn-submit:hover { background: #D35400; }
+
+/* Welcome */
+.welcome { text-align: center; padding: 60px 20px; }
+.welcome h2 { color: #1B4F72; font-size: 2em; margin-bottom: 15px; }
+.welcome p { font-size: 1.1em; color: #7F8C8D; max-width: 600px; margin: 0 auto 20px; }
+.welcome .stats { display: flex; justify-content: center; gap: 30px; margin-top: 30px; }
+.stat { text-align: center; }
+.stat .number { font-size: 2em; font-weight: bold; color: #1B4F72; }
+.stat .label { font-size: 0.85em; color: #95A5A6; }
+.btn-start { background: #1B4F72; color: white; border: none; padding: 15px 40px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin-top: 30px; }
+.btn-start:hover { background: #2E75B6; }
+
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 20px; }
+    .header h1 { font-size: 1.1em; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Life Health — Interactive Training Module</h1>
+    <div class="subtitle">WealthBridge Study Library | EMBA-Quality Professional Development</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0% Complete</div>
+</div>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="nav-title">Chapters</div>
+        <a href="#" class="nav-item active" data-section="welcome" onclick="showSection('welcome')">Welcome</a>
+        <a href="#" class="nav-item" data-section="section-0" onclick="showSection('section-0')">Introduction</a>
+<a href="#" class="nav-item" data-section="section-1" onclick="showSection('section-1')">Table of Contents</a>
+<a href="#" class="nav-item" data-section="section-2" onclick="showSection('section-2')">How to Use This Manual</a>
+<a href="#" class="nav-item" data-section="section-3" onclick="showSection('section-3')">Exam Overview</a>
+<a href="#" class="nav-item" data-section="section-4" onclick="showSection('section-4')">Practice Exam: Life and Health Insurance</a>
+<a href="#" class="nav-item" data-section="section-5" onclick="showSection('section-5')">Additional Practice Questions: Life &amp; Health Additional</a>
+
+        <a href="#" class="nav-quiz" onclick="showQuiz()">Practice Quiz (5 Questions)</a>
+    </div>
+    
+    <div class="main">
+        <div id="welcome" class="section">
+            <div class="welcome">
+                <h2>Welcome to Life Health</h2>
+                <p>This interactive training module covers all key concepts, formulas, and exam strategies. Track your progress as you work through each section.</p>
+                <div class="stats">
+                    <div class="stat"><div class="number">6</div><div class="label">Sections</div></div>
+                    <div class="stat"><div class="number">5</div><div class="label">Quiz Questions</div></div>
+                    <div class="stat"><div class="number">0%</div><div class="label" id="masteryLabel">Mastery</div></div>
+                </div>
+                <button class="btn-start" onclick="nextSection(-1)">Begin Training →</button>
+            </div>
+        </div>
+        
+        <div id="section-0" class="section" style="display:none;">
+<h2>Introduction</h2>
+<p>Life &amp; Health Insurance</p>
+<p>Life and Health Insurance Study Manual</p>
+<p>Comprehensive Study Guide</p>
+<p>Updated March 2026  |  OBBBA Integrated</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-0', 0)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(0)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-1" class="section" style="display:none;">
+<h2>Table of Contents</h2>
+<p>Right-click → &#x27;Update Field&#x27; in Word for clickable page numbers.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-1', 1)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(1)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-2" class="section" style="display:none;">
+<h2>How to Use This Manual</h2>
+<p>The Life and Health Insurance examination qualifies individuals to sell life insurance, health insurance, annuities, and related products. This is a state-administered exam with content varying by state, though core concepts are consistent nationwide. The exam tests knowledge of insurance principles, product features, policy provisions, taxation, and state regulatory requirements. Unlike securities exams (SIE, Series 7), the Life and Health exam focuses exclusively on insurance products and the insurance regulatory framework.</p>
+<p>This manual covers seven chapters spanning the complete Life and Health curriculum. Chapters 1-4 cover life insurance and annuities. Chapters 5-6 cover health insurance. Chapter 7 covers regulation and ethics. The exam typically includes approximately 150 questions with a time limit of 2-3 hours (varies by state). Focus your study on understanding the differences between product types, the tax treatment of premiums and benefits, and the key policy provisions that protect policyholders.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-2', 2)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(2)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-3" class="section" style="display:none;">
+<h2>Exam Overview</h2>
+<p>Insurance is a risk transfer mechanism where the insured pays a premium to the insurer in exchange for a promise to pay benefits upon the occurrence of a covered loss. The law of large numbers allows insurers to predict losses with reasonable accuracy by pooling a large number of similar risks. Adverse selection is the tendency of higher-risk individuals to seek insurance more actively than lower-risk individuals. Insurers combat adverse selection through underwriting — the process of evaluating and classifying risk to determine whether to issue a policy and at what premium.</p>
+<p>Insurable interest requires that the policyholder would suffer a financial loss from the insured event. For life insurance, insurable interest must exist at the time of application (not at the time of claim). A person always has insurable interest in their own life. Insurable interest also exists between spouses, parents and children, business partners, and employers and key employees. The principle of indemnity (applicable to property and health insurance, not life insurance) limits recovery to the actual financial loss suffered, preventing the insured from profiting from a loss.</p>
+<p>The human life value approach estimates the present value of the insured&#x27;s future earnings, adjusted for taxes, personal consumption, and inflation. The needs approach (more commonly used) calculates specific financial obligations: final expenses ($10,000-$25,000), outstanding debts (mortgage, loans), income replacement (present value of needed income for dependents), education funding, emergency fund, and special needs. Existing resources (savings, investments, Social Security survivor benefits, existing insurance) are subtracted to determine the insurance gap.</p>
+<p>Underwriting classifies applicants into risk categories: preferred (lowest risk, lowest premiums), standard (average risk, standard premiums), substandard/rated (higher risk, higher premiums), and declined (uninsurable). Factors considered include age, gender, health history, family medical history, occupation, hobbies, tobacco use, driving record, and financial situation. The Medical Information Bureau (MIB) maintains a database of medical conditions reported by member insurance companies to detect fraud and adverse selection.</p>
+<p>Term life insurance provides pure death protection for a specified period (10, 15, 20, or 30 years) with no cash value accumulation. It is the most affordable type of life insurance and is appropriate for temporary needs such as income replacement during working years, mortgage protection, and coverage during child-rearing years. Level term maintains a constant death benefit and premium throughout the term. Decreasing term maintains a constant premium but the death benefit decreases over time (used for mortgage protection). Annual renewable term (ART) renews annually with increasing premiums based on the insured&#x27;s attained age.</p>
+<p>Convertible term policies allow the policyholder to convert to a permanent policy without evidence of insurability, typically within a specified conversion period. This is valuable because the insured&#x27;s health may deteriorate during the term, making it impossible to qualify for a new policy. The conversion is based on the insured&#x27;s attained age (current age) at the time of conversion, resulting in higher premiums than if the permanent policy had been purchased originally.</p>
+<p>Whole life (ordinary life) insurance provides permanent coverage for the insured&#x27;s entire lifetime with guaranteed level premiums, a guaranteed death benefit, and guaranteed cash value growth. The cash value grows at a guaranteed minimum rate and can be accessed through policy loans or partial surrenders. Policy loans accrue interest but do not need to be repaid (outstanding loans reduce the death benefit). Whole life premiums are significantly higher than term premiums because a portion of each premium funds the cash value. Whole life is appropriate for permanent needs: estate liquidity, final expenses, wealth transfer, and supplemental retirement income.</p>
+<p>Limited-pay whole life (such as 20-pay life or paid-up at 65) compresses the premium payments into a shorter period while providing lifetime coverage. Single-premium whole life is paid with one lump sum and is always classified as a Modified Endowment Contract (MEC). Participating whole life policies pay dividends (which are considered a return of premium and are not taxable until they exceed the total premiums paid). Dividends can be taken in cash, used to reduce premiums, left to accumulate at interest, or used to purchase paid-up additions (additional insurance).</p>
+<p>Universal life (UL) offers flexible premiums and an adjustable death benefit. The policyholder can increase or decrease premiums (within limits) and adjust the death benefit. Cash value earns interest based on current rates (with a guaranteed minimum). UL has two death benefit options: Option A (level death benefit, where the cash value is included in the death benefit) and Option B (increasing death benefit, where the death benefit equals the face amount plus the cash value). Option B is more expensive but provides increasing coverage.</p>
+<p>Variable life (VL) allows the policyholder to invest the cash value in subaccounts (similar to mutual funds), offering higher growth potential but with investment risk. The death benefit has a guaranteed minimum but can increase if investments perform well. Variable universal life (VUL) combines the flexibility of UL with the investment options of VL. Both VL and VUL are securities and require a securities license (Series 6 or Series 7) in addition to a life insurance license. Indexed universal life (IUL) credits interest based on a market index (such as the S&amp;P 500) with a floor (minimum rate, often 0-2%) and a cap (maximum rate, often 8-12%).</p>
+<p>Standard policy provisions protect both the insurer and the policyholder. The free-look period (typically 10-30 days) allows the policyholder to return the policy for a full refund after delivery. The grace period (typically 31 days) allows premium payment after the due date without lapse. The incontestability clause prevents the insurer from contesting the policy after it has been in force for 2 years (except for non-payment of premiums). The suicide clause excludes death by suicide within the first 2 years of the policy (after 2 years, suicide is covered).</p>
+<p>The misstatement of age provision allows the insurer to adjust the death benefit (rather than void the policy) if the insured&#x27;s age was misstated on the application. The entire contract provision states that the policy and the application (attached to the policy) constitute the entire contract. The reinstatement provision allows a lapsed policy to be reinstated within a specified period (typically 3-5 years) with evidence of insurability and payment of back premiums with interest. Non-forfeiture options (for permanent policies) protect the policyholder&#x27;s cash value if the policy lapses: cash surrender value, reduced paid-up insurance, or extended term insurance.</p>
+<p>Settlement options determine how the death benefit is paid to the beneficiary. Lump sum provides the entire benefit at once. Fixed period pays equal installments over a specified number of years. Fixed amount pays a specified dollar amount until the proceeds are exhausted. Life income (annuitization) pays for the beneficiary&#x27;s lifetime. Interest only leaves the proceeds with the insurer, paying only the interest to the beneficiary. The beneficiary designation can be revocable (the policyholder can change it) or irrevocable (requires the beneficiary&#x27;s consent to change).</p>
+<p>An annuity is a contract between an individual and an insurance company designed to provide income, typically during retirement. During the accumulation phase, the contract owner makes premium payments and the value grows tax-deferred. During the annuitization (payout) phase, the insurance company makes periodic payments to the annuitant. Fixed annuities guarantee a minimum interest rate and provide predictable payments. Variable annuities invest in subaccounts with returns dependent on market performance — they are securities requiring a securities license.</p>
+<p>Annuity payout options include: life only (payments for the annuitant&#x27;s lifetime, highest payment but nothing to beneficiaries at death), life with period certain (payments for life with a guaranteed minimum period, such as 10 or 20 years), joint and survivor (payments for two lives, continuing to the survivor at 50-100% of the original amount), and fixed period or fixed amount. The exclusion ratio determines the tax treatment of each payment: Exclusion Ratio = Investment in Contract / Expected Return. The excluded portion is a tax-free return of basis; the remainder is taxable as ordinary income.</p>
+<p>Taxation of annuities: contributions to non-qualified annuities are made with after-tax dollars (no deduction). Growth is tax-deferred. Withdrawals during accumulation are taxed LIFO (earnings first, as ordinary income) with a 10% penalty before age 59 1/2. Qualified annuities (held in IRAs or employer plans) follow the same distribution rules as the underlying retirement account. The 1035 exchange allows tax-free exchange of one annuity for another, or a life insurance policy for an annuity (but NOT an annuity for a life insurance policy).</p>
+<p>Health insurance protects against the financial consequences of illness and injury. Major medical insurance covers a broad range of medical expenses with a deductible (the amount the insured pays before coverage begins), coinsurance (the percentage split between insurer and insured, typically 80/20), and an out-of-pocket maximum (the most the insured pays in a year, after which the insurer pays 100%). The Affordable Care Act (ACA) established essential health benefits that all individual and small group plans must cover, prohibited denial of coverage for pre-existing conditions, and eliminated lifetime benefit limits.</p>
+<p>Disability income insurance replaces a portion of income (typically 60-70%) when the insured cannot work due to illness or injury. Own-occupation coverage pays if the insured cannot perform their specific occupation. Any-occupation coverage pays only if the insured cannot perform any occupation for which they are reasonably qualified. The elimination period (waiting period) is the time between disability onset and benefit commencement — longer elimination periods reduce premiums. Tax treatment: employer-paid premiums result in taxable benefits; employee-paid (after-tax) premiums result in tax-free benefits.</p>
+<p>Long-term care (LTC) insurance covers custodial care, assisted living, home health care, and skilled nursing facility care. Benefits are triggered when the insured cannot perform 2 or more activities of daily living (ADLs: bathing, dressing, eating, toileting, transferring, continence) or has a cognitive impairment. Tax-qualified LTC policies allow premium deductions as medical expenses (subject to age-based limits) and provide tax-free benefits up to a per-diem limit ($420/day in 2026). Partnership policies protect assets equal to benefits received from Medicaid spend-down requirements.</p>
+<p>Medicare is the federal health insurance program for individuals age 65+ and certain disabled individuals. Part A covers hospital care (funded by payroll taxes, no premium for most). Part B covers physician services and outpatient care (monthly premium, approximately $185/month in 2026). Part C (Medicare Advantage) is a private alternative to Parts A and B. Part D covers prescription drugs. Medigap (Medicare Supplement) policies fill the gaps in Original Medicare coverage. Medicare does NOT cover long-term custodial care, dental, vision, or hearing (with limited exceptions under Medicare Advantage).</p>
+<p>Insurance is regulated primarily at the state level. Each state has an insurance department headed by a commissioner (or superintendent) who oversees licensing, market conduct, rate approval, and consumer protection. The McCarran-Ferguson Act (1945) affirmed state regulation of insurance and exempted insurance from most federal antitrust laws. Producers (agents and brokers) must be licensed in each state where they sell insurance. Continuing education is required for license renewal (typically 24 hours per renewal period, including ethics).</p>
+<p>Unfair trade practices include misrepresentation (making false statements about a policy), twisting (using misrepresentation to induce a policyholder to replace an existing policy), churning (replacing policies to generate commissions without benefit to the client), rebating (giving part of the commission to the client as an inducement to purchase), and defamation (making false statements about a competitor). Replacement regulations require the agent to provide a comparison of the existing and proposed policies and to notify the existing insurer of the replacement. The agent has a duty to ensure that the replacement is in the client&#x27;s best interest.</p>
+<h3>1.1 Principles of Insurance</h3>
+<p>Insurance is a risk transfer mechanism where the insured pays a premium to the insurer in exchange for a promise to pay benefits upon the occurrence of a covered loss. The law of large numbers allows insurers to predict losses with reasonable accuracy by pooling a large number of similar risks. Adverse selection is the tendency of higher-risk individuals to seek insurance more actively than lower-risk individuals. Insurers combat adverse selection through underwriting — the process of evaluating and classifying risk to determine whether to issue a policy and at what premium.</p>
+<p>Insurable interest requires that the policyholder would suffer a financial loss from the insured event. For life insurance, insurable interest must exist at the time of application (not at the time of claim). A person always has insurable interest in their own life. Insurable interest also exists between spouses, parents and children, business partners, and employers and key employees. The principle of indemnity (applicable to property and health insurance, not life insurance) limits recovery to the actual financial loss suffered, preventing the insured from profiting from a loss.</p>
+<h3>1.2 Needs Analysis and Underwriting</h3>
+<p>The human life value approach estimates the present value of the insured&#x27;s future earnings, adjusted for taxes, personal consumption, and inflation. The needs approach (more commonly used) calculates specific financial obligations: final expenses ($10,000-$25,000), outstanding debts (mortgage, loans), income replacement (present value of needed income for dependents), education funding, emergency fund, and special needs. Existing resources (savings, investments, Social Security survivor benefits, existing insurance) are subtracted to determine the insurance gap.</p>
+<p>Underwriting classifies applicants into risk categories: preferred (lowest risk, lowest premiums), standard (average risk, standard premiums), substandard/rated (higher risk, higher premiums), and declined (uninsurable). Factors considered include age, gender, health history, family medical history, occupation, hobbies, tobacco use, driving record, and financial situation. The Medical Information Bureau (MIB) maintains a database of medical conditions reported by member insurance companies to detect fraud and adverse selection.</p>
+<h3>2.1 Term Life Insurance</h3>
+<p>Term life insurance provides pure death protection for a specified period (10, 15, 20, or 30 years) with no cash value accumulation. It is the most affordable type of life insurance and is appropriate for temporary needs such as income replacement during working years, mortgage protection, and coverage during child-rearing years. Level term maintains a constant death benefit and premium throughout the term. Decreasing term maintains a constant premium but the death benefit decreases over time (used for mortgage protection). Annual renewable term (ART) renews annually with increasing premiums based on the insured&#x27;s attained age.</p>
+<p>Convertible term policies allow the policyholder to convert to a permanent policy without evidence of insurability, typically within a specified conversion period. This is valuable because the insured&#x27;s health may deteriorate during the term, making it impossible to qualify for a new policy. The conversion is based on the insured&#x27;s attained age (current age) at the time of conversion, resulting in higher premiums than if the permanent policy had been purchased originally.</p>
+<h3>2.2 Whole Life Insurance</h3>
+<p>Whole life (ordinary life) insurance provides permanent coverage for the insured&#x27;s entire lifetime with guaranteed level premiums, a guaranteed death benefit, and guaranteed cash value growth. The cash value grows at a guaranteed minimum rate and can be accessed through policy loans or partial surrenders. Policy loans accrue interest but do not need to be repaid (outstanding loans reduce the death benefit). Whole life premiums are significantly higher than term premiums because a portion of each premium funds the cash value. Whole life is appropriate for permanent needs: estate liquidity, final expenses, wealth transfer, and supplemental retirement income.</p>
+<p>Limited-pay whole life (such as 20-pay life or paid-up at 65) compresses the premium payments into a shorter period while providing lifetime coverage. Single-premium whole life is paid with one lump sum and is always classified as a Modified Endowment Contract (MEC). Participating whole life policies pay dividends (which are considered a return of premium and are not taxable until they exceed the total premiums paid). Dividends can be taken in cash, used to reduce premiums, left to accumulate at interest, or used to purchase paid-up additions (additional insurance).</p>
+<h3>2.3 Universal and Variable Life</h3>
+<p>Universal life (UL) offers flexible premiums and an adjustable death benefit. The policyholder can increase or decrease premiums (within limits) and adjust the death benefit. Cash value earns interest based on current rates (with a guaranteed minimum). UL has two death benefit options: Option A (level death benefit, where the cash value is included in the death benefit) and Option B (increasing death benefit, where the death benefit equals the face amount plus the cash value). Option B is more expensive but provides increasing coverage.</p>
+<p>Variable life (VL) allows the policyholder to invest the cash value in subaccounts (similar to mutual funds), offering higher growth potential but with investment risk. The death benefit has a guaranteed minimum but can increase if investments perform well. Variable universal life (VUL) combines the flexibility of UL with the investment options of VL. Both VL and VUL are securities and require a securities license (Series 6 or Series 7) in addition to a life insurance license. Indexed universal life (IUL) credits interest based on a market index (such as the S&amp;P 500) with a floor (minimum rate, often 0-2%) and a cap (maximum rate, often 8-12%).</p>
+<p>Standard policy provisions protect both the insurer and the policyholder. The free-look period (typically 10-30 days) allows the policyholder to return the policy for a full refund after delivery. The grace period (typically 31 days) allows premium payment after the due date without lapse. The incontestability clause prevents the insurer from contesting the policy after it has been in force for 2 years (except for non-payment of premiums). The suicide clause excludes death by suicide within the first 2 years of the policy (after 2 years, suicide is covered).</p>
+<p>The misstatement of age provision allows the insurer to adjust the death benefit (rather than void the policy) if the insured&#x27;s age was misstated on the application. The entire contract provision states that the policy and the application (attached to the policy) constitute the entire contract. The reinstatement provision allows a lapsed policy to be reinstated within a specified period (typically 3-5 years) with evidence of insurability and payment of back premiums with interest. Non-forfeiture options (for permanent policies) protect the policyholder&#x27;s cash value if the policy lapses: cash surrender value, reduced paid-up insurance, or extended term insurance.</p>
+<p>Settlement options determine how the death benefit is paid to the beneficiary. Lump sum provides the entire benefit at once. Fixed period pays equal installments over a specified number of years. Fixed amount pays a specified dollar amount until the proceeds are exhausted. Life income (annuitization) pays for the beneficiary&#x27;s lifetime. Interest only leaves the proceeds with the insurer, paying only the interest to the beneficiary. The beneficiary designation can be revocable (the policyholder can change it) or irrevocable (requires the beneficiary&#x27;s consent to change).</p>
+<p>An annuity is a contract between an individual and an insurance company designed to provide income, typically during retirement. During the accumulation phase, the contract owner makes premium payments and the value grows tax-deferred. During the annuitization (payout) phase, the insurance company makes periodic payments to the annuitant. Fixed annuities guarantee a minimum interest rate and provide predictable payments. Variable annuities invest in subaccounts with returns dependent on market performance — they are securities requiring a securities license.</p>
+<p>Annuity payout options include: life only (payments for the annuitant&#x27;s lifetime, highest payment but nothing to beneficiaries at death), life with period certain (payments for life with a guaranteed minimum period, such as 10 or 20 years), joint and survivor (payments for two lives, continuing to the survivor at 50-100% of the original amount), and fixed period or fixed amount. The exclusion ratio determines the tax treatment of each payment: Exclusion Ratio = Investment in Contract / Expected Return. The excluded portion is a tax-free return of basis; the remainder is taxable as ordinary income.</p>
+<p>Taxation of annuities: contributions to non-qualified annuities are made with after-tax dollars (no deduction). Growth is tax-deferred. Withdrawals during accumulation are taxed LIFO (earnings first, as ordinary income) with a 10% penalty before age 59 1/2. Qualified annuities (held in IRAs or employer plans) follow the same distribution rules as the underlying retirement account. The 1035 exchange allows tax-free exchange of one annuity for another, or a life insurance policy for an annuity (but NOT an annuity for a life insurance policy).</p>
+<p>Health insurance protects against the financial consequences of illness and injury. Major medical insurance covers a broad range of medical expenses with a deductible (the amount the insured pays before coverage begins), coinsurance (the percentage split between insurer and insured, typically 80/20), and an out-of-pocket maximum (the most the insured pays in a year, after which the insurer pays 100%). The Affordable Care Act (ACA) established essential health benefits that all individual and small group plans must cover, prohibited denial of coverage for pre-existing conditions, and eliminated lifetime benefit limits.</p>
+<p>Disability income insurance replaces a portion of income (typically 60-70%) when the insured cannot work due to illness or injury. Own-occupation coverage pays if the insured cannot perform their specific occupation. Any-occupation coverage pays only if the insured cannot perform any occupation for which they are reasonably qualified. The elimination period (waiting period) is the time between disability onset and benefit commencement — longer elimination periods reduce premiums. Tax treatment: employer-paid premiums result in taxable benefits; employee-paid (after-tax) premiums result in tax-free benefits.</p>
+<p>Long-term care (LTC) insurance covers custodial care, assisted living, home health care, and skilled nursing facility care. Benefits are triggered when the insured cannot perform 2 or more activities of daily living (ADLs: bathing, dressing, eating, toileting, transferring, continence) or has a cognitive impairment. Tax-qualified LTC policies allow premium deductions as medical expenses (subject to age-based limits) and provide tax-free benefits up to a per-diem limit ($420/day in 2026). Partnership policies protect assets equal to benefits received from Medicaid spend-down requirements.</p>
+<p>Medicare is the federal health insurance program for individuals age 65+ and certain disabled individuals. Part A covers hospital care (funded by payroll taxes, no premium for most). Part B covers physician services and outpatient care (monthly premium, approximately $185/month in 2026). Part C (Medicare Advantage) is a private alternative to Parts A and B. Part D covers prescription drugs. Medigap (Medicare Supplement) policies fill the gaps in Original Medicare coverage. Medicare does NOT cover long-term custodial care, dental, vision, or hearing (with limited exceptions under Medicare Advantage).</p>
+<p>Insurance is regulated primarily at the state level. Each state has an insurance department headed by a commissioner (or superintendent) who oversees licensing, market conduct, rate approval, and consumer protection. The McCarran-Ferguson Act (1945) affirmed state regulation of insurance and exempted insurance from most federal antitrust laws. Producers (agents and brokers) must be licensed in each state where they sell insurance. Continuing education is required for license renewal (typically 24 hours per renewal period, including ethics).</p>
+<p>Unfair trade practices include misrepresentation (making false statements about a policy), twisting (using misrepresentation to induce a policyholder to replace an existing policy), churning (replacing policies to generate commissions without benefit to the client), rebating (giving part of the commission to the client as an inducement to purchase), and defamation (making false statements about a competitor). Replacement regulations require the agent to provide a comparison of the existing and proposed policies and to notify the existing insurer of the replacement. The agent has a duty to ensure that the replacement is in the client&#x27;s best interest.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-3', 3)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(3)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-4" class="section" style="display:none;">
+<h2>Practice Exam: Life and Health Insurance</h2>
+<h3>1. Insurable interest for life insurance must exist at:</h3>
+<p>A) Time of claim
+B) Time of application
+C) Time of policy delivery
+D) All times</p>
+<h3>2. Which life insurance product has NO cash value?</h3>
+<p>A) Whole life
+B) Universal life
+C) Term life
+D) Variable life</p>
+<h3>3. The incontestability clause prevents the insurer from contesting the policy after:</h3>
+<p>A) 1 year
+B) 2 years
+C) 3 years
+D) 5 years</p>
+<h3>4. A Modified Endowment Contract (MEC) results from:</h3>
+<p>A) Insufficient premium payments
+B) Exceeding the 7-pay test
+C) Failing to name a beneficiary
+D) Converting term to permanent</p>
+<h3>5. Medicare Part B covers:</h3>
+<p>A) Hospital care
+B) Physician services and outpatient care
+C) Prescription drugs
+D) Long-term custodial care</p>
+<h3>6. The elimination period in disability insurance is:</h3>
+<p>A) The maximum benefit period
+B) The waiting period before benefits begin
+C) The time to process the application
+D) The grace period for premium payment</p>
+<p>The free-look provision gives the policyowner a specified period (typically 10-30 days, depending on state law) after policy delivery to examine the policy and return it for a full refund of premiums paid. The grace period (typically 31 days for annual premium policies, 10 days for monthly) allows the policyowner to make a late premium payment without the policy lapsing. If the insured dies during the grace period, the death benefit is paid minus the overdue premium.</p>
+<p>The incontestability clause prevents the insurer from contesting the validity of the policy after it has been in force for a specified period (typically 2 years from the date of issue). After the contestability period, the insurer cannot void the policy even if the application contained material misrepresentations — with the exception of fraud (in most states). The misstatement of age or sex provision allows the insurer to adjust the death benefit (not void the policy) if the insured&#x27;s age or sex was misstated on the application.</p>
+<p>The entire contract clause states that the policy and the attached application constitute the entire contract between the parties. No statement made by the applicant can be used to void the policy unless it is contained in the written application attached to the policy. The reinstatement provision allows a lapsed policy to be reinstated within a specified period (typically 3-5 years) if the policyowner pays all back premiums with interest, provides evidence of insurability, and pays any outstanding policy loans. A reinstated policy has a new contestability period and a new suicide exclusion period.</p>
+<p>The waiver of premium rider waives premium payments if the insured becomes totally disabled (as defined in the rider) for a specified waiting period (typically 6 months). The policy remains in force as if premiums were being paid. The guaranteed insurability rider (guaranteed purchase option) allows the insured to purchase additional coverage at specified future dates (typically every 3 years or at life events such as marriage or birth of a child) without evidence of insurability. The accelerated death benefit rider (living benefit) allows the insured to receive a portion of the death benefit (typically 25-75%) while still living if diagnosed with a terminal illness (life expectancy of 12-24 months).</p>
+<p>The accidental death benefit rider (double indemnity) pays an additional death benefit (typically equal to the face amount) if the insured dies as a result of an accident. The death must occur within a specified period after the accident (typically 90 days). Exclusions typically include death from war, aviation (as a pilot), and self-inflicted injuries. The term rider adds term insurance coverage to a permanent policy, providing additional temporary coverage at a lower cost than purchasing a separate term policy. The children&#x27;s term rider provides term coverage for all children of the insured, typically converting to permanent coverage at age 25.</p>
+<p>Health insurance provides coverage for medical expenses, including hospitalization, surgery, physician visits, prescription drugs, and preventive care. The Affordable Care Act (ACA) established key requirements: guaranteed issue (insurers cannot deny coverage based on pre-existing conditions), community rating (premiums can vary only by age, tobacco use, family size, and geographic area), essential health benefits (10 categories of coverage that all ACA-compliant plans must include), and the metal tier system (Bronze: 60% actuarial value, Silver: 70%, Gold: 80%, Platinum: 90%).</p>
+<p>Health Savings Accounts (HSAs) are available to individuals enrolled in a High Deductible Health Plan (HDHP). For 2026, the minimum deductible is $1,700 (individual) / $3,400 (family), and the maximum out-of-pocket is $8,500 (individual) / $17,000 (family). HSA contributions are tax-deductible, growth is tax-free, and withdrawals for qualified medical expenses are tax-free (triple tax benefit). After age 65, HSA withdrawals for non-medical expenses are taxed as ordinary income (no penalty). Flexible Spending Accounts (FSAs) allow employees to set aside pre-tax dollars for medical expenses, but FSAs have a use-it-or-lose-it provision (with a $640 carryover or 2.5-month grace period).</p>
+<p>Medicare is the federal health insurance program for individuals age 65+ and certain disabled individuals. Part A (Hospital Insurance) covers inpatient hospital care, skilled nursing facility care, home health care, and hospice care. Part A is premium-free for individuals with 40+ quarters of Social Security coverage. Part B (Medical Insurance) covers physician services, outpatient care, preventive services, and durable medical equipment. Part B has a monthly premium ($185/month standard in 2026, higher for high-income individuals under IRMAA). Part D covers prescription drugs through private plans. Medicare Advantage (Part C) is an alternative to Original Medicare, offered by private insurers, combining Parts A, B, and usually D with additional benefits.</p>
+<h3>A.1 Life Insurance Policy Provisions</h3>
+<p>The free-look provision gives the policyowner a specified period (typically 10-30 days, depending on state law) after policy delivery to examine the policy and return it for a full refund of premiums paid. The grace period (typically 31 days for annual premium policies, 10 days for monthly) allows the policyowner to make a late premium payment without the policy lapsing. If the insured dies during the grace period, the death benefit is paid minus the overdue premium.</p>
+<p>The incontestability clause prevents the insurer from contesting the validity of the policy after it has been in force for a specified period (typically 2 years from the date of issue). After the contestability period, the insurer cannot void the policy even if the application contained material misrepresentations — with the exception of fraud (in most states). The misstatement of age or sex provision allows the insurer to adjust the death benefit (not void the policy) if the insured&#x27;s age or sex was misstated on the application.</p>
+<p>The entire contract clause states that the policy and the attached application constitute the entire contract between the parties. No statement made by the applicant can be used to void the policy unless it is contained in the written application attached to the policy. The reinstatement provision allows a lapsed policy to be reinstated within a specified period (typically 3-5 years) if the policyowner pays all back premiums with interest, provides evidence of insurability, and pays any outstanding policy loans. A reinstated policy has a new contestability period and a new suicide exclusion period.</p>
+<h3>A.2 Life Insurance Riders</h3>
+<p>The waiver of premium rider waives premium payments if the insured becomes totally disabled (as defined in the rider) for a specified waiting period (typically 6 months). The policy remains in force as if premiums were being paid. The guaranteed insurability rider (guaranteed purchase option) allows the insured to purchase additional coverage at specified future dates (typically every 3 years or at life events such as marriage or birth of a child) without evidence of insurability. The accelerated death benefit rider (living benefit) allows the insured to receive a portion of the death benefit (typically 25-75%) while still living if diagnosed with a terminal illness (life expectancy of 12-24 months).</p>
+<p>The accidental death benefit rider (double indemnity) pays an additional death benefit (typically equal to the face amount) if the insured dies as a result of an accident. The death must occur within a specified period after the accident (typically 90 days). Exclusions typically include death from war, aviation (as a pilot), and self-inflicted injuries. The term rider adds term insurance coverage to a permanent policy, providing additional temporary coverage at a lower cost than purchasing a separate term policy. The children&#x27;s term rider provides term coverage for all children of the insured, typically converting to permanent coverage at age 25.</p>
+<h3>A.3 Health Insurance Fundamentals</h3>
+<p>Health insurance provides coverage for medical expenses, including hospitalization, surgery, physician visits, prescription drugs, and preventive care. The Affordable Care Act (ACA) established key requirements: guaranteed issue (insurers cannot deny coverage based on pre-existing conditions), community rating (premiums can vary only by age, tobacco use, family size, and geographic area), essential health benefits (10 categories of coverage that all ACA-compliant plans must include), and the metal tier system (Bronze: 60% actuarial value, Silver: 70%, Gold: 80%, Platinum: 90%).</p>
+<p>Health Savings Accounts (HSAs) are available to individuals enrolled in a High Deductible Health Plan (HDHP). For 2026, the minimum deductible is $1,700 (individual) / $3,400 (family), and the maximum out-of-pocket is $8,500 (individual) / $17,000 (family). HSA contributions are tax-deductible, growth is tax-free, and withdrawals for qualified medical expenses are tax-free (triple tax benefit). After age 65, HSA withdrawals for non-medical expenses are taxed as ordinary income (no penalty). Flexible Spending Accounts (FSAs) allow employees to set aside pre-tax dollars for medical expenses, but FSAs have a use-it-or-lose-it provision (with a $640 carryover or 2.5-month grace period).</p>
+<p>Medicare is the federal health insurance program for individuals age 65+ and certain disabled individuals. Part A (Hospital Insurance) covers inpatient hospital care, skilled nursing facility care, home health care, and hospice care. Part A is premium-free for individuals with 40+ quarters of Social Security coverage. Part B (Medical Insurance) covers physician services, outpatient care, preventive services, and durable medical equipment. Part B has a monthly premium ($185/month standard in 2026, higher for high-income individuals under IRMAA). Part D covers prescription drugs through private plans. Medicare Advantage (Part C) is an alternative to Original Medicare, offered by private insurers, combining Parts A, B, and usually D with additional benefits.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-4', 4)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(4)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-5" class="section" style="display:none;">
+<h2>Additional Practice Questions: Life &amp; Health Additional</h2>
+<h3>11. The incontestability clause prevents the insurer from voiding a policy after:</h3>
+<p>A) 1 year
+B) 2 years
+C) 3 years
+D) 5 years</p>
+<h3>12. An HSA contribution for a family in 2026 is limited to:</h3>
+<p>A) $4,400
+B) $8,750
+C) $9,550
+D) $17,000</p>
+<h3>13. The waiver of premium rider waives premiums when the insured:</h3>
+<p>A) Reaches age 65
+B) Becomes totally disabled
+C) Is diagnosed with a terminal illness
+D) Retires from employment</p>
+<h3>14. Medicare Part B covers:</h3>
+<p>A) Inpatient hospital care
+B) Physician services and outpatient care
+C) Prescription drugs
+D) Skilled nursing facility care only</p>
+<div class="table-wrapper"><table>
+<tr><th></th><th>How to Use This Manual</th></tr>
+<tr><td></td><td>Exam Overview</td></tr>
+<tr><td>CH 1</td><td>Life Insurance Fundamentals</td></tr>
+<tr><td>CH 2</td><td>Life Insurance Products</td></tr>
+<tr><td>CH 3</td><td>Life Insurance Policy Provisions</td></tr>
+<tr><td>CH 4</td><td>Annuities</td></tr>
+<tr><td>CH 5</td><td>Health Insurance Fundamentals</td></tr>
+<tr><td>CH 6</td><td>Health Insurance Products</td></tr>
+<tr><td>CH 7</td><td>Insurance Regulation and Ethics</td></tr>
+<tr><td></td><td>Practice Exam</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Component</th><th>Detail</th></tr>
+<tr><td>Questions</td><td>~150 multiple-choice (varies by state)</td></tr>
+<tr><td>Time</td><td>2-3 hours (varies by state)</td></tr>
+<tr><td>Passing Score</td><td>~70% (varies by state)</td></tr>
+<tr><td>Prerequisites</td><td>Pre-licensing education (varies by state, typically 20-40 hours)</td></tr>
+<tr><td>Cost</td><td>$50-$100 (varies by state)</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Product</th><th>Premiums</th><th>Cash Value</th><th>Death Benefit</th><th>Securities?</th></tr>
+<tr><td>Term</td><td>Level (for term)</td><td>None</td><td>Level or decreasing</td><td>No</td></tr>
+<tr><td>Whole Life</td><td>Level (guaranteed)</td><td>Guaranteed growth</td><td>Guaranteed level</td><td>No</td></tr>
+<tr><td>Universal Life</td><td>Flexible</td><td>Current rate (min guaranteed)</td><td>Adjustable</td><td>No</td></tr>
+<tr><td>Variable Life</td><td>Fixed</td><td>Subaccount performance</td><td>Guaranteed minimum + variable</td><td>Yes</td></tr>
+<tr><td>Variable Universal</td><td>Flexible</td><td>Subaccount performance</td><td>Adjustable + variable</td><td>Yes</td></tr>
+<tr><td>Indexed Universal</td><td>Flexible</td><td>Index-linked (floor and cap)</td><td>Adjustable</td><td>No</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Provision</th><th>Purpose</th><th>Typical Timeframe</th></tr>
+<tr><td>Free Look</td><td>Examine and return policy</td><td>10-30 days after delivery</td></tr>
+<tr><td>Grace Period</td><td>Late premium payment</td><td>31 days (annual), 10 days (monthly)</td></tr>
+<tr><td>Incontestability</td><td>Prevents insurer from voiding</td><td>2 years from issue</td></tr>
+<tr><td>Reinstatement</td><td>Restore lapsed policy</td><td>3-5 years from lapse</td></tr>
+<tr><td>Suicide Exclusion</td><td>No death benefit for suicide</td><td>2 years from issue</td></tr>
+<tr><td>Misstatement of Age</td><td>Adjust benefit, not void</td><td>Anytime (adjustment only)</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Medicare Part</th><th>Coverage</th><th>2026 Premium</th><th>Deductible</th></tr>
+<tr><td>Part A</td><td>Hospital, SNF, home health, hospice</td><td>Free (40+ quarters)</td><td>$1,676 per benefit period</td></tr>
+<tr><td>Part B</td><td>Physician, outpatient, preventive</td><td>$185/month (standard)</td><td>$257 annually</td></tr>
+<tr><td>Part C</td><td>Combined A+B+D (private plan)</td><td>Varies by plan</td><td>Varies by plan</td></tr>
+<tr><td>Part D</td><td>Prescription drugs</td><td>Varies by plan</td><td>Varies ($590 max standard)</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Feature</th><th>Own-Occupation</th><th>Any-Occupation</th></tr>
+<tr><td>Definition</td><td>Cannot perform own job</td><td>Cannot perform any suitable job</td></tr>
+<tr><td>Premium</td><td>Higher</td><td>Lower</td></tr>
+<tr><td>Protection Level</td><td>Broader</td><td>Narrower</td></tr>
+<tr><td>Best For</td><td>Professionals, specialists</td><td>General workers</td></tr>
+<tr><td>Common In</td><td>Individual policies</td><td>Group policies</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Account</th><th>Contribution Limit (2026)</th><th>Rollover</th><th>Portability</th><th>Tax Treatment</th></tr>
+<tr><td>HSA</td><td>$4,400/$8,750</td><td>Yes (unlimited)</td><td>Yes</td><td>Triple tax-free</td></tr>
+<tr><td>FSA</td><td>$3,200</td><td>Limited ($640)</td><td>No (employer-owned)</td><td>Pre-tax contributions</td></tr>
+<tr><td>HRA</td><td>Employer sets</td><td>Employer decides</td><td>No (employer-owned)</td><td>Employer-funded, tax-free</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Method</th><th>Approach</th><th>Death Benefit Size</th><th>Best For</th></tr>
+<tr><td>Human Life Value</td><td>PV of future earnings</td><td>Moderate to large</td><td>Young, high-earning professionals</td></tr>
+<tr><td>Needs Analysis</td><td>Specific financial needs</td><td>Varies by situation</td><td>Most families (primary method)</td></tr>
+<tr><td>Capital Retention</td><td>Invest and use income only</td><td>Largest</td><td>Legacy-focused clients</td></tr>
+<tr><td>Capital Liquidation</td><td>Use principal + interest</td><td>Smallest</td><td>Budget-conscious clients</td></tr>
+</table></div>
+<p>Disability insurance replaces a portion of income (typically 60-70%) when the insured is unable to work due to illness or injury. Own-occupation coverage pays benefits if the insured cannot perform the duties of their specific occupation. Any-occupation coverage pays only if the insured cannot perform any occupation for which they are reasonably suited by education, training, or experience. Own-occupation is more expensive but provides broader protection, especially for professionals (physicians, attorneys) whose specialized skills command higher income.</p>
+<p>Key disability policy features: the elimination period (waiting period before benefits begin, typically 30-180 days — longer elimination periods reduce premiums), the benefit period (how long benefits are paid, ranging from 2 years to age 65 or lifetime), residual/partial disability benefits (pays a proportional benefit when the insured can work part-time but earns less than before disability), cost-of-living adjustment (COLA) rider (increases benefits annually to keep pace with inflation), and the non-cancelable/guaranteed renewable distinction.</p>
+<p>Non-cancelable policies guarantee that the insurer cannot cancel the policy, increase premiums, or change benefits as long as premiums are paid — this is the strongest form of disability coverage. Guaranteed renewable policies guarantee the insured can renew the policy, but the insurer can increase premiums for the entire class of policyholders (not individually). Conditionally renewable policies can be cancelled by the insurer under specified conditions. The tax treatment of disability benefits depends on who paid the premiums: employer-paid premiums result in taxable benefits; individually-paid premiums result in tax-free benefits.</p>
+<p>Long-term care (LTC) insurance covers the cost of care when the insured needs assistance with activities of daily living (ADLs): bathing, dressing, eating, toileting, transferring (moving in/out of bed/chair), and continence. Benefits are triggered when the insured cannot perform 2 of 6 ADLs or has a severe cognitive impairment (such as Alzheimer&#x27;s disease). LTC policies typically have a daily or monthly benefit amount ($150-$400/day), a benefit period (2-5 years or lifetime), and an elimination period (30-180 days).</p>
+<p>LTC coverage options include: nursing home care (the most expensive, averaging $8,000-$12,000/month), assisted living facility care ($4,000-$7,000/month), home health care (professional care provided in the insured&#x27;s home), adult day care, and hospice care. Inflation protection riders are critical for LTC policies because the cost of care increases significantly over time — a 3-5% compound inflation rider ensures benefits keep pace with rising care costs. Partnership programs in many states allow policyholders to protect assets equal to the benefits received from a qualified LTC policy, providing Medicaid asset protection.</p>
+<p>Tax-qualified LTC policies (meeting IRC Section 7702B requirements) provide tax benefits: premiums are deductible as medical expenses (subject to age-based limits and the 7.5% AGI threshold), and benefits received are tax-free up to the per diem limit ($420/day in 2026) or actual costs incurred. Non-tax-qualified policies may provide broader benefit triggers but do not receive favorable tax treatment. Hybrid LTC policies (combining life insurance or annuities with LTC benefits) have become increasingly popular as they guarantee a benefit even if LTC is never needed.</p>
+<p>Group life insurance is typically provided by employers as a benefit. Group term life is the most common form, providing coverage for the duration of employment. The employer can deduct premiums as a business expense. The first $50,000 of employer-provided group term life is tax-free to the employee; coverage above $50,000 results in imputed income based on IRS Table I rates. Group life is guaranteed issue (no individual underwriting) during the initial enrollment period, making it valuable for employees with health conditions who might not qualify for individual coverage.</p>
+<p>COBRA (Consolidated Omnibus Budget Reconciliation Act) requires employers with 20+ employees to offer continuation of group health coverage to employees and dependents who lose coverage due to a qualifying event (termination, reduction in hours, divorce, death of the covered employee). COBRA coverage lasts 18 months for termination/reduction in hours, 36 months for divorce/death/Medicare eligibility. The former employee pays the full premium plus a 2% administrative fee. COBRA is a bridge to other coverage, not a long-term solution.</p>
+<p>Fixed annuities guarantee a minimum interest rate during the accumulation phase and a fixed payment during the annuitization phase. The insurer bears the investment risk. Immediate annuities begin payments within one year of purchase (single premium immediate annuity — SPIA). Deferred annuities accumulate value over time before payments begin. Annuity payout options include: life only (highest payment, no beneficiary), life with period certain (payments for life or a guaranteed period, whichever is longer), joint and survivor (payments continue for the surviving annuitant), and fixed period/fixed amount.</p>
+<p>The exclusion ratio determines the tax-free portion of each annuity payment: Exclusion Ratio = Investment in Contract / Expected Return. For example, if an annuitant invested $100,000 and the expected return is $200,000, the exclusion ratio is 50% — half of each payment is tax-free (return of principal) and half is taxable (earnings). After the investment is fully recovered, all subsequent payments are fully taxable. For qualified annuities (funded with pre-tax dollars in retirement plans), the entire payment is taxable because no after-tax contributions were made.</p>
+<p>The 1035 exchange allows tax-free exchanges between certain insurance products: life insurance to life insurance, life insurance to annuity, annuity to annuity, and life insurance to long-term care. An annuity CANNOT be exchanged tax-free for life insurance (this would convert tax-deferred gains into a tax-free death benefit). The exchange must be between the same owner and insured/annuitant. Partial 1035 exchanges are also permitted. This is a critical planning tool for clients who want to change products without triggering a taxable event.</p>
+<p>Health insurance plans are categorized by metal tier under the Affordable Care Act: Bronze (60% actuarial value — lowest premiums, highest out-of-pocket costs), Silver (70% AV), Gold (80% AV), and Platinum (90% AV — highest premiums, lowest out-of-pocket costs). High-Deductible Health Plans (HDHPs) qualify for Health Savings Account (HSA) contributions. 2026 HDHP minimums: $1,700 individual / $3,400 family deductible. 2026 HSA contribution limits: $4,400 individual / $8,750 family ($1,000 catch-up for age 55+).</p>
+<p>HSAs offer triple tax advantages: contributions are tax-deductible (or pre-tax if through payroll), growth is tax-free, and withdrawals for qualified medical expenses are tax-free. Unlike FSAs, HSAs have no use-it-or-lose-it provision — funds roll over indefinitely. After age 65, HSA funds can be withdrawn for any purpose (taxed as ordinary income, like a traditional IRA) or tax-free for medical expenses. HSAs are individually owned and portable — they are not tied to an employer. This makes them a powerful retirement planning tool in addition to their healthcare function.</p>
+<p>Life insurance policies contain standard provisions required by state law. The incontestability clause prevents the insurer from contesting the policy after it has been in force for 2 years (except for non-payment of premiums). Even material misrepresentations on the application cannot void the policy after the contestability period. The suicide clause excludes death benefits if the insured commits suicide within the first 2 years of the policy — after 2 years, suicide is covered. The misstatement of age provision allows the insurer to adjust the death benefit to what the premium would have purchased at the correct age, rather than voiding the policy.</p>
+<p>The grace period (typically 31 days for annual premium policies) allows the policyholder to pay a late premium without losing coverage. If the insured dies during the grace period, the death benefit is paid minus the overdue premium. The reinstatement provision allows a lapsed policy to be reinstated within a specified period (typically 3-5 years) if the policyholder provides evidence of insurability and pays all back premiums with interest. A new contestability period begins upon reinstatement. The entire contract provision states that the policy and attached application constitute the entire contract — no external documents can modify the agreement.</p>
+<p>Common life insurance riders include: waiver of premium (waives premiums if the insured becomes totally disabled — typically requires disability for 6 months with a retroactive waiver to the date of disability), accelerated death benefit (allows access to a portion of the death benefit if the insured is diagnosed with a terminal illness with 12-24 months life expectancy), guaranteed insurability rider (allows the purchase of additional coverage at specified future dates without evidence of insurability), accidental death benefit (pays an additional death benefit — typically double — if death results from an accident), and children&#x27;s term rider (provides term coverage on the insured&#x27;s children).</p>
+<p>The human life value approach calculates the present value of the insured&#x27;s future earnings, adjusted for taxes, personal consumption, and inflation. For example, a 35-year-old earning $100,000 with 30 years to retirement, assuming 3% annual raises and a 5% discount rate, might have a human life value of $2.5 million. The needs approach is more practical: it identifies specific financial needs that would arise at death (final expenses, debt payoff, income replacement, education funding, emergency fund) and subtracts existing resources (savings, group life, Social Security survivor benefits, spouse&#x27;s income) to determine the insurance gap.</p>
+<p>The capital retention approach assumes the death benefit is invested and only the investment income is used, preserving the principal for the next generation. This requires a larger death benefit but provides permanent income replacement. The capital liquidation approach assumes both principal and interest are consumed over a specified period (e.g., until the youngest child reaches age 22 or the surviving spouse reaches retirement age). This requires a smaller death benefit but provides no legacy. Most financial planners use a combination of approaches, with the needs analysis as the primary method supplemented by human life value as a reasonableness check.</p>
+<p>Replacement regulations protect consumers when replacing existing life insurance or annuity policies. The replacing agent must: provide the applicant with a Notice Regarding Replacement, obtain a list of all existing policies to be replaced, and submit copies to both the existing and replacing insurers. The existing insurer has 20 days to contact the policyholder to provide information about the existing policy&#x27;s benefits. Twisting (inducing replacement through misrepresentation) and churning (replacing for the purpose of generating commissions) are prohibited and can result in license revocation.</p>
+<p>Key life insurance tax rules: death benefits are generally income tax-free to the beneficiary (IRC Section 101(a)). Cash value growth is tax-deferred. Policy loans are not taxable events (as long as the policy remains in force). Surrendering a policy triggers income tax on the gain (surrender value minus cost basis). Modified Endowment Contracts (MECs) — policies that fail the 7-pay test — lose favorable tax treatment for lifetime distributions: withdrawals and loans are taxed LIFO (earnings first) and subject to a 10% penalty if taken before age 59 1/2.</p>
+<p>The 7-pay test determines whether a life insurance policy is a MEC: if cumulative premiums paid in the first 7 years exceed the net level premium that would pay up the policy in 7 years, the policy becomes a MEC. Once a policy is classified as a MEC, it cannot be reclassified. This rule prevents people from overfunding life insurance policies to use them primarily as tax-sheltered investment vehicles. MECs still provide income tax-free death benefits, but lifetime access to cash value is penalized.</p>
+<p>Group life insurance is employer-sponsored coverage. Key features: no individual underwriting (guaranteed issue up to a specified amount), the employer is the policyholder and employees receive certificates of insurance, coverage is typically term insurance equal to 1-2x annual salary, and employees can convert to individual policies upon termination (conversion privilege). Under IRC Section 79, employer-paid group term life insurance premiums are tax-free to the employee for the first $50,000 of coverage. Premiums for coverage exceeding $50,000 are taxable income to the employee based on IRS Table I rates (imputed income).</p>
+<p>Long-term care (LTC) insurance covers the cost of care for individuals who cannot perform activities of daily living (ADLs): bathing, dressing, eating, toileting, transferring, and continence. Benefits are triggered when the insured cannot perform 2 of 6 ADLs or has a severe cognitive impairment. The elimination period (typically 30-90 days) is the waiting period before benefits begin — longer elimination periods reduce premiums. LTC premiums may be tax-deductible as medical expenses (subject to age-based limits). Partnership policies allow the insured to protect assets equal to the benefits received from Medicaid spend-down requirements.</p>
+<p>Continuing education is required to maintain a life and health insurance license. Most states require 24 hours of CE every 2 years, including ethics credits. Agents must also complete any state-specific requirements such as flood insurance CE or long-term care partnership program training. Failure to complete CE by the deadline results in license lapse, and the agent must cease all insurance activities until the license is reinstated.</p>
+<p>Success on the life and health exam requires mastering both the technical insurance concepts and the state-specific regulatory requirements that govern agent conduct and consumer protection in your jurisdiction.</p>
+<p>Figure 15: Life Insurance Product Spectrum</p>
+<p>Figure 16: Insurance Needs Analysis Waterfall</p>
+<h3>Disability Insurance</h3>
+<p>Disability insurance replaces a portion of income (typically 60-70%) when the insured is unable to work due to illness or injury. Own-occupation coverage pays benefits if the insured cannot perform the duties of their specific occupation. Any-occupation coverage pays only if the insured cannot perform any occupation for which they are reasonably suited by education, training, or experience. Own-occupation is more expensive but provides broader protection, especially for professionals (physicians, attorneys) whose specialized skills command higher income.</p>
+<p>Key disability policy features: the elimination period (waiting period before benefits begin, typically 30-180 days — longer elimination periods reduce premiums), the benefit period (how long benefits are paid, ranging from 2 years to age 65 or lifetime), residual/partial disability benefits (pays a proportional benefit when the insured can work part-time but earns less than before disability), cost-of-living adjustment (COLA) rider (increases benefits annually to keep pace with inflation), and the non-cancelable/guaranteed renewable distinction.</p>
+<p>Non-cancelable policies guarantee that the insurer cannot cancel the policy, increase premiums, or change benefits as long as premiums are paid — this is the strongest form of disability coverage. Guaranteed renewable policies guarantee the insured can renew the policy, but the insurer can increase premiums for the entire class of policyholders (not individually). Conditionally renewable policies can be cancelled by the insurer under specified conditions. The tax treatment of disability benefits depends on who paid the premiums: employer-paid premiums result in taxable benefits; individually-paid premiums result in tax-free benefits.</p>
+<h3>Long-Term Care Insurance</h3>
+<p>Long-term care (LTC) insurance covers the cost of care when the insured needs assistance with activities of daily living (ADLs): bathing, dressing, eating, toileting, transferring (moving in/out of bed/chair), and continence. Benefits are triggered when the insured cannot perform 2 of 6 ADLs or has a severe cognitive impairment (such as Alzheimer&#x27;s disease). LTC policies typically have a daily or monthly benefit amount ($150-$400/day), a benefit period (2-5 years or lifetime), and an elimination period (30-180 days).</p>
+<p>LTC coverage options include: nursing home care (the most expensive, averaging $8,000-$12,000/month), assisted living facility care ($4,000-$7,000/month), home health care (professional care provided in the insured&#x27;s home), adult day care, and hospice care. Inflation protection riders are critical for LTC policies because the cost of care increases significantly over time — a 3-5% compound inflation rider ensures benefits keep pace with rising care costs. Partnership programs in many states allow policyholders to protect assets equal to the benefits received from a qualified LTC policy, providing Medicaid asset protection.</p>
+<p>Tax-qualified LTC policies (meeting IRC Section 7702B requirements) provide tax benefits: premiums are deductible as medical expenses (subject to age-based limits and the 7.5% AGI threshold), and benefits received are tax-free up to the per diem limit ($420/day in 2026) or actual costs incurred. Non-tax-qualified policies may provide broader benefit triggers but do not receive favorable tax treatment. Hybrid LTC policies (combining life insurance or annuities with LTC benefits) have become increasingly popular as they guarantee a benefit even if LTC is never needed.</p>
+<h3>Group Insurance and Employee Benefits</h3>
+<p>Group life insurance is typically provided by employers as a benefit. Group term life is the most common form, providing coverage for the duration of employment. The employer can deduct premiums as a business expense. The first $50,000 of employer-provided group term life is tax-free to the employee; coverage above $50,000 results in imputed income based on IRS Table I rates. Group life is guaranteed issue (no individual underwriting) during the initial enrollment period, making it valuable for employees with health conditions who might not qualify for individual coverage.</p>
+<p>COBRA (Consolidated Omnibus Budget Reconciliation Act) requires employers with 20+ employees to offer continuation of group health coverage to employees and dependents who lose coverage due to a qualifying event (termination, reduction in hours, divorce, death of the covered employee). COBRA coverage lasts 18 months for termination/reduction in hours, 36 months for divorce/death/Medicare eligibility. The former employee pays the full premium plus a 2% administrative fee. COBRA is a bridge to other coverage, not a long-term solution.</p>
+<h3>Annuity Types and Taxation</h3>
+<p>Fixed annuities guarantee a minimum interest rate during the accumulation phase and a fixed payment during the annuitization phase. The insurer bears the investment risk. Immediate annuities begin payments within one year of purchase (single premium immediate annuity — SPIA). Deferred annuities accumulate value over time before payments begin. Annuity payout options include: life only (highest payment, no beneficiary), life with period certain (payments for life or a guaranteed period, whichever is longer), joint and survivor (payments continue for the surviving annuitant), and fixed period/fixed amount.</p>
+<p>The exclusion ratio determines the tax-free portion of each annuity payment: Exclusion Ratio = Investment in Contract / Expected Return. For example, if an annuitant invested $100,000 and the expected return is $200,000, the exclusion ratio is 50% — half of each payment is tax-free (return of principal) and half is taxable (earnings). After the investment is fully recovered, all subsequent payments are fully taxable. For qualified annuities (funded with pre-tax dollars in retirement plans), the entire payment is taxable because no after-tax contributions were made.</p>
+<p>The 1035 exchange allows tax-free exchanges between certain insurance products: life insurance to life insurance, life insurance to annuity, annuity to annuity, and life insurance to long-term care. An annuity CANNOT be exchanged tax-free for life insurance (this would convert tax-deferred gains into a tax-free death benefit). The exchange must be between the same owner and insured/annuitant. Partial 1035 exchanges are also permitted. This is a critical planning tool for clients who want to change products without triggering a taxable event.</p>
+<h3>Health Insurance Fundamentals</h3>
+<p>Health insurance plans are categorized by metal tier under the Affordable Care Act: Bronze (60% actuarial value — lowest premiums, highest out-of-pocket costs), Silver (70% AV), Gold (80% AV), and Platinum (90% AV — highest premiums, lowest out-of-pocket costs). High-Deductible Health Plans (HDHPs) qualify for Health Savings Account (HSA) contributions. 2026 HDHP minimums: $1,700 individual / $3,400 family deductible. 2026 HSA contribution limits: $4,400 individual / $8,750 family ($1,000 catch-up for age 55+).</p>
+<p>HSAs offer triple tax advantages: contributions are tax-deductible (or pre-tax if through payroll), growth is tax-free, and withdrawals for qualified medical expenses are tax-free. Unlike FSAs, HSAs have no use-it-or-lose-it provision — funds roll over indefinitely. After age 65, HSA funds can be withdrawn for any purpose (taxed as ordinary income, like a traditional IRA) or tax-free for medical expenses. HSAs are individually owned and portable — they are not tied to an employer. This makes them a powerful retirement planning tool in addition to their healthcare function.</p>
+<h3>Standard Policy Provisions</h3>
+<p>Life insurance policies contain standard provisions required by state law. The incontestability clause prevents the insurer from contesting the policy after it has been in force for 2 years (except for non-payment of premiums). Even material misrepresentations on the application cannot void the policy after the contestability period. The suicide clause excludes death benefits if the insured commits suicide within the first 2 years of the policy — after 2 years, suicide is covered. The misstatement of age provision allows the insurer to adjust the death benefit to what the premium would have purchased at the correct age, rather than voiding the policy.</p>
+<p>The grace period (typically 31 days for annual premium policies) allows the policyholder to pay a late premium without losing coverage. If the insured dies during the grace period, the death benefit is paid minus the overdue premium. The reinstatement provision allows a lapsed policy to be reinstated within a specified period (typically 3-5 years) if the policyholder provides evidence of insurability and pays all back premiums with interest. A new contestability period begins upon reinstatement. The entire contract provision states that the policy and attached application constitute the entire contract — no external documents can modify the agreement.</p>
+<p>Common life insurance riders include: waiver of premium (waives premiums if the insured becomes totally disabled — typically requires disability for 6 months with a retroactive waiver to the date of disability), accelerated death benefit (allows access to a portion of the death benefit if the insured is diagnosed with a terminal illness with 12-24 months life expectancy), guaranteed insurability rider (allows the purchase of additional coverage at specified future dates without evidence of insurability), accidental death benefit (pays an additional death benefit — typically double — if death results from an accident), and children&#x27;s term rider (provides term coverage on the insured&#x27;s children).</p>
+<h3>Life Insurance Needs Analysis Methods</h3>
+<p>The human life value approach calculates the present value of the insured&#x27;s future earnings, adjusted for taxes, personal consumption, and inflation. For example, a 35-year-old earning $100,000 with 30 years to retirement, assuming 3% annual raises and a 5% discount rate, might have a human life value of $2.5 million. The needs approach is more practical: it identifies specific financial needs that would arise at death (final expenses, debt payoff, income replacement, education funding, emergency fund) and subtracts existing resources (savings, group life, Social Security survivor benefits, spouse&#x27;s income) to determine the insurance gap.</p>
+<p>The capital retention approach assumes the death benefit is invested and only the investment income is used, preserving the principal for the next generation. This requires a larger death benefit but provides permanent income replacement. The capital liquidation approach assumes both principal and interest are consumed over a specified period (e.g., until the youngest child reaches age 22 or the surviving spouse reaches retirement age). This requires a smaller death benefit but provides no legacy. Most financial planners use a combination of approaches, with the needs analysis as the primary method supplemented by human life value as a reasonableness check.</p>
+<h3>Life &amp; Health Key Concepts Review</h3>
+<p>Replacement regulations protect consumers when replacing existing life insurance or annuity policies. The replacing agent must: provide the applicant with a Notice Regarding Replacement, obtain a list of all existing policies to be replaced, and submit copies to both the existing and replacing insurers. The existing insurer has 20 days to contact the policyholder to provide information about the existing policy&#x27;s benefits. Twisting (inducing replacement through misrepresentation) and churning (replacing for the purpose of generating commissions) are prohibited and can result in license revocation.</p>
+<p>Key life insurance tax rules: death benefits are generally income tax-free to the beneficiary (IRC Section 101(a)). Cash value growth is tax-deferred. Policy loans are not taxable events (as long as the policy remains in force). Surrendering a policy triggers income tax on the gain (surrender value minus cost basis). Modified Endowment Contracts (MECs) — policies that fail the 7-pay test — lose favorable tax treatment for lifetime distributions: withdrawals and loans are taxed LIFO (earnings first) and subject to a 10% penalty if taken before age 59 1/2.</p>
+<p>The 7-pay test determines whether a life insurance policy is a MEC: if cumulative premiums paid in the first 7 years exceed the net level premium that would pay up the policy in 7 years, the policy becomes a MEC. Once a policy is classified as a MEC, it cannot be reclassified. This rule prevents people from overfunding life insurance policies to use them primarily as tax-sheltered investment vehicles. MECs still provide income tax-free death benefits, but lifetime access to cash value is penalized.</p>
+<h3>Life &amp; Health Final Key Facts</h3>
+<p>Group life insurance is employer-sponsored coverage. Key features: no individual underwriting (guaranteed issue up to a specified amount), the employer is the policyholder and employees receive certificates of insurance, coverage is typically term insurance equal to 1-2x annual salary, and employees can convert to individual policies upon termination (conversion privilege). Under IRC Section 79, employer-paid group term life insurance premiums are tax-free to the employee for the first $50,000 of coverage. Premiums for coverage exceeding $50,000 are taxable income to the employee based on IRS Table I rates (imputed income).</p>
+<p>Long-term care (LTC) insurance covers the cost of care for individuals who cannot perform activities of daily living (ADLs): bathing, dressing, eating, toileting, transferring, and continence. Benefits are triggered when the insured cannot perform 2 of 6 ADLs or has a severe cognitive impairment. The elimination period (typically 30-90 days) is the waiting period before benefits begin — longer elimination periods reduce premiums. LTC premiums may be tax-deductible as medical expenses (subject to age-based limits). Partnership policies allow the insured to protect assets equal to the benefits received from Medicaid spend-down requirements.</p>
+<p>Continuing education is required to maintain a life and health insurance license. Most states require 24 hours of CE every 2 years, including ethics credits. Agents must also complete any state-specific requirements such as flood insurance CE or long-term care partnership program training. Failure to complete CE by the deadline results in license lapse, and the agent must cease all insurance activities until the license is reinstated.</p>
+<p>Success on the life and health exam requires mastering both the technical insurance concepts and the state-specific regulatory requirements that govern agent conduct and consumer protection in your jurisdiction.</p>
+<p>Figure 15: Life Insurance Product Spectrum</p>
+<p>Figure 16: Insurance Needs Analysis Waterfall</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-5', 5)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(5)">Next Section →</button>
+        </div>
+        </div>
+
+        
+        <div id="quiz" class="quiz-container">
+            <h2>Practice Quiz</h2>
+            <p>Test your knowledge with these practice questions. Select the best answer for each question.</p>
+            <div id="quizQuestions"></div>
+            <button class="btn-submit" onclick="submitQuiz()">Submit Answers</button>
+            <div id="quizScore" class="quiz-score" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SECTIONS = document.querySelectorAll('.section');
+const NAV_ITEMS = document.querySelectorAll('.nav-item');
+const TOTAL_SECTIONS = 6;
+let completedSections = new Set();
+const STORAGE_KEY = 'Life_Health_progress';
+
+// Load saved progress
+try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    saved.forEach(s => completedSections.add(s));
+    updateProgress();
+    NAV_ITEMS.forEach(item => {
+        if (completedSections.has(item.dataset.section)) item.classList.add('completed');
+    });
+} catch(e) {}
+
+function showSection(id) {
+    SECTIONS.forEach(s => s.style.display = 'none');
+    document.querySelector('.quiz-container').style.display = 'none';
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+    NAV_ITEMS.forEach(n => n.classList.remove('active'));
+    document.querySelector(`[data-section="${id}"]`)?.classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+function nextSection(currentIdx) {
+    const sectionIds = Array.from(SECTIONS).map(s => s.id).filter(id => id !== 'welcome');
+    const nextIdx = currentIdx + 1;
+    if (nextIdx < sectionIds.length) showSection(sectionIds[nextIdx]);
+}
+
+function markComplete(sectionId, idx) {
+    completedSections.add(sectionId);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedSections]));
+    updateProgress();
+    document.querySelector(`[data-section="${sectionId}"]`)?.classList.add('completed');
+    const btn = event.target;
+    btn.textContent = 'Completed ✓';
+    btn.classList.add('done');
+}
+
+function updateProgress() {
+    const pct = Math.round((completedSections.size / TOTAL_SECTIONS) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = pct + '% Complete (' + completedSections.size + '/' + TOTAL_SECTIONS + ' sections)';
+}
+
+// Quiz
+const questions = [{"question": "Which of the following best describes the key concept covered in 'Introduction'?", "options": ["A foundational concept in Life Health", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Life Health curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Table of Contents'?", "options": ["A foundational concept in Life Health", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Life Health curriculum."}, {"question": "Which of the following best describes the key concept covered in 'How to Use This Manual'?", "options": ["A foundational concept in Life Health", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Life Health curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Exam Overview'?", "options": ["A foundational concept in Life Health", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Life Health curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Practice Exam: Life and Health Insurance'?", "options": ["A foundational concept in Life Health", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Life Health curriculum."}];
+
+function showQuiz() {
+    SECTIONS.forEach(s => s.style.display = 'none');
+    const qc = document.querySelector('.quiz-container');
+    qc.style.display = 'block';
+    NAV_ITEMS.forEach(n => n.classList.remove('active'));
+    
+    const container = document.getElementById('quizQuestions');
+    container.innerHTML = '';
+    
+    questions.forEach((q, i) => {
+        let html = `<div class="question" id="q${i}">`;
+        html += `<div class="question-text">${i+1}. ${q.question}</div>`;
+        q.options.forEach((opt, j) => {
+            html += `<div class="option" onclick="selectOption(${i}, ${j})" id="q${i}o${j}">${String.fromCharCode(65+j)}. ${opt}</div>`;
+        });
+        html += `<div class="explanation" id="exp${i}">${q.explanation}</div>`;
+        html += '</div>';
+        container.innerHTML += html;
+    });
+    
+    document.getElementById('quizScore').style.display = 'none';
+    window.scrollTo(0, 0);
+}
+
+let selectedAnswers = {};
+
+function selectOption(qIdx, oIdx) {
+    // Clear previous selection
+    for (let j = 0; j < 4; j++) {
+        const el = document.getElementById(`q${qIdx}o${j}`);
+        if (el) el.classList.remove('selected');
+    }
+    const el = document.getElementById(`q${qIdx}o${oIdx}`);
+    if (el) el.classList.add('selected');
+    selectedAnswers[qIdx] = oIdx;
+}
+
+function submitQuiz() {
+    let correct = 0;
+    questions.forEach((q, i) => {
+        const selected = selectedAnswers[i];
+        for (let j = 0; j < 4; j++) {
+            const el = document.getElementById(`q${i}o${j}`);
+            if (el) {
+                el.classList.remove('selected');
+                if (j === q.correct) el.classList.add('correct');
+                else if (j === selected) el.classList.add('incorrect');
+            }
+        }
+        if (selected === q.correct) correct++;
+        document.getElementById(`exp${i}`).style.display = 'block';
+    });
+    
+    const pct = Math.round((correct / questions.length) * 100);
+    const scoreEl = document.getElementById('quizScore');
+    scoreEl.style.display = 'block';
+    scoreEl.innerHTML = `<h3>${pct}% — ${correct}/${questions.length} Correct</h3><p>${pct >= 70 ? 'Great job! You passed!' : 'Keep studying and try again.'}</p>`;
+    scoreEl.style.borderColor = pct >= 70 ? '#27AE60' : '#E74C3C';
+    scoreEl.querySelector('h3').style.color = pct >= 70 ? '#27AE60' : '#E74C3C';
+}
+
+// Show welcome by default
+showSection('welcome');
+</script>
+
+<section class="az-appendix">
+<h3>Arizona Operations — WealthBridge AZ Region 1</h3>
+<p>Arizona insurance-specific requirements:</p>
+<ul>
+<li><strong>Licensing:</strong> Separate licenses for Life/Health (Line 1), Property (Line 2), Casualty (Line 3), Surplus Lines (Line 6). Exam by Prometric.</li>
+<li><strong>CE:</strong> 24 hours per 2-year period including 3 hours ethics. At least 8 hours classroom/webinar.</li>
+<li><strong>Free Look:</strong> 10 days standard; 30 days for replacements and insureds 65+.</li>
+<li><strong>Guaranty Fund:</strong> $300,000 per claim (P&C); $300,000 life / $300,000 annuity / $500,000 health.</li>
+<li><strong>Auto Minimums:</strong> 25/50/15 (BI per person/per accident/PD).</li>
+<li><strong>State Tax:</strong> Flat 2.5%. No state estate tax.</li>
+</ul>
+</section>
+</body>
+</html>

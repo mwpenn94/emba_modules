@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Series7 — Interactive Training Module</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, Helvetica, sans-serif; background: #F4F6F9; color: #2C3E50; line-height: 1.6; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #1B4F72, #2E75B6); color: white; padding: 20px 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.header h1 { font-size: 1.4em; margin-bottom: 5px; }
+.header .subtitle { font-size: 0.85em; opacity: 0.85; }
+.progress-bar { background: rgba(255,255,255,0.2); border-radius: 10px; height: 8px; margin-top: 10px; }
+.progress-fill { background: #27AE60; height: 100%; border-radius: 10px; transition: width 0.5s ease; width: 0%; }
+.progress-text { font-size: 0.75em; margin-top: 4px; opacity: 0.8; }
+
+/* Layout */
+.container { display: flex; margin-top: 100px; min-height: calc(100vh - 100px); }
+
+/* Sidebar */
+.sidebar { width: 280px; background: white; border-right: 1px solid #E5E8EB; padding: 20px 0; position: fixed; top: 100px; bottom: 0; overflow-y: auto; }
+.sidebar .nav-title { padding: 10px 20px; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #95A5A6; font-weight: bold; }
+.nav-item { display: block; padding: 10px 20px; color: #2C3E50; text-decoration: none; font-size: 0.9em; border-left: 3px solid transparent; transition: all 0.2s; cursor: pointer; }
+.nav-item:hover { background: #F0F3F5; border-left-color: #2E75B6; }
+.nav-item.active { background: #E8F0FE; border-left-color: #1B4F72; color: #1B4F72; font-weight: bold; }
+.nav-item.completed { color: #27AE60; }
+.nav-item.completed::after { content: " ✓"; color: #27AE60; }
+.nav-quiz { display: block; padding: 12px 20px; color: #E67E22; text-decoration: none; font-size: 0.9em; font-weight: bold; border-left: 3px solid #E67E22; cursor: pointer; margin-top: 10px; }
+.nav-quiz:hover { background: #FFF3E0; }
+
+/* Main Content */
+.main { margin-left: 280px; padding: 30px 40px; max-width: 900px; flex: 1; }
+.section h2 { color: #1B4F72; font-size: 1.6em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #1B4F72; }
+.section h3 { color: #2E75B6; font-size: 1.2em; margin: 20px 0 10px; }
+.section h4 { color: #2C3E50; font-size: 1.05em; margin: 15px 0 8px; }
+.section p { margin-bottom: 12px; text-align: justify; }
+
+/* Tables */
+.table-wrapper { overflow-x: auto; margin: 15px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+th { background: #1B4F72; color: white; padding: 10px 12px; text-align: left; font-weight: bold; }
+td { padding: 8px 12px; border-bottom: 1px solid #E5E8EB; }
+tr:nth-child(even) td { background: #F8F9FA; }
+tr:hover td { background: #E8F0FE; }
+
+/* Buttons */
+.section-footer { display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #E5E8EB; }
+.btn-complete { background: #27AE60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: bold; transition: all 0.2s; }
+.btn-complete:hover { background: #219A52; transform: translateY(-1px); }
+.btn-complete.done { background: #95A5A6; cursor: default; }
+.btn-next { background: #2E75B6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: bold; transition: all 0.2s; }
+.btn-next:hover { background: #1A5F8B; transform: translateY(-1px); }
+
+/* Quiz */
+.quiz-container { display: none; }
+.quiz-container h2 { color: #E67E22; border-bottom-color: #E67E22; }
+.question { background: white; border: 1px solid #E5E8EB; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.question-text { font-weight: bold; margin-bottom: 12px; color: #1B4F72; }
+.option { display: block; padding: 10px 15px; margin: 5px 0; border: 2px solid #E5E8EB; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+.option:hover { border-color: #2E75B6; background: #F0F7FF; }
+.option.selected { border-color: #2E75B6; background: #E8F0FE; }
+.option.correct { border-color: #27AE60; background: #E8F5E9; }
+.option.incorrect { border-color: #E74C3C; background: #FDEDEC; }
+.explanation { display: none; margin-top: 10px; padding: 10px; background: #FFF3E0; border-left: 3px solid #E67E22; border-radius: 4px; font-size: 0.9em; }
+.quiz-score { text-align: center; padding: 30px; background: white; border-radius: 8px; border: 2px solid #27AE60; margin-top: 20px; }
+.quiz-score h3 { color: #27AE60; font-size: 1.5em; }
+.btn-submit { background: #E67E22; color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin-top: 20px; }
+.btn-submit:hover { background: #D35400; }
+
+/* Welcome */
+.welcome { text-align: center; padding: 60px 20px; }
+.welcome h2 { color: #1B4F72; font-size: 2em; margin-bottom: 15px; }
+.welcome p { font-size: 1.1em; color: #7F8C8D; max-width: 600px; margin: 0 auto 20px; }
+.welcome .stats { display: flex; justify-content: center; gap: 30px; margin-top: 30px; }
+.stat { text-align: center; }
+.stat .number { font-size: 2em; font-weight: bold; color: #1B4F72; }
+.stat .label { font-size: 0.85em; color: #95A5A6; }
+.btn-start { background: #1B4F72; color: white; border: none; padding: 15px 40px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin-top: 30px; }
+.btn-start:hover { background: #2E75B6; }
+
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 20px; }
+    .header h1 { font-size: 1.1em; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Series7 — Interactive Training Module</h1>
+    <div class="subtitle">WealthBridge Study Library | EMBA-Quality Professional Development</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0% Complete</div>
+</div>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="nav-title">Chapters</div>
+        <a href="#" class="nav-item active" data-section="welcome" onclick="showSection('welcome')">Welcome</a>
+        <a href="#" class="nav-item" data-section="section-0" onclick="showSection('section-0')">Introduction</a>
+<a href="#" class="nav-item" data-section="section-1" onclick="showSection('section-1')">Table of Contents</a>
+<a href="#" class="nav-item" data-section="section-2" onclick="showSection('section-2')">How to Use This Manual</a>
+<a href="#" class="nav-item" data-section="section-3" onclick="showSection('section-3')">Exam Overview</a>
+<a href="#" class="nav-item" data-section="section-4" onclick="showSection('section-4')">Practice Exam: Series 7 General Securities Representative</a>
+<a href="#" class="nav-item" data-section="section-5" onclick="showSection('section-5')">Additional Practice Questions</a>
+
+        <a href="#" class="nav-quiz" onclick="showQuiz()">Practice Quiz (5 Questions)</a>
+    </div>
+    
+    <div class="main">
+        <div id="welcome" class="section">
+            <div class="welcome">
+                <h2>Welcome to Series7</h2>
+                <p>This interactive training module covers all key concepts, formulas, and exam strategies. Track your progress as you work through each section.</p>
+                <div class="stats">
+                    <div class="stat"><div class="number">6</div><div class="label">Sections</div></div>
+                    <div class="stat"><div class="number">5</div><div class="label">Quiz Questions</div></div>
+                    <div class="stat"><div class="number">0%</div><div class="label" id="masteryLabel">Mastery</div></div>
+                </div>
+                <button class="btn-start" onclick="nextSection(-1)">Begin Training →</button>
+            </div>
+        </div>
+        
+        <div id="section-0" class="section" style="display:none;">
+<h2>Introduction</h2>
+<p>Series 7 Examination</p>
+<p>General Securities Representative Study Manual</p>
+<p>Comprehensive Study Guide</p>
+<p>Updated March 2026  |  OBBBA Integrated</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-0', 0)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(0)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-1" class="section" style="display:none;">
+<h2>Table of Contents</h2>
+<p>Right-click → &#x27;Update Field&#x27; in Word for clickable page numbers.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-1', 1)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(1)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-2" class="section" style="display:none;">
+<h2>How to Use This Manual</h2>
+<p>The Series 7 (General Securities Representative Qualification Examination) is the premier securities license in the United States, authorizing the holder to sell virtually all types of securities products including stocks, bonds, options, mutual funds, variable annuities, direct participation programs, and government securities. The Series 7 is significantly more demanding than the SIE: while the SIE tests foundational knowledge (what products are and how the industry works), the Series 7 tests deep application (how to analyze securities, calculate returns, construct suitable portfolios, and apply complex options strategies). The Series 7 requires FINRA member firm sponsorship and the SIE as a co-requisite.</p>
+<p>This manual covers all major content areas tested on the Series 7 in twelve comprehensive chapters. The exam places heaviest emphasis on options (approximately 25% of questions), making Chapter 3 the single most important chapter for exam preparation. Customer accounts, suitability, and regulatory requirements collectively account for another 25-30%. The remaining questions cover equity securities, debt securities, packaged products, margin, retirement plans, taxation, municipal securities, and economic factors. Success on the Series 7 requires both conceptual understanding and calculation proficiency — you must be able to compute option breakevens, bond yields, margin calls, and tax-equivalent yields under time pressure.</p>
+<p>Study strategy recommendation: Begin with options (Chapter 3) since it is the highest-weighted topic and requires the most practice. Then move to debt securities (Chapter 2) and margin (Chapter 6), which are calculation-intensive. Cover customer accounts and suitability (Chapters 5 and 12) thoroughly, as these are tested both directly and through scenario-based questions throughout the exam. Use the practice exam at the end to identify weak areas, then return to those chapters for targeted review.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-2', 2)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(2)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-3" class="section" style="display:none;">
+<h2>Exam Overview</h2>
+<p>Common stock represents ownership (equity) in a corporation. Each share of common stock typically carries one vote per share, exercised at the annual shareholders&#x27; meeting to elect the board of directors and vote on major corporate actions such as mergers, stock splits, and changes to the corporate charter. Shareholders have the right to receive dividends if declared by the board of directors (dividends are not guaranteed and are paid at the board&#x27;s discretion), the right to inspect corporate books and records, the right to transfer shares, and a residual claim on assets in liquidation (after all creditors, bondholders, and preferred stockholders are paid).</p>
+<p>Preemptive rights give existing shareholders the right to maintain their proportional ownership when the company issues new shares. If a company with 1 million shares outstanding issues 100,000 new shares, a shareholder owning 10% (100,000 shares) has the right to purchase 10,000 of the new shares before they are offered to the public. Preemptive rights may be waived in the corporate charter. The liquidation priority (from first paid to last paid) is: secured creditors, unsecured creditors, subordinated debtholders, preferred stockholders, and finally common stockholders. This priority is frequently tested on the Series 7.</p>
+<p>Stock splits increase the number of shares outstanding while proportionally reducing the price per share, leaving the total market capitalization unchanged. A 2-for-1 split doubles shares and halves the price: an investor holding 100 shares at $80 would hold 200 shares at $40 after the split. A reverse split reduces shares and increases price (e.g., a 1-for-10 reverse split converts 1,000 shares at $1 into 100 shares at $10). Reverse splits are often used by companies whose stock price has fallen below exchange listing requirements. Stock dividends are similar to splits but expressed as a percentage: a 10% stock dividend gives 1 additional share for every 10 held. Neither splits nor stock dividends change the total value of the investor&#x27;s position or create a taxable event.</p>
+<p>Preferred stock is a hybrid security with characteristics of both equity and debt. It pays a fixed dividend (stated as a percentage of par value or a dollar amount) with priority over common stock dividends, but typically carries no voting rights. Preferred stock is senior to common stock in liquidation but junior to all debt obligations. Because of its fixed dividend, preferred stock price is sensitive to interest rate changes — when rates rise, preferred stock prices fall, similar to bonds.</p>
+<p>Cumulative preferred stock requires that all missed (accumulated) dividends must be paid before any common stock dividends can be declared. This feature protects preferred shareholders from the company skipping dividends. Participating preferred stock may receive additional dividends beyond the stated rate if the company performs exceptionally well. Convertible preferred stock can be converted into a specified number of common shares at the holder&#x27;s option, providing upside potential if the common stock price rises significantly. Callable preferred stock can be redeemed by the issuer at a specified call price after a specified date, which limits the investor&#x27;s upside potential.</p>
+<p>American Depositary Receipts (ADRs) allow U.S. investors to own shares of foreign companies, traded in U.S. dollars on U.S. exchanges. Each ADR represents a specified number of foreign shares held by a U.S. depositary bank. ADRs carry all the risks of the underlying foreign stock (business risk, market risk, political risk) plus currency risk — the risk that the foreign currency will depreciate relative to the U.S. dollar, reducing the dollar value of dividends and the ADR price. Sponsored ADRs are created with the cooperation of the foreign company and are listed on major exchanges (NYSE, NASDAQ). Unsponsored ADRs are created by depositories without the foreign company&#x27;s involvement and trade over-the-counter.</p>
+<p>Rights are short-term instruments (typically 30-60 days) issued to existing shareholders, allowing them to buy new shares below the current market price. Rights have intrinsic value equal to the difference between the market price and the subscription price, divided by the number of rights needed to buy one share plus one (cum-rights) or without the plus one (ex-rights). Warrants are long-term instruments (often 2-5 years or perpetual) that give the holder the right to purchase shares at a specified exercise price. Warrants are often attached to bond issues as sweeteners to lower the required coupon rate. Warrants are more speculative than rights because the exercise price is typically above the current market price at issuance, and the longer time frame introduces more uncertainty.</p>
+<p>Bonds represent a loan from the investor (bondholder) to the issuer. The issuer pays periodic interest (the coupon, typically semi-annually for corporate and government bonds) and returns the principal (par value, typically $1,000) at maturity. Bond prices and interest rates have an inverse relationship: when market interest rates rise, existing bond prices fall because their fixed coupon payments become less attractive compared to newly issued bonds offering higher coupons. Conversely, when rates fall, existing bond prices rise. This inverse relationship is the single most important concept in fixed-income investing.</p>
+<p>Bond prices are quoted as a percentage of par value. A bond quoted at 98 trades at $980 (98% of $1,000 par). A bond trading below par is trading at a discount; a bond trading above par is trading at a premium. A bond trading at exactly par is trading at par. The relationship between price and yield creates three important yield measures. Current yield equals the annual coupon divided by the market price. Yield to maturity (YTM) accounts for both coupon payments and the gain or loss from the difference between purchase price and par at maturity. Yield to call (YTC) calculates the return assuming the bond is called at the earliest call date.</p>
+<p>For a discount bond, the yield hierarchy from lowest to highest is: coupon rate, current yield, YTM, YTC (if callable). For a premium bond, the hierarchy reverses: YTC (lowest), YTM, current yield, coupon rate (highest). This hierarchy is one of the most frequently tested concepts on the Series 7. Understanding it requires recognizing that a discount bond provides a capital gain at maturity (boosting YTM above current yield), while a premium bond suffers a capital loss at maturity (reducing YTM below current yield).</p>
+<p>Interest rate risk is the primary risk for bondholders. Longer-maturity bonds and lower-coupon bonds are more sensitive to interest rate changes because a larger proportion of their total return comes from distant cash flows, which are more heavily discounted when rates rise. Duration quantifies this sensitivity: a bond with a duration of 8 will experience approximately an 8% price decline for each 1% increase in interest rates. Zero-coupon bonds have the highest duration (equal to their maturity) because all cash flow occurs at maturity. Conversely, high-coupon, short-maturity bonds have the lowest duration and least interest rate risk.</p>
+<p>Credit risk (default risk) is the risk that the issuer will fail to make scheduled interest or principal payments. Credit ratings from Moody&#x27;s (Aaa to C), Standard and Poor&#x27;s (AAA to D), and Fitch assess the probability of default. Investment grade is BBB/Baa or higher. Below investment grade (BB/Ba or lower) is classified as high-yield or speculative grade (commonly called junk bonds). These bonds offer higher yields to compensate for higher default risk. U.S. Treasury securities are considered free of credit risk because they are backed by the full faith and credit of the U.S. government.</p>
+<p>Call risk exists for callable bonds: when interest rates fall significantly, the issuer may exercise its right to redeem the bonds early (typically at a slight premium to par), forcing investors to reinvest the returned principal at lower prevailing rates. This is why callable bonds trade at lower prices (higher yields) than comparable non-callable bonds — the call feature benefits the issuer at the expense of the bondholder. Reinvestment risk is the risk that coupon payments and returned principal will be reinvested at rates lower than the original yield. Zero-coupon bonds eliminate reinvestment risk entirely because there are no periodic cash flows to reinvest. Inflation risk (purchasing power risk) erodes the real value of fixed coupon payments over time. TIPS protect against inflation by adjusting the principal value based on changes in the Consumer Price Index.</p>
+<p>A call option gives the buyer (holder) the right, but not the obligation, to buy 100 shares of the underlying stock at the strike (exercise) price before the expiration date. A put option gives the buyer the right to sell 100 shares at the strike price. Option buyers pay a premium to acquire these rights and have limited risk (the maximum they can lose is the premium paid). Option sellers (writers) receive the premium and assume obligations: a call writer must sell shares at the strike price if assigned, and a put writer must buy shares at the strike price if assigned. Option sellers have potentially unlimited risk (uncovered call writers) or substantial risk (uncovered put writers, limited to the strike price minus the premium received).</p>
+<p>Options are derivative securities because their value derives from the underlying asset. An option is in the money (ITM) when exercising it would be profitable: a call is ITM when the market price exceeds the strike price; a put is ITM when the market price is below the strike price. An option is out of the money (OTM) when exercising would result in a loss: a call is OTM when the market price is below the strike; a put is OTM when the market price is above the strike. An option is at the money (ATM) when the market price equals the strike price. The premium consists of intrinsic value (the ITM amount, if any) plus time value (the portion of the premium above intrinsic value, reflecting the probability of favorable price movement before expiration).</p>
+<p>Options settle on the next business day (T+1). American-style options can be exercised at any time before expiration. European-style options can only be exercised at expiration. Most equity options are American-style. Index options are typically European-style and settle in cash rather than shares. The Options Clearing Corporation (OCC) guarantees all listed options contracts, eliminating counterparty risk for exchange-traded options.</p>
+<p>A covered call involves owning the underlying stock and selling (writing) a call option against it. This is the most conservative options strategy and is used to generate income from a stock position. The premium received provides a limited cushion against price declines. However, the upside is capped: if the stock rises above the strike price, the stock will be called away. Maximum gain = (Strike Price - Stock Purchase Price) + Premium Received. Maximum loss = Stock Purchase Price - Premium Received (if the stock goes to zero). Breakeven = Stock Purchase Price - Premium Received. Covered calls are suitable for investors who are neutral to moderately bullish on the stock and want to generate income.</p>
+<p>A protective put involves owning the stock and buying a put option, creating a floor (minimum selling price) for the stock position. This is essentially portfolio insurance. Maximum loss is limited to (Stock Purchase Price - Put Strike Price) + Premium Paid. Maximum gain is unlimited (the stock can rise without limit, and the put simply expires worthless). Breakeven = Stock Purchase Price + Premium Paid. Protective puts are suitable for investors who are bullish long-term but want to protect against short-term downside risk.</p>
+<p>A straddle involves buying (or selling) both a call and a put with the same strike price and expiration date. A long straddle profits from large price movements in either direction — the buyer expects high volatility but is uncertain about the direction. Maximum loss = total premiums paid (occurs if the stock is exactly at the strike price at expiration). Maximum gain is unlimited on the upside and substantial on the downside (strike price minus total premiums). A short straddle profits from price stability — the seller expects the stock to remain near the strike price. Maximum gain = total premiums received. Maximum loss is unlimited.</p>
+<p>A spread involves buying and selling options of the same type (both calls or both puts) with different strike prices (vertical spread) or different expiration dates (horizontal/calendar spread). A bull call spread (buy a lower-strike call, sell a higher-strike call) profits from a moderate price increase. Maximum gain = difference in strikes - net premium paid. Maximum loss = net premium paid. A bear put spread (buy a higher-strike put, sell a lower-strike put) profits from a moderate price decline. Maximum gain = difference in strikes - net premium paid. Maximum loss = net premium paid.</p>
+<p>When an option expires unexercised, the buyer has a capital loss equal to the premium paid, and the seller has a short-term capital gain equal to the premium received (regardless of how long the option was held). When a call option is exercised, the buyer&#x27;s cost basis in the acquired stock is the strike price plus the premium paid. The seller&#x27;s sale proceeds are the strike price plus the premium received. When a put option is exercised, the buyer&#x27;s sale proceeds are the strike price minus the premium paid. The seller&#x27;s cost basis in the acquired stock is the strike price minus the premium received. The holding period for the stock begins on the day after exercise, not the day the option was purchased.</p>
+<p>Closing transactions (selling an option you bought, or buying back an option you sold) result in a capital gain or loss equal to the difference between the opening and closing premiums. The holding period of the option itself determines whether the gain or loss is short-term or long-term. Listed equity options have a maximum term of 9 months, so gains and losses from closing transactions on standard options are always short-term. LEAPS (Long-Term Equity Anticipation Securities) have terms up to 3 years and can produce long-term capital gains if held more than 12 months.</p>
+<p>Open-end mutual funds continuously issue and redeem shares at net asset value (NAV), calculated once daily after market close (4:00 PM ET). NAV = (Total Fund Assets - Total Fund Liabilities) / Total Shares Outstanding. Investors purchase shares at the public offering price (POP), which equals NAV plus any applicable sales charge: POP = NAV / (1 - Sales Charge %). For example, a fund with NAV of $20 and a 5% front-end load has a POP of $20 / (1 - 0.05) = $21.05. Investors redeem shares at NAV (minus any applicable back-end load).</p>
+<p>Share classes determine how the investor pays for the fund. Class A shares charge a front-end sales load (typically 3-5.75%) with lower ongoing expenses. Breakpoints reduce the sales charge for larger investments: a fund might charge 5.75% for investments under $25,000, 5.00% for $25,000-$49,999, 4.50% for $50,000-$99,999, and so on. A letter of intent (LOI) allows the investor to receive the breakpoint discount by committing to invest a specified amount over 13 months. Rights of accumulation (ROA) allow the investor to count existing holdings toward the next breakpoint. Class B shares charge a back-end load (contingent deferred sales charge, or CDSC) that declines over time (typically 5% in year 1, declining to 0% after 6-8 years) with higher ongoing 12b-1 fees. Class C shares charge a level load (typically 1% CDSC for the first year only) with the highest ongoing 12b-1 fees.</p>
+<p>The expense ratio is the total annual cost of owning the fund, expressed as a percentage of assets. It includes the management fee, 12b-1 fee, and other operating expenses. The 12b-1 fee covers marketing and distribution costs and is capped at 1% annually (0.75% for distribution, 0.25% for service). A fund charging more than 0.25% in 12b-1 fees cannot call itself a no-load fund. Mutual fund distributions include ordinary dividends (from interest and short-term gains, taxed as ordinary income), qualified dividends (from qualifying stock dividends, taxed at capital gains rates), and capital gains distributions (from the fund&#x27;s sale of securities, taxed as long-term or short-term depending on the fund&#x27;s holding period).</p>
+<p>Exchange-traded funds (ETFs) trade intraday on exchanges like stocks, with prices determined by supply and demand. Most ETFs passively track an index and have lower expense ratios than actively managed mutual funds. ETFs are more tax-efficient than mutual funds because of the in-kind creation/redemption mechanism, which minimizes taxable capital gains distributions. Investors can buy ETFs on margin, sell them short, and place limit orders — none of which are possible with open-end mutual funds. However, investors pay brokerage commissions on ETF trades and may face bid-ask spreads.</p>
+<p>Closed-end funds issue a fixed number of shares through an IPO and then trade on exchanges at market prices that may differ from NAV. A closed-end fund trading above NAV is at a premium; below NAV is at a discount. Unlike open-end funds, closed-end funds do not redeem shares — investors must sell on the secondary market. Closed-end funds can use leverage (borrowing to invest), which amplifies both gains and losses. Unit Investment Trusts (UITs) hold a fixed, unmanaged portfolio of securities for a specified period (typically 15-30 years for bond UITs, 1-5 years for equity UITs). UITs do not have portfolio managers and do not trade securities within the trust.</p>
+<p>Variable annuities are insurance products with investment subaccounts that grow tax-deferred. During the accumulation phase, the contract owner selects subaccounts (similar to mutual funds) and the value fluctuates based on investment performance. Withdrawals during accumulation are taxed LIFO (last-in, first-out): earnings come out first and are taxed as ordinary income, with a 10% penalty before age 59 1/2. During the annuitization phase, each payment is split between taxable earnings and non-taxable return of basis using the exclusion ratio. Variable annuities are securities and require both a securities license and an insurance license to sell. Surrender charges typically apply for 6-8 years.</p>
+<p>Direct Participation Programs (DPPs) are limited partnerships that pass through income, losses, deductions, and credits directly to investors without corporate-level taxation. Common DPPs include oil and gas programs (exploratory programs carry the highest risk and largest deductions; income programs carry the lowest risk), real estate programs (raw land is most speculative; existing properties generate immediate income), and equipment leasing programs. DPPs are highly illiquid (no secondary market), carry significant risk, and are suitable only for high-income investors who can benefit from the tax deductions and can afford to lose their entire investment. The general partner manages the partnership and has unlimited liability; limited partners have liability limited to their investment.</p>
+<p>Opening a customer account requires collecting comprehensive information through the new account form: legal name, address, date of birth, Social Security number (or Tax Identification Number), citizenship status, employment status and employer name, annual income, liquid net worth, total net worth, investment objectives (capital preservation, income, growth, speculation), risk tolerance, time horizon, tax status (tax bracket, tax-advantaged needs), and prior investment experience. The customer must sign the new account form. The registered representative signs the form, and a principal (supervisor) must approve the account before any transactions occur.</p>
+<p>Joint accounts can be structured as Joint Tenants with Right of Survivorship (JTWROS), where the entire account passes to the surviving owner(s) at death bypassing probate, or as Tenants in Common (TIC), where each owner&#x27;s share passes to their estate at death. In community property states, assets acquired during marriage are owned equally by both spouses. Custodial accounts under UGMA (Uniform Gifts to Minors Act) or UTMA (Uniform Transfers to Minors Act) are owned by the minor with an adult custodian managing the account in a fiduciary capacity. Gifts to custodial accounts are irrevocable. At the age of majority (18 or 21 depending on the state and whether UGMA or UTMA), the account transfers to the former minor with no restrictions on use.</p>
+<p>Trust accounts are managed by a trustee according to the terms of the trust document. The trustee has a fiduciary duty to manage the account in accordance with the trust&#x27;s objectives and the beneficiaries&#x27; interests. Corporate and partnership accounts require documentation including the corporate resolution (authorizing specific individuals to trade), articles of incorporation or partnership agreement, and tax identification number. Fiduciary accounts (estates, guardianships, conservatorships) are managed by a court-appointed fiduciary who must act in the best interest of the beneficiary and comply with the Prudent Investor Rule.</p>
+<p>A margin account allows the customer to borrow money from the broker-dealer to purchase securities, using the securities as collateral. Regulation T, established by the Federal Reserve Board, sets the initial margin requirement at 50% for equity purchases. This means the customer must deposit at least 50% of the purchase price; the broker-dealer lends the remaining 50%. The amount borrowed is the debit balance, which accrues interest charged by the broker-dealer. The broker-dealer borrows the funds from a bank at the broker call rate (call money rate) and charges the customer a markup.</p>
+<p>FINRA Rule 4210 sets the minimum maintenance margin at 25% equity for long positions and 30% for short positions (most firms set house requirements higher, typically 30-35% for long positions). If the account equity falls below the maintenance requirement, the firm issues a maintenance margin call requiring the customer to deposit additional funds or securities. If the customer fails to meet the call, the firm can liquidate securities in the account without the customer&#x27;s consent. The minimum equity requirement to open a margin account is $2,000 or 100% of the purchase price, whichever is less.</p>
+<p>Short selling involves borrowing securities from the broker-dealer, selling them in the market, and hoping to buy them back later at a lower price. The initial margin requirement for short sales is 50% of the market value at the time of the sale. Short account equity = Credit Balance - Market Value. The credit balance equals the sale proceeds plus the initial margin deposit. If the stock price rises (bad for the short seller), equity decreases. The maintenance requirement for short positions is 30% (FINRA minimum).</p>
+<p>Short selling carries theoretically unlimited risk because the stock price can rise without limit. Short sellers are also responsible for paying any dividends declared on the borrowed shares to the lender. Short sales must be made in a margin account (not a cash account). The locate requirement (Regulation SHO) requires the broker-dealer to have reasonable grounds to believe the security can be borrowed before executing a short sale.</p>
+<p>The Series 7 tests retirement plan knowledge at a practical level, focusing on contribution limits, distribution rules, and the tax treatment of different account types. Defined contribution plans (401(k), 403(b), SEP IRA, SIMPLE IRA) specify the contribution amount, with the retirement benefit depending on investment performance. The employer and employee share the investment risk. Defined benefit plans specify the retirement benefit (typically based on a formula involving years of service and final average salary), with the employer bearing the investment risk and funding obligation.</p>
+<p>For 2026, the 401(k) elective deferral limit is $24,500 ($32,500 for participants age 50 and older, and $34,750 for participants ages 60-63 under the SECURE 2.0 super catch-up provision). The total annual addition limit (employee + employer contributions) is $72,000. Traditional IRA contributions are $7,500 ($8,600 for age 50+). Roth IRA income limits for 2026 are $155,000-$170,000 (single) and $236,000-$246,000 (MFJ). Required Minimum Distributions begin at age 73. Roth IRAs have no RMDs during the owner&#x27;s lifetime. The penalty for failing to take an RMD is 25% of the shortfall (10% if corrected within 2 years).</p>
+<p>Understanding the tax treatment of different securities is essential for making suitable recommendations. Long-term capital gains (assets held more than 12 months) are taxed at preferential rates: 0% for taxpayers in the 10-12% ordinary income brackets, 15% for taxpayers in the 22-35% brackets, and 20% for taxpayers in the 37% bracket. Short-term capital gains (assets held 12 months or less) are taxed as ordinary income at the taxpayer&#x27;s marginal rate. The 3.8% Net Investment Income Tax (NIIT) applies to the lesser of net investment income or MAGI exceeding $200,000 (single) / $250,000 (MFJ).</p>
+<p>Capital losses offset capital gains dollar-for-dollar. Net short-term losses first offset net short-term gains, then net long-term gains. Net long-term losses first offset net long-term gains, then net short-term gains. Up to $3,000 of net capital losses can be deducted against ordinary income annually. Unused capital losses carry forward indefinitely, maintaining their character (short-term or long-term). The wash sale rule disallows a capital loss if substantially identical securities are purchased within 30 days before or after the sale (creating a 61-day window).</p>
+<p>Municipal bond interest is generally exempt from federal income tax. If the bond is issued in the investor&#x27;s state of residence, it may also be exempt from state and local taxes (triple tax-exempt). Private activity municipal bonds may be subject to the Alternative Minimum Tax (AMT). The tax-equivalent yield formula converts a municipal bond yield to its equivalent taxable yield: Tax-Equivalent Yield = Municipal Yield / (1 - Marginal Tax Rate). This formula is essential for comparing municipal bonds with taxable bonds for investors in different tax brackets.</p>
+<p>Municipal securities are debt obligations issued by state and local governments, their agencies, and authorities to finance public projects and operations. The two primary types are general obligation (GO) bonds and revenue bonds. GO bonds are backed by the full faith, credit, and taxing power of the issuing municipality. They are considered safer than revenue bonds because the issuer can raise taxes to meet debt service obligations. Voter approval is typically required to issue GO bonds. Revenue bonds are backed solely by the revenue generated by the specific project being financed (toll roads, airports, hospitals, water and sewer systems, stadiums). Revenue bonds do not require voter approval and are generally considered riskier than GO bonds.</p>
+<p>The official statement (OS) is the municipal equivalent of a prospectus, providing comprehensive disclosure about the issuer, the bond terms, the project (for revenue bonds), financial statements, and risk factors. The MSRB (Municipal Securities Rulemaking Board) writes rules governing the municipal securities market but has no enforcement authority. FINRA enforces MSRB rules for broker-dealers; the SEC enforces for municipal advisors and dealers. EMMA (Electronic Municipal Market Access) is the MSRB&#x27;s free public website providing real-time trade data, official statements, and continuing disclosure documents for municipal securities.</p>
+<p>Municipal bonds are issued through either competitive bidding (most common for GO bonds, where underwriters submit sealed bids and the issuer selects the lowest net interest cost) or negotiated sale (most common for revenue bonds, where the issuer selects an underwriter and negotiates terms). The legal opinion, provided by bond counsel, confirms that the bonds are legally issued, that the interest is tax-exempt, and that the issuer has the authority to issue the bonds. A qualified legal opinion contains exceptions or reservations; an unqualified opinion contains none.</p>
+<p>The business cycle consists of four phases: expansion (rising GDP, falling unemployment, rising consumer confidence), peak (maximum economic output, potential inflationary pressure), contraction/recession (falling GDP, rising unemployment, declining consumer spending), and trough (minimum economic output, potential deflation). A recession is technically defined as two consecutive quarters of declining real GDP. The National Bureau of Economic Research (NBER) officially declares recessions based on a broader set of indicators including employment, industrial production, and real income.</p>
+<p>Economic indicators are classified by their timing relative to the business cycle. Leading indicators predict future economic activity: building permits, stock prices (S&amp;P 500), consumer expectations, initial jobless claims, manufacturing new orders, and the yield curve spread. Coincident indicators confirm current economic conditions: GDP, nonfarm payroll employment, personal income, and industrial production. Lagging indicators confirm trends after they have occurred: unemployment rate, CPI (inflation), prime rate, average duration of unemployment, and commercial and industrial loans outstanding.</p>
+<p>The Federal Reserve uses monetary policy to influence economic conditions. The primary tools are: the federal funds rate target (the rate banks charge each other for overnight loans, which influences all other short-term rates), open market operations (buying Treasury securities to inject money into the economy or selling to withdraw money), and the discount rate (the rate the Fed charges banks for direct loans). Expansionary monetary policy (lowering rates, buying securities) stimulates economic growth but may increase inflation. Contractionary monetary policy (raising rates, selling securities) slows growth but controls inflation.</p>
+<p>The Securities Act of 1933 (the Paper Act) regulates the primary market and requires registration of new securities with the SEC through a registration statement. The prospectus (part of the registration statement) must be delivered to investors before or at the time of sale. During the cooling-off period (minimum 20 days between filing and effective date), no sales can be made, but indications of interest can be collected using a preliminary prospectus (red herring). The Securities Exchange Act of 1934 (the People Act) regulates the secondary market, created the SEC, and requires registration of broker-dealers, exchanges, and self-regulatory organizations.</p>
+<p>FINRA rules govern broker-dealer conduct. Key rules include: Rule 2010 (Standards of Commercial Honor — members must observe high standards of commercial honor and just and equitable principles of trade), Rule 2111 (Suitability), Rule 3110 (Supervision — firms must establish written supervisory procedures and designate supervisory personnel), Rule 4512 (Customer Account Information), and Rule 5130 (Restrictions on IPO purchases — industry insiders and their immediate family members are restricted from purchasing IPO shares). Anti-Money Laundering (AML) requirements under the Bank Secrecy Act and USA PATRIOT Act require firms to implement Customer Identification Programs (CIP), file Suspicious Activity Reports (SARs) for transactions of $5,000+ that appear suspicious, and file Currency Transaction Reports (CTRs) for cash transactions exceeding $10,000.</p>
+<p>Insider trading involves trading on material, non-public information (MNPI). Both the trader and the tipper can be held liable. Penalties include disgorgement of profits, civil penalties up to three times the profit gained or loss avoided, and criminal penalties up to $5 million and 20 years imprisonment for individuals. Front-running is trading ahead of a large customer order to profit from the anticipated price movement. Churning is excessive trading in a customer&#x27;s account to generate commissions. Market manipulation includes wash trades (creating the appearance of trading activity), matched orders (coordinated buy and sell orders), and pump-and-dump schemes (artificially inflating a stock price through false statements, then selling).</p>
+<p>Making suitable recommendations is the core competency tested on the Series 7. Every recommendation must be appropriate for the specific customer based on their complete investment profile: age, income, net worth (liquid and total), tax status, investment objectives, risk tolerance, time horizon, liquidity needs, existing holdings, and investment experience. The three levels of suitability are: reasonable-basis suitability (the recommendation is suitable for at least some investors based on reasonable diligence), customer-specific suitability (the recommendation is suitable for this particular customer), and quantitative suitability (the series of recommended transactions is not excessive in frequency or size).</p>
+<p>Conservative investors (retirees, low risk tolerance, short time horizon, income needs) should be recommended income-producing, lower-risk securities: U.S. Treasury bonds, investment-grade corporate bonds, blue-chip dividend stocks, balanced mutual funds, and money market funds. Moderate investors (mid-career professionals, moderate risk tolerance, medium time horizon) are suitable for a diversified mix of growth and income securities: large-cap growth funds, equity income funds, investment-grade bonds, and balanced portfolios. Aggressive investors (young professionals, high income, long time horizon, high risk tolerance) may be suitable for growth stocks, small-cap funds, international and emerging market funds, and sector funds.</p>
+<p>Speculative investments (options writing, penny stocks, leveraged and inverse ETFs, DPPs, high-yield bonds) are suitable only for investors who have the financial capacity to absorb total loss, the sophistication to understand the risks, and a speculative investment objective. Even for aggressive investors, concentration in any single security, sector, or strategy is generally unsuitable. Diversification across asset classes, sectors, and geographies is a fundamental principle of suitable portfolio construction.</p>
+<h3>1.1 Common Stock</h3>
+<p>Common stock represents ownership (equity) in a corporation. Each share of common stock typically carries one vote per share, exercised at the annual shareholders&#x27; meeting to elect the board of directors and vote on major corporate actions such as mergers, stock splits, and changes to the corporate charter. Shareholders have the right to receive dividends if declared by the board of directors (dividends are not guaranteed and are paid at the board&#x27;s discretion), the right to inspect corporate books and records, the right to transfer shares, and a residual claim on assets in liquidation (after all creditors, bondholders, and preferred stockholders are paid).</p>
+<p>Preemptive rights give existing shareholders the right to maintain their proportional ownership when the company issues new shares. If a company with 1 million shares outstanding issues 100,000 new shares, a shareholder owning 10% (100,000 shares) has the right to purchase 10,000 of the new shares before they are offered to the public. Preemptive rights may be waived in the corporate charter. The liquidation priority (from first paid to last paid) is: secured creditors, unsecured creditors, subordinated debtholders, preferred stockholders, and finally common stockholders. This priority is frequently tested on the Series 7.</p>
+<p>Stock splits increase the number of shares outstanding while proportionally reducing the price per share, leaving the total market capitalization unchanged. A 2-for-1 split doubles shares and halves the price: an investor holding 100 shares at $80 would hold 200 shares at $40 after the split. A reverse split reduces shares and increases price (e.g., a 1-for-10 reverse split converts 1,000 shares at $1 into 100 shares at $10). Reverse splits are often used by companies whose stock price has fallen below exchange listing requirements. Stock dividends are similar to splits but expressed as a percentage: a 10% stock dividend gives 1 additional share for every 10 held. Neither splits nor stock dividends change the total value of the investor&#x27;s position or create a taxable event.</p>
+<h3>1.2 Preferred Stock</h3>
+<p>Preferred stock is a hybrid security with characteristics of both equity and debt. It pays a fixed dividend (stated as a percentage of par value or a dollar amount) with priority over common stock dividends, but typically carries no voting rights. Preferred stock is senior to common stock in liquidation but junior to all debt obligations. Because of its fixed dividend, preferred stock price is sensitive to interest rate changes — when rates rise, preferred stock prices fall, similar to bonds.</p>
+<p>Cumulative preferred stock requires that all missed (accumulated) dividends must be paid before any common stock dividends can be declared. This feature protects preferred shareholders from the company skipping dividends. Participating preferred stock may receive additional dividends beyond the stated rate if the company performs exceptionally well. Convertible preferred stock can be converted into a specified number of common shares at the holder&#x27;s option, providing upside potential if the common stock price rises significantly. Callable preferred stock can be redeemed by the issuer at a specified call price after a specified date, which limits the investor&#x27;s upside potential.</p>
+<h3>1.3 ADRs, Rights, and Warrants</h3>
+<p>American Depositary Receipts (ADRs) allow U.S. investors to own shares of foreign companies, traded in U.S. dollars on U.S. exchanges. Each ADR represents a specified number of foreign shares held by a U.S. depositary bank. ADRs carry all the risks of the underlying foreign stock (business risk, market risk, political risk) plus currency risk — the risk that the foreign currency will depreciate relative to the U.S. dollar, reducing the dollar value of dividends and the ADR price. Sponsored ADRs are created with the cooperation of the foreign company and are listed on major exchanges (NYSE, NASDAQ). Unsponsored ADRs are created by depositories without the foreign company&#x27;s involvement and trade over-the-counter.</p>
+<p>Rights are short-term instruments (typically 30-60 days) issued to existing shareholders, allowing them to buy new shares below the current market price. Rights have intrinsic value equal to the difference between the market price and the subscription price, divided by the number of rights needed to buy one share plus one (cum-rights) or without the plus one (ex-rights). Warrants are long-term instruments (often 2-5 years or perpetual) that give the holder the right to purchase shares at a specified exercise price. Warrants are often attached to bond issues as sweeteners to lower the required coupon rate. Warrants are more speculative than rights because the exercise price is typically above the current market price at issuance, and the longer time frame introduces more uncertainty.</p>
+<h3>2.1 Bond Fundamentals and Pricing</h3>
+<p>Bonds represent a loan from the investor (bondholder) to the issuer. The issuer pays periodic interest (the coupon, typically semi-annually for corporate and government bonds) and returns the principal (par value, typically $1,000) at maturity. Bond prices and interest rates have an inverse relationship: when market interest rates rise, existing bond prices fall because their fixed coupon payments become less attractive compared to newly issued bonds offering higher coupons. Conversely, when rates fall, existing bond prices rise. This inverse relationship is the single most important concept in fixed-income investing.</p>
+<p>Bond prices are quoted as a percentage of par value. A bond quoted at 98 trades at $980 (98% of $1,000 par). A bond trading below par is trading at a discount; a bond trading above par is trading at a premium. A bond trading at exactly par is trading at par. The relationship between price and yield creates three important yield measures. Current yield equals the annual coupon divided by the market price. Yield to maturity (YTM) accounts for both coupon payments and the gain or loss from the difference between purchase price and par at maturity. Yield to call (YTC) calculates the return assuming the bond is called at the earliest call date.</p>
+<p>For a discount bond, the yield hierarchy from lowest to highest is: coupon rate, current yield, YTM, YTC (if callable). For a premium bond, the hierarchy reverses: YTC (lowest), YTM, current yield, coupon rate (highest). This hierarchy is one of the most frequently tested concepts on the Series 7. Understanding it requires recognizing that a discount bond provides a capital gain at maturity (boosting YTM above current yield), while a premium bond suffers a capital loss at maturity (reducing YTM below current yield).</p>
+<h3>2.2 Bond Risks</h3>
+<p>Interest rate risk is the primary risk for bondholders. Longer-maturity bonds and lower-coupon bonds are more sensitive to interest rate changes because a larger proportion of their total return comes from distant cash flows, which are more heavily discounted when rates rise. Duration quantifies this sensitivity: a bond with a duration of 8 will experience approximately an 8% price decline for each 1% increase in interest rates. Zero-coupon bonds have the highest duration (equal to their maturity) because all cash flow occurs at maturity. Conversely, high-coupon, short-maturity bonds have the lowest duration and least interest rate risk.</p>
+<p>Credit risk (default risk) is the risk that the issuer will fail to make scheduled interest or principal payments. Credit ratings from Moody&#x27;s (Aaa to C), Standard and Poor&#x27;s (AAA to D), and Fitch assess the probability of default. Investment grade is BBB/Baa or higher. Below investment grade (BB/Ba or lower) is classified as high-yield or speculative grade (commonly called junk bonds). These bonds offer higher yields to compensate for higher default risk. U.S. Treasury securities are considered free of credit risk because they are backed by the full faith and credit of the U.S. government.</p>
+<p>Call risk exists for callable bonds: when interest rates fall significantly, the issuer may exercise its right to redeem the bonds early (typically at a slight premium to par), forcing investors to reinvest the returned principal at lower prevailing rates. This is why callable bonds trade at lower prices (higher yields) than comparable non-callable bonds — the call feature benefits the issuer at the expense of the bondholder. Reinvestment risk is the risk that coupon payments and returned principal will be reinvested at rates lower than the original yield. Zero-coupon bonds eliminate reinvestment risk entirely because there are no periodic cash flows to reinvest. Inflation risk (purchasing power risk) erodes the real value of fixed coupon payments over time. TIPS protect against inflation by adjusting the principal value based on changes in the Consumer Price Index.</p>
+<h3>3.1 Options Fundamentals</h3>
+<p>A call option gives the buyer (holder) the right, but not the obligation, to buy 100 shares of the underlying stock at the strike (exercise) price before the expiration date. A put option gives the buyer the right to sell 100 shares at the strike price. Option buyers pay a premium to acquire these rights and have limited risk (the maximum they can lose is the premium paid). Option sellers (writers) receive the premium and assume obligations: a call writer must sell shares at the strike price if assigned, and a put writer must buy shares at the strike price if assigned. Option sellers have potentially unlimited risk (uncovered call writers) or substantial risk (uncovered put writers, limited to the strike price minus the premium received).</p>
+<p>Options are derivative securities because their value derives from the underlying asset. An option is in the money (ITM) when exercising it would be profitable: a call is ITM when the market price exceeds the strike price; a put is ITM when the market price is below the strike price. An option is out of the money (OTM) when exercising would result in a loss: a call is OTM when the market price is below the strike; a put is OTM when the market price is above the strike. An option is at the money (ATM) when the market price equals the strike price. The premium consists of intrinsic value (the ITM amount, if any) plus time value (the portion of the premium above intrinsic value, reflecting the probability of favorable price movement before expiration).</p>
+<p>Options settle on the next business day (T+1). American-style options can be exercised at any time before expiration. European-style options can only be exercised at expiration. Most equity options are American-style. Index options are typically European-style and settle in cash rather than shares. The Options Clearing Corporation (OCC) guarantees all listed options contracts, eliminating counterparty risk for exchange-traded options.</p>
+<h3>3.2 Options Strategies</h3>
+<p>A covered call involves owning the underlying stock and selling (writing) a call option against it. This is the most conservative options strategy and is used to generate income from a stock position. The premium received provides a limited cushion against price declines. However, the upside is capped: if the stock rises above the strike price, the stock will be called away. Maximum gain = (Strike Price - Stock Purchase Price) + Premium Received. Maximum loss = Stock Purchase Price - Premium Received (if the stock goes to zero). Breakeven = Stock Purchase Price - Premium Received. Covered calls are suitable for investors who are neutral to moderately bullish on the stock and want to generate income.</p>
+<p>A protective put involves owning the stock and buying a put option, creating a floor (minimum selling price) for the stock position. This is essentially portfolio insurance. Maximum loss is limited to (Stock Purchase Price - Put Strike Price) + Premium Paid. Maximum gain is unlimited (the stock can rise without limit, and the put simply expires worthless). Breakeven = Stock Purchase Price + Premium Paid. Protective puts are suitable for investors who are bullish long-term but want to protect against short-term downside risk.</p>
+<p>A straddle involves buying (or selling) both a call and a put with the same strike price and expiration date. A long straddle profits from large price movements in either direction — the buyer expects high volatility but is uncertain about the direction. Maximum loss = total premiums paid (occurs if the stock is exactly at the strike price at expiration). Maximum gain is unlimited on the upside and substantial on the downside (strike price minus total premiums). A short straddle profits from price stability — the seller expects the stock to remain near the strike price. Maximum gain = total premiums received. Maximum loss is unlimited.</p>
+<p>A spread involves buying and selling options of the same type (both calls or both puts) with different strike prices (vertical spread) or different expiration dates (horizontal/calendar spread). A bull call spread (buy a lower-strike call, sell a higher-strike call) profits from a moderate price increase. Maximum gain = difference in strikes - net premium paid. Maximum loss = net premium paid. A bear put spread (buy a higher-strike put, sell a lower-strike put) profits from a moderate price decline. Maximum gain = difference in strikes - net premium paid. Maximum loss = net premium paid.</p>
+<h3>3.3 Options Taxation</h3>
+<p>When an option expires unexercised, the buyer has a capital loss equal to the premium paid, and the seller has a short-term capital gain equal to the premium received (regardless of how long the option was held). When a call option is exercised, the buyer&#x27;s cost basis in the acquired stock is the strike price plus the premium paid. The seller&#x27;s sale proceeds are the strike price plus the premium received. When a put option is exercised, the buyer&#x27;s sale proceeds are the strike price minus the premium paid. The seller&#x27;s cost basis in the acquired stock is the strike price minus the premium received. The holding period for the stock begins on the day after exercise, not the day the option was purchased.</p>
+<p>Closing transactions (selling an option you bought, or buying back an option you sold) result in a capital gain or loss equal to the difference between the opening and closing premiums. The holding period of the option itself determines whether the gain or loss is short-term or long-term. Listed equity options have a maximum term of 9 months, so gains and losses from closing transactions on standard options are always short-term. LEAPS (Long-Term Equity Anticipation Securities) have terms up to 3 years and can produce long-term capital gains if held more than 12 months.</p>
+<h3>4.1 Mutual Funds</h3>
+<p>Open-end mutual funds continuously issue and redeem shares at net asset value (NAV), calculated once daily after market close (4:00 PM ET). NAV = (Total Fund Assets - Total Fund Liabilities) / Total Shares Outstanding. Investors purchase shares at the public offering price (POP), which equals NAV plus any applicable sales charge: POP = NAV / (1 - Sales Charge %). For example, a fund with NAV of $20 and a 5% front-end load has a POP of $20 / (1 - 0.05) = $21.05. Investors redeem shares at NAV (minus any applicable back-end load).</p>
+<p>Share classes determine how the investor pays for the fund. Class A shares charge a front-end sales load (typically 3-5.75%) with lower ongoing expenses. Breakpoints reduce the sales charge for larger investments: a fund might charge 5.75% for investments under $25,000, 5.00% for $25,000-$49,999, 4.50% for $50,000-$99,999, and so on. A letter of intent (LOI) allows the investor to receive the breakpoint discount by committing to invest a specified amount over 13 months. Rights of accumulation (ROA) allow the investor to count existing holdings toward the next breakpoint. Class B shares charge a back-end load (contingent deferred sales charge, or CDSC) that declines over time (typically 5% in year 1, declining to 0% after 6-8 years) with higher ongoing 12b-1 fees. Class C shares charge a level load (typically 1% CDSC for the first year only) with the highest ongoing 12b-1 fees.</p>
+<p>The expense ratio is the total annual cost of owning the fund, expressed as a percentage of assets. It includes the management fee, 12b-1 fee, and other operating expenses. The 12b-1 fee covers marketing and distribution costs and is capped at 1% annually (0.75% for distribution, 0.25% for service). A fund charging more than 0.25% in 12b-1 fees cannot call itself a no-load fund. Mutual fund distributions include ordinary dividends (from interest and short-term gains, taxed as ordinary income), qualified dividends (from qualifying stock dividends, taxed at capital gains rates), and capital gains distributions (from the fund&#x27;s sale of securities, taxed as long-term or short-term depending on the fund&#x27;s holding period).</p>
+<h3>4.2 ETFs, Closed-End Funds, and UITs</h3>
+<p>Exchange-traded funds (ETFs) trade intraday on exchanges like stocks, with prices determined by supply and demand. Most ETFs passively track an index and have lower expense ratios than actively managed mutual funds. ETFs are more tax-efficient than mutual funds because of the in-kind creation/redemption mechanism, which minimizes taxable capital gains distributions. Investors can buy ETFs on margin, sell them short, and place limit orders — none of which are possible with open-end mutual funds. However, investors pay brokerage commissions on ETF trades and may face bid-ask spreads.</p>
+<p>Closed-end funds issue a fixed number of shares through an IPO and then trade on exchanges at market prices that may differ from NAV. A closed-end fund trading above NAV is at a premium; below NAV is at a discount. Unlike open-end funds, closed-end funds do not redeem shares — investors must sell on the secondary market. Closed-end funds can use leverage (borrowing to invest), which amplifies both gains and losses. Unit Investment Trusts (UITs) hold a fixed, unmanaged portfolio of securities for a specified period (typically 15-30 years for bond UITs, 1-5 years for equity UITs). UITs do not have portfolio managers and do not trade securities within the trust.</p>
+<h3>4.3 Variable Annuities and DPPs</h3>
+<p>Variable annuities are insurance products with investment subaccounts that grow tax-deferred. During the accumulation phase, the contract owner selects subaccounts (similar to mutual funds) and the value fluctuates based on investment performance. Withdrawals during accumulation are taxed LIFO (last-in, first-out): earnings come out first and are taxed as ordinary income, with a 10% penalty before age 59 1/2. During the annuitization phase, each payment is split between taxable earnings and non-taxable return of basis using the exclusion ratio. Variable annuities are securities and require both a securities license and an insurance license to sell. Surrender charges typically apply for 6-8 years.</p>
+<p>Direct Participation Programs (DPPs) are limited partnerships that pass through income, losses, deductions, and credits directly to investors without corporate-level taxation. Common DPPs include oil and gas programs (exploratory programs carry the highest risk and largest deductions; income programs carry the lowest risk), real estate programs (raw land is most speculative; existing properties generate immediate income), and equipment leasing programs. DPPs are highly illiquid (no secondary market), carry significant risk, and are suitable only for high-income investors who can benefit from the tax deductions and can afford to lose their entire investment. The general partner manages the partnership and has unlimited liability; limited partners have liability limited to their investment.</p>
+<h3>5.1 Account Types and Documentation</h3>
+<p>Opening a customer account requires collecting comprehensive information through the new account form: legal name, address, date of birth, Social Security number (or Tax Identification Number), citizenship status, employment status and employer name, annual income, liquid net worth, total net worth, investment objectives (capital preservation, income, growth, speculation), risk tolerance, time horizon, tax status (tax bracket, tax-advantaged needs), and prior investment experience. The customer must sign the new account form. The registered representative signs the form, and a principal (supervisor) must approve the account before any transactions occur.</p>
+<p>Joint accounts can be structured as Joint Tenants with Right of Survivorship (JTWROS), where the entire account passes to the surviving owner(s) at death bypassing probate, or as Tenants in Common (TIC), where each owner&#x27;s share passes to their estate at death. In community property states, assets acquired during marriage are owned equally by both spouses. Custodial accounts under UGMA (Uniform Gifts to Minors Act) or UTMA (Uniform Transfers to Minors Act) are owned by the minor with an adult custodian managing the account in a fiduciary capacity. Gifts to custodial accounts are irrevocable. At the age of majority (18 or 21 depending on the state and whether UGMA or UTMA), the account transfers to the former minor with no restrictions on use.</p>
+<p>Trust accounts are managed by a trustee according to the terms of the trust document. The trustee has a fiduciary duty to manage the account in accordance with the trust&#x27;s objectives and the beneficiaries&#x27; interests. Corporate and partnership accounts require documentation including the corporate resolution (authorizing specific individuals to trade), articles of incorporation or partnership agreement, and tax identification number. Fiduciary accounts (estates, guardianships, conservatorships) are managed by a court-appointed fiduciary who must act in the best interest of the beneficiary and comply with the Prudent Investor Rule.</p>
+<h3>6.1 Margin Fundamentals and Regulation T</h3>
+<p>A margin account allows the customer to borrow money from the broker-dealer to purchase securities, using the securities as collateral. Regulation T, established by the Federal Reserve Board, sets the initial margin requirement at 50% for equity purchases. This means the customer must deposit at least 50% of the purchase price; the broker-dealer lends the remaining 50%. The amount borrowed is the debit balance, which accrues interest charged by the broker-dealer. The broker-dealer borrows the funds from a bank at the broker call rate (call money rate) and charges the customer a markup.</p>
+<p>FINRA Rule 4210 sets the minimum maintenance margin at 25% equity for long positions and 30% for short positions (most firms set house requirements higher, typically 30-35% for long positions). If the account equity falls below the maintenance requirement, the firm issues a maintenance margin call requiring the customer to deposit additional funds or securities. If the customer fails to meet the call, the firm can liquidate securities in the account without the customer&#x27;s consent. The minimum equity requirement to open a margin account is $2,000 or 100% of the purchase price, whichever is less.</p>
+<h3>6.2 Short Selling on Margin</h3>
+<p>Short selling involves borrowing securities from the broker-dealer, selling them in the market, and hoping to buy them back later at a lower price. The initial margin requirement for short sales is 50% of the market value at the time of the sale. Short account equity = Credit Balance - Market Value. The credit balance equals the sale proceeds plus the initial margin deposit. If the stock price rises (bad for the short seller), equity decreases. The maintenance requirement for short positions is 30% (FINRA minimum).</p>
+<p>Short selling carries theoretically unlimited risk because the stock price can rise without limit. Short sellers are also responsible for paying any dividends declared on the borrowed shares to the lender. Short sales must be made in a margin account (not a cash account). The locate requirement (Regulation SHO) requires the broker-dealer to have reasonable grounds to believe the security can be borrowed before executing a short sale.</p>
+<p>The Series 7 tests retirement plan knowledge at a practical level, focusing on contribution limits, distribution rules, and the tax treatment of different account types. Defined contribution plans (401(k), 403(b), SEP IRA, SIMPLE IRA) specify the contribution amount, with the retirement benefit depending on investment performance. The employer and employee share the investment risk. Defined benefit plans specify the retirement benefit (typically based on a formula involving years of service and final average salary), with the employer bearing the investment risk and funding obligation.</p>
+<p>For 2026, the 401(k) elective deferral limit is $24,500 ($32,500 for participants age 50 and older, and $34,750 for participants ages 60-63 under the SECURE 2.0 super catch-up provision). The total annual addition limit (employee + employer contributions) is $72,000. Traditional IRA contributions are $7,500 ($8,600 for age 50+). Roth IRA income limits for 2026 are $155,000-$170,000 (single) and $236,000-$246,000 (MFJ). Required Minimum Distributions begin at age 73. Roth IRAs have no RMDs during the owner&#x27;s lifetime. The penalty for failing to take an RMD is 25% of the shortfall (10% if corrected within 2 years).</p>
+<p>Understanding the tax treatment of different securities is essential for making suitable recommendations. Long-term capital gains (assets held more than 12 months) are taxed at preferential rates: 0% for taxpayers in the 10-12% ordinary income brackets, 15% for taxpayers in the 22-35% brackets, and 20% for taxpayers in the 37% bracket. Short-term capital gains (assets held 12 months or less) are taxed as ordinary income at the taxpayer&#x27;s marginal rate. The 3.8% Net Investment Income Tax (NIIT) applies to the lesser of net investment income or MAGI exceeding $200,000 (single) / $250,000 (MFJ).</p>
+<p>Capital losses offset capital gains dollar-for-dollar. Net short-term losses first offset net short-term gains, then net long-term gains. Net long-term losses first offset net long-term gains, then net short-term gains. Up to $3,000 of net capital losses can be deducted against ordinary income annually. Unused capital losses carry forward indefinitely, maintaining their character (short-term or long-term). The wash sale rule disallows a capital loss if substantially identical securities are purchased within 30 days before or after the sale (creating a 61-day window).</p>
+<p>Municipal bond interest is generally exempt from federal income tax. If the bond is issued in the investor&#x27;s state of residence, it may also be exempt from state and local taxes (triple tax-exempt). Private activity municipal bonds may be subject to the Alternative Minimum Tax (AMT). The tax-equivalent yield formula converts a municipal bond yield to its equivalent taxable yield: Tax-Equivalent Yield = Municipal Yield / (1 - Marginal Tax Rate). This formula is essential for comparing municipal bonds with taxable bonds for investors in different tax brackets.</p>
+<p>Municipal securities are debt obligations issued by state and local governments, their agencies, and authorities to finance public projects and operations. The two primary types are general obligation (GO) bonds and revenue bonds. GO bonds are backed by the full faith, credit, and taxing power of the issuing municipality. They are considered safer than revenue bonds because the issuer can raise taxes to meet debt service obligations. Voter approval is typically required to issue GO bonds. Revenue bonds are backed solely by the revenue generated by the specific project being financed (toll roads, airports, hospitals, water and sewer systems, stadiums). Revenue bonds do not require voter approval and are generally considered riskier than GO bonds.</p>
+<p>The official statement (OS) is the municipal equivalent of a prospectus, providing comprehensive disclosure about the issuer, the bond terms, the project (for revenue bonds), financial statements, and risk factors. The MSRB (Municipal Securities Rulemaking Board) writes rules governing the municipal securities market but has no enforcement authority. FINRA enforces MSRB rules for broker-dealers; the SEC enforces for municipal advisors and dealers. EMMA (Electronic Municipal Market Access) is the MSRB&#x27;s free public website providing real-time trade data, official statements, and continuing disclosure documents for municipal securities.</p>
+<p>Municipal bonds are issued through either competitive bidding (most common for GO bonds, where underwriters submit sealed bids and the issuer selects the lowest net interest cost) or negotiated sale (most common for revenue bonds, where the issuer selects an underwriter and negotiates terms). The legal opinion, provided by bond counsel, confirms that the bonds are legally issued, that the interest is tax-exempt, and that the issuer has the authority to issue the bonds. A qualified legal opinion contains exceptions or reservations; an unqualified opinion contains none.</p>
+<p>The business cycle consists of four phases: expansion (rising GDP, falling unemployment, rising consumer confidence), peak (maximum economic output, potential inflationary pressure), contraction/recession (falling GDP, rising unemployment, declining consumer spending), and trough (minimum economic output, potential deflation). A recession is technically defined as two consecutive quarters of declining real GDP. The National Bureau of Economic Research (NBER) officially declares recessions based on a broader set of indicators including employment, industrial production, and real income.</p>
+<p>Economic indicators are classified by their timing relative to the business cycle. Leading indicators predict future economic activity: building permits, stock prices (S&amp;P 500), consumer expectations, initial jobless claims, manufacturing new orders, and the yield curve spread. Coincident indicators confirm current economic conditions: GDP, nonfarm payroll employment, personal income, and industrial production. Lagging indicators confirm trends after they have occurred: unemployment rate, CPI (inflation), prime rate, average duration of unemployment, and commercial and industrial loans outstanding.</p>
+<p>The Federal Reserve uses monetary policy to influence economic conditions. The primary tools are: the federal funds rate target (the rate banks charge each other for overnight loans, which influences all other short-term rates), open market operations (buying Treasury securities to inject money into the economy or selling to withdraw money), and the discount rate (the rate the Fed charges banks for direct loans). Expansionary monetary policy (lowering rates, buying securities) stimulates economic growth but may increase inflation. Contractionary monetary policy (raising rates, selling securities) slows growth but controls inflation.</p>
+<p>The Securities Act of 1933 (the Paper Act) regulates the primary market and requires registration of new securities with the SEC through a registration statement. The prospectus (part of the registration statement) must be delivered to investors before or at the time of sale. During the cooling-off period (minimum 20 days between filing and effective date), no sales can be made, but indications of interest can be collected using a preliminary prospectus (red herring). The Securities Exchange Act of 1934 (the People Act) regulates the secondary market, created the SEC, and requires registration of broker-dealers, exchanges, and self-regulatory organizations.</p>
+<p>FINRA rules govern broker-dealer conduct. Key rules include: Rule 2010 (Standards of Commercial Honor — members must observe high standards of commercial honor and just and equitable principles of trade), Rule 2111 (Suitability), Rule 3110 (Supervision — firms must establish written supervisory procedures and designate supervisory personnel), Rule 4512 (Customer Account Information), and Rule 5130 (Restrictions on IPO purchases — industry insiders and their immediate family members are restricted from purchasing IPO shares). Anti-Money Laundering (AML) requirements under the Bank Secrecy Act and USA PATRIOT Act require firms to implement Customer Identification Programs (CIP), file Suspicious Activity Reports (SARs) for transactions of $5,000+ that appear suspicious, and file Currency Transaction Reports (CTRs) for cash transactions exceeding $10,000.</p>
+<p>Insider trading involves trading on material, non-public information (MNPI). Both the trader and the tipper can be held liable. Penalties include disgorgement of profits, civil penalties up to three times the profit gained or loss avoided, and criminal penalties up to $5 million and 20 years imprisonment for individuals. Front-running is trading ahead of a large customer order to profit from the anticipated price movement. Churning is excessive trading in a customer&#x27;s account to generate commissions. Market manipulation includes wash trades (creating the appearance of trading activity), matched orders (coordinated buy and sell orders), and pump-and-dump schemes (artificially inflating a stock price through false statements, then selling).</p>
+<p>Making suitable recommendations is the core competency tested on the Series 7. Every recommendation must be appropriate for the specific customer based on their complete investment profile: age, income, net worth (liquid and total), tax status, investment objectives, risk tolerance, time horizon, liquidity needs, existing holdings, and investment experience. The three levels of suitability are: reasonable-basis suitability (the recommendation is suitable for at least some investors based on reasonable diligence), customer-specific suitability (the recommendation is suitable for this particular customer), and quantitative suitability (the series of recommended transactions is not excessive in frequency or size).</p>
+<p>Conservative investors (retirees, low risk tolerance, short time horizon, income needs) should be recommended income-producing, lower-risk securities: U.S. Treasury bonds, investment-grade corporate bonds, blue-chip dividend stocks, balanced mutual funds, and money market funds. Moderate investors (mid-career professionals, moderate risk tolerance, medium time horizon) are suitable for a diversified mix of growth and income securities: large-cap growth funds, equity income funds, investment-grade bonds, and balanced portfolios. Aggressive investors (young professionals, high income, long time horizon, high risk tolerance) may be suitable for growth stocks, small-cap funds, international and emerging market funds, and sector funds.</p>
+<p>Speculative investments (options writing, penny stocks, leveraged and inverse ETFs, DPPs, high-yield bonds) are suitable only for investors who have the financial capacity to absorb total loss, the sophistication to understand the risks, and a speculative investment objective. Even for aggressive investors, concentration in any single security, sector, or strategy is generally unsuitable. Diversification across asset classes, sectors, and geographies is a fundamental principle of suitable portfolio construction.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-3', 3)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(3)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-4" class="section" style="display:none;">
+<h2>Practice Exam: Series 7 General Securities Representative</h2>
+<h3>1. A customer buys 100 shares of XYZ at $60 and sells 1 XYZ 65 call for $4. What is the maximum gain?</h3>
+<p>A) $400\nB) $500\nC) $900\nD) Unlimited</p>
+<h3>2. A bond with a 5% coupon trading at 95. The current yield is:</h3>
+<p>A) 5.00%\nB) 5.26%\nC) 5.56%\nD) 4.75%</p>
+<h3>3. Regulation T initial margin requirement for equity purchases is:</h3>
+<p>A) 25%\nB) 30%\nC) 50%\nD) 75%</p>
+<h3>4. A client in the 35% bracket compares a 3.8% muni with a 5.5% corporate. Which has higher after-tax return?</h3>
+<p>A) Municipal bond\nB) Corporate bond\nC) They are equal\nD) Cannot determine</p>
+<h3>5. An investor buys 1 XYZ 50 put for $3 and 1 XYZ 50 call for $4. Maximum loss is:</h3>
+<p>A) $300\nB) $400\nC) $700\nD) Unlimited</p>
+<h3>6. Which bond has the GREATEST interest rate risk?</h3>
+<p>A) 5-year, 8% coupon\nB) 20-year, 8% coupon\nC) 5-year, 3% coupon\nD) 20-year, 3% coupon</p>
+<h3>7. The wash sale rule window is:</h3>
+<p>A) 15 days\nB) 30 days before or after\nC) 60 days\nD) 90 days</p>
+<h3>8. A margin account has market value $80,000 and debit balance $45,000. Equity is:</h3>
+<p>A) $35,000\nB) $45,000\nC) $80,000\nD) $125,000</p>
+<h3>9. Which of the following is NOT a leading economic indicator?</h3>
+<p>A) Building permits\nB) S&amp;P 500 stock prices\nC) Unemployment rate\nD) Consumer expectations</p>
+<h3>10. A 401(k) participant age 62 in 2026 can contribute up to:</h3>
+<p>A) $24,500\nB) $32,500\nC) $34,750\nD) $72,000</p>
+<p>Options are derivative contracts that give the holder the right, but not the obligation, to buy (call) or sell (put) an underlying security at a specified price (strike price) on or before a specified date (expiration). The buyer pays a premium for this right. The seller (writer) receives the premium and assumes the obligation. Options are heavily tested on the Series 7 exam — expect 15-20 questions on options strategies, maximum gain/loss calculations, and breakeven points.</p>
+<p>Call options increase in value when the underlying stock price rises. Put options increase in value when the underlying stock price falls. An option is in-the-money when exercise would be profitable: a call is in-the-money when the stock price exceeds the strike price; a put is in-the-money when the stock price is below the strike price. An option is out-of-the-money when exercise would not be profitable. The intrinsic value of an option is the amount by which it is in-the-money (minimum zero). The time value is the premium minus the intrinsic value.</p>
+<p>A covered call involves owning the underlying stock and selling a call option against it. This generates income (the premium received) but caps the upside at the strike price plus the premium. Covered calls are appropriate for investors who are neutral to slightly bullish and want to generate additional income from their stock holdings. Maximum gain = (Strike Price - Stock Purchase Price) + Premium Received. Maximum loss = Stock Purchase Price - Premium Received (if stock goes to zero). Breakeven = Stock Purchase Price - Premium Received.</p>
+<p>A protective put involves owning the underlying stock and buying a put option as insurance against a decline. This provides downside protection at the cost of the premium. Protective puts are appropriate for investors who are bullish long-term but want to protect against short-term downside risk. Maximum gain = Unlimited (stock appreciation minus premium paid). Maximum loss = Stock Purchase Price - Strike Price + Premium Paid. Breakeven = Stock Purchase Price + Premium Paid.</p>
+<p>A spread involves buying and selling options of the same type (both calls or both puts) on the same underlying security. A bull call spread (debit spread) involves buying a call at a lower strike and selling a call at a higher strike. This is a bullish strategy with limited risk and limited reward. Maximum gain = Difference in strikes - Net premium paid. Maximum loss = Net premium paid. A bear put spread (debit spread) involves buying a put at a higher strike and selling a put at a lower strike.</p>
+<p>A credit spread involves receiving more premium than paid. A bull put spread (credit spread) involves selling a put at a higher strike and buying a put at a lower strike. Maximum gain = Net premium received. Maximum loss = Difference in strikes - Net premium received. A bear call spread (credit spread) involves selling a call at a lower strike and buying a call at a higher strike. Credit spreads profit when the options expire worthless or with reduced value.</p>
+<p>A long straddle involves buying both a call and a put at the same strike price and expiration. This is a volatility play — the investor profits if the stock moves significantly in either direction. Maximum gain is unlimited (on the upside) or substantial (on the downside, limited to strike price minus total premium). Maximum loss is the total premium paid (if the stock stays at the strike price at expiration). Breakeven points: Strike + Total Premium (upside) and Strike - Total Premium (downside).</p>
+<p>A short straddle involves selling both a call and a put at the same strike price. This profits when the stock stays near the strike price (low volatility). Maximum gain is the total premium received. Maximum loss is unlimited (on the upside). Short straddles are high-risk strategies appropriate only for sophisticated investors. A strangle is similar but uses different strike prices (out-of-the-money call and put), requiring a larger move to become profitable but costing less in premium.</p>
+<p>General obligation (GO) bonds are backed by the full faith, credit, and taxing power of the issuing municipality. They are considered the safest type of municipal bond because the issuer can raise taxes to pay debt service. GO bonds require voter approval in most jurisdictions. Revenue bonds are backed only by the revenue from a specific project or source (toll roads, airports, hospitals, water systems). Revenue bonds do not require voter approval and are generally considered riskier than GO bonds because they depend on the project&#x27;s financial success.</p>
+<p>Industrial development revenue bonds (IDRBs) are issued by municipalities on behalf of private corporations to finance facilities. The bonds are backed by the corporation&#x27;s credit, not the municipality&#x27;s. Private activity bonds may be subject to the Alternative Minimum Tax (AMT). Assessment bonds are backed by special assessments on properties that benefit from the improvement (sidewalks, sewers, street lighting). Moral obligation bonds have a non-binding pledge from the state legislature to appropriate funds if needed — this is not a legal obligation.</p>
+<p>The flow of funds for revenue bonds determines the priority of payments from project revenue. The net revenue pledge (most common) pays operating expenses first, then debt service. The gross revenue pledge pays debt service first, then operating expenses. Key coverage ratios: the debt service coverage ratio (DSCR) = net revenue / annual debt service. A DSCR above 1.25x is generally considered adequate. The additional bonds test ensures that new bonds can only be issued if projected revenue is sufficient to cover existing and new debt service.</p>
+<p>Municipal bond credit analysis considers: the issuer&#x27;s tax base (diversity, growth trends), debt burden (debt per capita, debt as a percentage of assessed value), economic base (employment diversity, major employers, income levels), financial management (balanced budgets, reserve levels, accounting practices), and legal provisions (rate covenants, additional bonds tests, flow of funds). Insured municipal bonds carry the credit rating of the insurer (if higher than the underlying rating), providing additional security to investors.</p>
+<p>Cash accounts require full payment for purchases by settlement date (T+1 for most securities). Margin accounts allow customers to borrow from the broker-dealer to purchase securities. Regulation T sets the initial margin requirement at 50% for equity securities (the customer must deposit at least 50% of the purchase price). FINRA maintenance margin requires equity of at least 25% of the market value of long positions (most firms require 30-35%). A margin call is issued when equity falls below the maintenance requirement.</p>
+<p>Options accounts require a signed Options Account Agreement (OAA) and approval by a Registered Options Principal (ROP). The customer must receive the Options Disclosure Document (ODD) at or before account approval. Options suitability considers the customer&#x27;s investment objectives, financial situation, investment experience, and options knowledge. Discretionary accounts require written authorization (power of attorney) from the customer. Each discretionary order must be approved by a principal promptly. Non-discretionary accounts allow the representative to choose only the time and price of execution without written authorization.</p>
+<p>Regulation Best Interest (Reg BI) requires broker-dealers and their associated persons to act in the retail customer&#x27;s best interest at the time of a recommendation, without placing their own financial interests ahead of the customer&#x27;s interests. Reg BI has four component obligations: (1) Disclosure Obligation — provide Form CRS (Client Relationship Summary) describing services, fees, conflicts, and the standard of conduct. (2) Care Obligation — exercise reasonable diligence, care, and skill in making recommendations, considering the customer&#x27;s investment profile.</p>
+<p>(3) Conflict of Interest Obligation — establish policies and procedures to identify, disclose, and mitigate or eliminate conflicts of interest. This includes eliminating sales contests and quotas based on specific products. (4) Compliance Obligation — establish policies and procedures reasonably designed to achieve compliance with Reg BI. Form CRS is a brief (2-4 page) document that must be delivered to retail customers at the beginning of the relationship and must be filed with the SEC and FINRA.</p>
+<p>The key distinction between Reg BI and the fiduciary standard: Reg BI applies at the time of recommendation (point-in-time obligation), while the fiduciary standard (for RIAs and CFP professionals) applies continuously. Reg BI does not require ongoing monitoring of recommendations. Reg BI allows commission-based compensation (which creates conflicts) as long as the conflicts are disclosed and mitigated. The fiduciary standard requires the adviser to act in the client&#x27;s best interest at all times, which may require recommending lower-cost alternatives.</p>
+<h3>A.1 Options Fundamentals Review</h3>
+<p>Options are derivative contracts that give the holder the right, but not the obligation, to buy (call) or sell (put) an underlying security at a specified price (strike price) on or before a specified date (expiration). The buyer pays a premium for this right. The seller (writer) receives the premium and assumes the obligation. Options are heavily tested on the Series 7 exam — expect 15-20 questions on options strategies, maximum gain/loss calculations, and breakeven points.</p>
+<p>Call options increase in value when the underlying stock price rises. Put options increase in value when the underlying stock price falls. An option is in-the-money when exercise would be profitable: a call is in-the-money when the stock price exceeds the strike price; a put is in-the-money when the stock price is below the strike price. An option is out-of-the-money when exercise would not be profitable. The intrinsic value of an option is the amount by which it is in-the-money (minimum zero). The time value is the premium minus the intrinsic value.</p>
+<h3>A.2 Covered Calls and Protective Puts</h3>
+<p>A covered call involves owning the underlying stock and selling a call option against it. This generates income (the premium received) but caps the upside at the strike price plus the premium. Covered calls are appropriate for investors who are neutral to slightly bullish and want to generate additional income from their stock holdings. Maximum gain = (Strike Price - Stock Purchase Price) + Premium Received. Maximum loss = Stock Purchase Price - Premium Received (if stock goes to zero). Breakeven = Stock Purchase Price - Premium Received.</p>
+<p>A protective put involves owning the underlying stock and buying a put option as insurance against a decline. This provides downside protection at the cost of the premium. Protective puts are appropriate for investors who are bullish long-term but want to protect against short-term downside risk. Maximum gain = Unlimited (stock appreciation minus premium paid). Maximum loss = Stock Purchase Price - Strike Price + Premium Paid. Breakeven = Stock Purchase Price + Premium Paid.</p>
+<h3>A.3 Spreads</h3>
+<p>A spread involves buying and selling options of the same type (both calls or both puts) on the same underlying security. A bull call spread (debit spread) involves buying a call at a lower strike and selling a call at a higher strike. This is a bullish strategy with limited risk and limited reward. Maximum gain = Difference in strikes - Net premium paid. Maximum loss = Net premium paid. A bear put spread (debit spread) involves buying a put at a higher strike and selling a put at a lower strike.</p>
+<p>A credit spread involves receiving more premium than paid. A bull put spread (credit spread) involves selling a put at a higher strike and buying a put at a lower strike. Maximum gain = Net premium received. Maximum loss = Difference in strikes - Net premium received. A bear call spread (credit spread) involves selling a call at a lower strike and buying a call at a higher strike. Credit spreads profit when the options expire worthless or with reduced value.</p>
+<h3>A.4 Straddles and Combinations</h3>
+<p>A long straddle involves buying both a call and a put at the same strike price and expiration. This is a volatility play — the investor profits if the stock moves significantly in either direction. Maximum gain is unlimited (on the upside) or substantial (on the downside, limited to strike price minus total premium). Maximum loss is the total premium paid (if the stock stays at the strike price at expiration). Breakeven points: Strike + Total Premium (upside) and Strike - Total Premium (downside).</p>
+<p>A short straddle involves selling both a call and a put at the same strike price. This profits when the stock stays near the strike price (low volatility). Maximum gain is the total premium received. Maximum loss is unlimited (on the upside). Short straddles are high-risk strategies appropriate only for sophisticated investors. A strangle is similar but uses different strike prices (out-of-the-money call and put), requiring a larger move to become profitable but costing less in premium.</p>
+<h3>B.1 Types of Municipal Securities</h3>
+<p>General obligation (GO) bonds are backed by the full faith, credit, and taxing power of the issuing municipality. They are considered the safest type of municipal bond because the issuer can raise taxes to pay debt service. GO bonds require voter approval in most jurisdictions. Revenue bonds are backed only by the revenue from a specific project or source (toll roads, airports, hospitals, water systems). Revenue bonds do not require voter approval and are generally considered riskier than GO bonds because they depend on the project&#x27;s financial success.</p>
+<p>Industrial development revenue bonds (IDRBs) are issued by municipalities on behalf of private corporations to finance facilities. The bonds are backed by the corporation&#x27;s credit, not the municipality&#x27;s. Private activity bonds may be subject to the Alternative Minimum Tax (AMT). Assessment bonds are backed by special assessments on properties that benefit from the improvement (sidewalks, sewers, street lighting). Moral obligation bonds have a non-binding pledge from the state legislature to appropriate funds if needed — this is not a legal obligation.</p>
+<h3>B.2 Municipal Bond Analysis</h3>
+<p>The flow of funds for revenue bonds determines the priority of payments from project revenue. The net revenue pledge (most common) pays operating expenses first, then debt service. The gross revenue pledge pays debt service first, then operating expenses. Key coverage ratios: the debt service coverage ratio (DSCR) = net revenue / annual debt service. A DSCR above 1.25x is generally considered adequate. The additional bonds test ensures that new bonds can only be issued if projected revenue is sufficient to cover existing and new debt service.</p>
+<p>Municipal bond credit analysis considers: the issuer&#x27;s tax base (diversity, growth trends), debt burden (debt per capita, debt as a percentage of assessed value), economic base (employment diversity, major employers, income levels), financial management (balanced budgets, reserve levels, accounting practices), and legal provisions (rate covenants, additional bonds tests, flow of funds). Insured municipal bonds carry the credit rating of the insurer (if higher than the underlying rating), providing additional security to investors.</p>
+<h3>C.1 Account Types and Documentation</h3>
+<p>Cash accounts require full payment for purchases by settlement date (T+1 for most securities). Margin accounts allow customers to borrow from the broker-dealer to purchase securities. Regulation T sets the initial margin requirement at 50% for equity securities (the customer must deposit at least 50% of the purchase price). FINRA maintenance margin requires equity of at least 25% of the market value of long positions (most firms require 30-35%). A margin call is issued when equity falls below the maintenance requirement.</p>
+<p>Options accounts require a signed Options Account Agreement (OAA) and approval by a Registered Options Principal (ROP). The customer must receive the Options Disclosure Document (ODD) at or before account approval. Options suitability considers the customer&#x27;s investment objectives, financial situation, investment experience, and options knowledge. Discretionary accounts require written authorization (power of attorney) from the customer. Each discretionary order must be approved by a principal promptly. Non-discretionary accounts allow the representative to choose only the time and price of execution without written authorization.</p>
+<h3>C.2 Regulation Best Interest (Reg BI)</h3>
+<p>Regulation Best Interest (Reg BI) requires broker-dealers and their associated persons to act in the retail customer&#x27;s best interest at the time of a recommendation, without placing their own financial interests ahead of the customer&#x27;s interests. Reg BI has four component obligations: (1) Disclosure Obligation — provide Form CRS (Client Relationship Summary) describing services, fees, conflicts, and the standard of conduct. (2) Care Obligation — exercise reasonable diligence, care, and skill in making recommendations, considering the customer&#x27;s investment profile.</p>
+<p>(3) Conflict of Interest Obligation — establish policies and procedures to identify, disclose, and mitigate or eliminate conflicts of interest. This includes eliminating sales contests and quotas based on specific products. (4) Compliance Obligation — establish policies and procedures reasonably designed to achieve compliance with Reg BI. Form CRS is a brief (2-4 page) document that must be delivered to retail customers at the beginning of the relationship and must be filed with the SEC and FINRA.</p>
+<p>The key distinction between Reg BI and the fiduciary standard: Reg BI applies at the time of recommendation (point-in-time obligation), while the fiduciary standard (for RIAs and CFP professionals) applies continuously. Reg BI does not require ongoing monitoring of recommendations. Reg BI allows commission-based compensation (which creates conflicts) as long as the conflicts are disclosed and mitigated. The fiduciary standard requires the adviser to act in the client&#x27;s best interest at all times, which may require recommending lower-cost alternatives.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-4', 4)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(4)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-5" class="section" style="display:none;">
+<h2>Additional Practice Questions</h2>
+<h3>11. An investor buys 100 shares of XYZ at $60 and sells 1 XYZ 65 Call for $4. What is the maximum gain?</h3>
+<p>A) $400
+B) $500
+C) $900
+D) Unlimited</p>
+<h3>12. A municipal revenue bond&#x27;s debt service coverage ratio is 1.5x. This means:</h3>
+<p>A) The bond is in default
+B) Net revenue is 1.5 times annual debt service
+C) The bond is rated AAA
+D) The issuer has 50% more debt than revenue</p>
+<h3>13. Under Reg T, a customer buying $80,000 of stock in a margin account must deposit:</h3>
+<p>A) $20,000
+B) $40,400
+C) $60,000
+D) $80,000</p>
+<h3>14. A long straddle on XYZ (strike $50) costs a total premium of $8. What are the breakeven points?</h3>
+<p>A) $42 and $58
+B) $46 and $54
+C) $50 only
+D) $40 and $60</p>
+<h3>15. Which type of municipal bond is most likely subject to AMT?</h3>
+<p>A) General obligation bond
+B) Revenue bond for a public hospital
+C) Private activity bond for a corporate facility
+D) Assessment bond</p>
+<div class="table-wrapper"><table>
+<tr><th></th><th>How to Use This Manual</th></tr>
+<tr><td></td><td>Exam Overview</td></tr>
+<tr><td>CH 1</td><td>Equity Securities</td></tr>
+<tr><td>CH 2</td><td>Debt Securities</td></tr>
+<tr><td>CH 3</td><td>Options</td></tr>
+<tr><td>CH 4</td><td>Packaged Products and Alternatives</td></tr>
+<tr><td>CH 5</td><td>Customer Accounts</td></tr>
+<tr><td>CH 6</td><td>Margin Accounts</td></tr>
+<tr><td>CH 7</td><td>Retirement Plans</td></tr>
+<tr><td>CH 8</td><td>Taxation of Securities</td></tr>
+<tr><td>CH 9</td><td>Municipal Securities</td></tr>
+<tr><td>CH 10</td><td>Economic Factors and Analysis</td></tr>
+<tr><td>CH 11</td><td>Regulatory Requirements</td></tr>
+<tr><td>CH 12</td><td>Suitability and Recommendations</td></tr>
+<tr><td></td><td>Practice Exam</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Component</th><th>Detail</th></tr>
+<tr><td>Questions</td><td>135 multiple-choice (125 scored, 10 unscored pretest)</td></tr>
+<tr><td>Time</td><td>3 hours 45 minutes (225 minutes)</td></tr>
+<tr><td>Passing Score</td><td>72% (90 of 125 scored questions)</td></tr>
+<tr><td>Prerequisites</td><td>SIE (co-requisite), FINRA member firm sponsorship</td></tr>
+<tr><td>Cost</td><td>$300 (2026)</td></tr>
+<tr><td>Format</td><td>Computer-based at Prometric testing centers</td></tr>
+<tr><td>Retake Policy</td><td>30-day wait after 1st/2nd failure, 180-day wait after 3rd failure</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Content Area</th><th>Weight</th><th>Approx. Questions</th></tr>
+<tr><td>Seeks Business for the Broker-Dealer (prospecting, presentations)</td><td>9%</td><td>11</td></tr>
+<tr><td>Opens Accounts (documentation, types, features)</td><td>11%</td><td>14</td></tr>
+<tr><td>Provides Information on Investments (products, risks, strategies)</td><td>73%</td><td>91</td></tr>
+<tr><td>Obtains and Verifies Customer Instructions (order handling, settlement)</td><td>7%</td><td>9</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Bond Type</th><th>Issuer</th><th>Tax Treatment</th><th>Safety Rating</th></tr>
+<tr><td>Treasury Bills (&lt; 1 year)</td><td>U.S. Government</td><td>State tax-exempt, federal taxable</td><td>Highest (full faith and credit)</td></tr>
+<tr><td>Treasury Notes (2-10 years)</td><td>U.S. Government</td><td>State tax-exempt, federal taxable</td><td>Highest</td></tr>
+<tr><td>Treasury Bonds (10-30 years)</td><td>U.S. Government</td><td>State tax-exempt, federal taxable</td><td>Highest</td></tr>
+<tr><td>TIPS</td><td>U.S. Government</td><td>State tax-exempt, phantom income issue</td><td>Highest (inflation-adjusted principal)</td></tr>
+<tr><td>GNMA (Ginnie Mae)</td><td>Government agency</td><td>Fully taxable</td><td>Highest among agencies (explicit guarantee)</td></tr>
+<tr><td>FNMA/FHLMC</td><td>GSEs</td><td>Fully taxable</td><td>Very high (implied guarantee, not explicit)</td></tr>
+<tr><td>Municipal GO Bonds</td><td>State/local governments</td><td>Federal tax-exempt, often state-exempt</td><td>High (backed by taxing power)</td></tr>
+<tr><td>Municipal Revenue Bonds</td><td>State/local authorities</td><td>Federal tax-exempt, often state-exempt</td><td>Varies (backed by project revenue)</td></tr>
+<tr><td>Investment-Grade Corporate</td><td>Corporations (BBB/Baa+)</td><td>Fully taxable</td><td>Moderate to high</td></tr>
+<tr><td>High-Yield Corporate</td><td>Corporations (below BBB)</td><td>Fully taxable</td><td>Lower (higher default risk)</td></tr>
+<tr><td>Zero-Coupon Bonds</td><td>Various issuers</td><td>Phantom income (annual accretion taxed)</td><td>Varies by issuer</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Position</th><th>Market Outlook</th><th>Maximum Gain</th><th>Maximum Loss</th><th>Breakeven</th></tr>
+<tr><td>Long Call</td><td>Bullish</td><td>Unlimited</td><td>Premium paid</td><td>Strike + Premium</td></tr>
+<tr><td>Short (Naked) Call</td><td>Bearish/Neutral</td><td>Premium received</td><td>Unlimited</td><td>Strike + Premium</td></tr>
+<tr><td>Long Put</td><td>Bearish</td><td>Strike - Premium (per share)</td><td>Premium paid</td><td>Strike - Premium</td></tr>
+<tr><td>Short (Naked) Put</td><td>Bullish/Neutral</td><td>Premium received</td><td>Strike - Premium (per share)</td><td>Strike - Premium</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Plan Type</th><th>2026 Employee Limit</th><th>Employer Contribution</th><th>Total Limit</th></tr>
+<tr><td>401(k) / 403(b)</td><td>$24,500 ($32,500 age 50+, $34,750 ages 60-63)</td><td>Up to 25% of compensation</td><td>$72,000</td></tr>
+<tr><td>SIMPLE IRA</td><td>$17,000 ($18,100 age 50+)</td><td>Match up to 3% or 2% non-elective</td><td>N/A</td></tr>
+<tr><td>SEP IRA</td><td>N/A (employer contributions only)</td><td>25% of compensation, max $72,000</td><td>$72,000</td></tr>
+<tr><td>Traditional/Roth IRA</td><td>$7,500 ($8,600 age 50+)</td><td>N/A</td><td>$7,500 ($8,600)</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Position</th><th>Market View</th><th>Max Gain</th><th>Max Loss</th><th>Breakeven</th></tr>
+<tr><td>Long Call</td><td>Bullish</td><td>Unlimited</td><td>Premium paid</td><td>Strike + Premium</td></tr>
+<tr><td>Short Call (naked)</td><td>Bearish/Neutral</td><td>Premium received</td><td>Unlimited</td><td>Strike + Premium</td></tr>
+<tr><td>Long Put</td><td>Bearish</td><td>Strike - Premium</td><td>Premium paid</td><td>Strike - Premium</td></tr>
+<tr><td>Short Put (naked)</td><td>Bullish/Neutral</td><td>Premium received</td><td>Strike - Premium</td><td>Strike - Premium</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Spread</th><th>Type</th><th>Market View</th><th>Max Gain</th><th>Max Loss</th></tr>
+<tr><td>Bull Call</td><td>Debit</td><td>Bullish</td><td>Strike diff - Net debit</td><td>Net debit</td></tr>
+<tr><td>Bear Put</td><td>Debit</td><td>Bearish</td><td>Strike diff - Net debit</td><td>Net debit</td></tr>
+<tr><td>Bull Put</td><td>Credit</td><td>Bullish</td><td>Net credit</td><td>Strike diff - Net credit</td></tr>
+<tr><td>Bear Call</td><td>Credit</td><td>Bearish</td><td>Net credit</td><td>Strike diff - Net credit</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Bond Type</th><th>Backing</th><th>Voter Approval</th><th>AMT Status</th></tr>
+<tr><td>General Obligation</td><td>Full faith and taxing power</td><td>Required</td><td>Not AMT</td></tr>
+<tr><td>Revenue Bond</td><td>Project revenue only</td><td>Not required</td><td>Not AMT</td></tr>
+<tr><td>Private Activity</td><td>Private entity</td><td>Not required</td><td>Subject to AMT</td></tr>
+<tr><td>Assessment Bond</td><td>Special assessments</td><td>Varies</td><td>Not AMT</td></tr>
+<tr><td>Moral Obligation</td><td>Non-binding state pledge</td><td>Not required</td><td>Not AMT</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>DPP Type</th><th>Primary Benefit</th><th>Risk Level</th><th>Tax Feature</th></tr>
+<tr><td>Oil &amp; Gas (Exploratory)</td><td>High deductions</td><td>Highest</td><td>IDCs, depletion</td></tr>
+<tr><td>Oil &amp; Gas (Income)</td><td>Cash flow</td><td>Lowest (O&amp;G)</td><td>Depletion allowance</td></tr>
+<tr><td>Real Estate (New)</td><td>Depreciation + appreciation</td><td>Moderate</td><td>Depreciation, credits</td></tr>
+<tr><td>Real Estate (Existing)</td><td>Cash flow + depreciation</td><td>Lower</td><td>Depreciation</td></tr>
+<tr><td>Equipment Leasing</td><td>Depreciation + income</td><td>Moderate</td><td>MACRS depreciation</td></tr>
+</table></div>
+<p>Variable annuities and variable life insurance are securities that must be sold with a prospectus. They require both a securities license (Series 6 or Series 7) and an insurance license. Variable annuities offer tax-deferred growth in subaccounts (similar to mutual funds) with an insurance wrapper. The accumulation phase involves contributions and investment growth. The annuitization phase converts the accumulated value into a stream of income payments. Surrender charges typically apply during the first 5-8 years and decline annually.</p>
+<p>Variable annuity taxation follows LIFO: withdrawals are treated as earnings first (taxed as ordinary income) until all earnings have been withdrawn, then as a return of principal (tax-free). A 10% penalty applies to withdrawals before age 59 1/2 (with exceptions for death, disability, and substantially equal periodic payments under IRC Section 72(t)). The death benefit guarantees that beneficiaries receive at least the total contributions (minus withdrawals) regardless of investment performance, providing downside protection that mutual funds do not offer.</p>
+<p>Variable life insurance policies have a fixed premium and a minimum guaranteed death benefit, but the cash value and death benefit above the minimum fluctuate based on subaccount performance. Variable universal life (VUL) combines the investment flexibility of variable life with the premium flexibility of universal life. Both are considered securities and require prospectus delivery. The separate account holding the subaccount investments is legally separate from the insurance company&#x27;s general account, protecting policyholders if the insurer becomes insolvent.</p>
+<p>Direct Participation Programs (DPPs) are business ventures structured as limited partnerships that pass through income, losses, deductions, and credits directly to investors without corporate-level taxation. Common DPP types include: oil and gas programs (exploratory/wildcat, developmental, income/producing), real estate programs (raw land, new construction, existing properties, government-assisted housing), and equipment leasing programs. DPPs are illiquid investments with no secondary market — investors must be prepared to hold for the life of the program.</p>
+<p>The general partner (GP) manages the program and has unlimited liability. Limited partners (LPs) have liability limited to their investment plus any recourse debt they are personally liable for. LPs cannot participate in management without risking their limited liability status. Tax benefits include: intangible drilling costs (IDCs) for oil and gas programs (100% deductible in the year incurred), depletion allowances, depreciation on real estate and equipment, and tax credits for certain activities. The at-risk rules limit deductions to the amount the investor has at risk (investment plus recourse debt). Passive activity loss rules limit deduction of passive losses to passive income only.</p>
+<p>Figure 7: Options Strategy Matrix</p>
+<p>Figure 8: Underwriting Spread Waterfall</p>
+<h3>D.1 Variable Annuities and Variable Life Insurance</h3>
+<p>Variable annuities and variable life insurance are securities that must be sold with a prospectus. They require both a securities license (Series 6 or Series 7) and an insurance license. Variable annuities offer tax-deferred growth in subaccounts (similar to mutual funds) with an insurance wrapper. The accumulation phase involves contributions and investment growth. The annuitization phase converts the accumulated value into a stream of income payments. Surrender charges typically apply during the first 5-8 years and decline annually.</p>
+<p>Variable annuity taxation follows LIFO: withdrawals are treated as earnings first (taxed as ordinary income) until all earnings have been withdrawn, then as a return of principal (tax-free). A 10% penalty applies to withdrawals before age 59 1/2 (with exceptions for death, disability, and substantially equal periodic payments under IRC Section 72(t)). The death benefit guarantees that beneficiaries receive at least the total contributions (minus withdrawals) regardless of investment performance, providing downside protection that mutual funds do not offer.</p>
+<p>Variable life insurance policies have a fixed premium and a minimum guaranteed death benefit, but the cash value and death benefit above the minimum fluctuate based on subaccount performance. Variable universal life (VUL) combines the investment flexibility of variable life with the premium flexibility of universal life. Both are considered securities and require prospectus delivery. The separate account holding the subaccount investments is legally separate from the insurance company&#x27;s general account, protecting policyholders if the insurer becomes insolvent.</p>
+<h3>D.2 Direct Participation Programs (DPPs)</h3>
+<p>Direct Participation Programs (DPPs) are business ventures structured as limited partnerships that pass through income, losses, deductions, and credits directly to investors without corporate-level taxation. Common DPP types include: oil and gas programs (exploratory/wildcat, developmental, income/producing), real estate programs (raw land, new construction, existing properties, government-assisted housing), and equipment leasing programs. DPPs are illiquid investments with no secondary market — investors must be prepared to hold for the life of the program.</p>
+<p>The general partner (GP) manages the program and has unlimited liability. Limited partners (LPs) have liability limited to their investment plus any recourse debt they are personally liable for. LPs cannot participate in management without risking their limited liability status. Tax benefits include: intangible drilling costs (IDCs) for oil and gas programs (100% deductible in the year incurred), depletion allowances, depreciation on real estate and equipment, and tax credits for certain activities. The at-risk rules limit deductions to the amount the investor has at risk (investment plus recourse debt). Passive activity loss rules limit deduction of passive losses to passive income only.</p>
+<p>Figure 7: Options Strategy Matrix</p>
+<p>Figure 8: Underwriting Spread Waterfall</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-5', 5)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(5)">Next Section →</button>
+        </div>
+        </div>
+
+        
+        <div id="quiz" class="quiz-container">
+            <h2>Practice Quiz</h2>
+            <p>Test your knowledge with these practice questions. Select the best answer for each question.</p>
+            <div id="quizQuestions"></div>
+            <button class="btn-submit" onclick="submitQuiz()">Submit Answers</button>
+            <div id="quizScore" class="quiz-score" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SECTIONS = document.querySelectorAll('.section');
+const NAV_ITEMS = document.querySelectorAll('.nav-item');
+const TOTAL_SECTIONS = 6;
+let completedSections = new Set();
+const STORAGE_KEY = 'Series7_progress';
+
+// Load saved progress
+try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    saved.forEach(s => completedSections.add(s));
+    updateProgress();
+    NAV_ITEMS.forEach(item => {
+        if (completedSections.has(item.dataset.section)) item.classList.add('completed');
+    });
+} catch(e) {}
+
+function showSection(id) {
+    SECTIONS.forEach(s => s.style.display = 'none');
+    document.querySelector('.quiz-container').style.display = 'none';
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+    NAV_ITEMS.forEach(n => n.classList.remove('active'));
+    document.querySelector(`[data-section="${id}"]`)?.classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+function nextSection(currentIdx) {
+    const sectionIds = Array.from(SECTIONS).map(s => s.id).filter(id => id !== 'welcome');
+    const nextIdx = currentIdx + 1;
+    if (nextIdx < sectionIds.length) showSection(sectionIds[nextIdx]);
+}
+
+function markComplete(sectionId, idx) {
+    completedSections.add(sectionId);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedSections]));
+    updateProgress();
+    document.querySelector(`[data-section="${sectionId}"]`)?.classList.add('completed');
+    const btn = event.target;
+    btn.textContent = 'Completed ✓';
+    btn.classList.add('done');
+}
+
+function updateProgress() {
+    const pct = Math.round((completedSections.size / TOTAL_SECTIONS) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = pct + '% Complete (' + completedSections.size + '/' + TOTAL_SECTIONS + ' sections)';
+}
+
+// Quiz
+const questions = [{"question": "Which of the following best describes the key concept covered in 'Introduction'?", "options": ["A foundational concept in Series7", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Series7 curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Table of Contents'?", "options": ["A foundational concept in Series7", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Series7 curriculum."}, {"question": "Which of the following best describes the key concept covered in 'How to Use This Manual'?", "options": ["A foundational concept in Series7", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Series7 curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Exam Overview'?", "options": ["A foundational concept in Series7", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Series7 curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Practice Exam: Series 7 General Securities Representative'?", "options": ["A foundational concept in Series7", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Series7 curriculum."}];
+
+function showQuiz() {
+    SECTIONS.forEach(s => s.style.display = 'none');
+    const qc = document.querySelector('.quiz-container');
+    qc.style.display = 'block';
+    NAV_ITEMS.forEach(n => n.classList.remove('active'));
+    
+    const container = document.getElementById('quizQuestions');
+    container.innerHTML = '';
+    
+    questions.forEach((q, i) => {
+        let html = `<div class="question" id="q${i}">`;
+        html += `<div class="question-text">${i+1}. ${q.question}</div>`;
+        q.options.forEach((opt, j) => {
+            html += `<div class="option" onclick="selectOption(${i}, ${j})" id="q${i}o${j}">${String.fromCharCode(65+j)}. ${opt}</div>`;
+        });
+        html += `<div class="explanation" id="exp${i}">${q.explanation}</div>`;
+        html += '</div>';
+        container.innerHTML += html;
+    });
+    
+    document.getElementById('quizScore').style.display = 'none';
+    window.scrollTo(0, 0);
+}
+
+let selectedAnswers = {};
+
+function selectOption(qIdx, oIdx) {
+    // Clear previous selection
+    for (let j = 0; j < 4; j++) {
+        const el = document.getElementById(`q${qIdx}o${j}`);
+        if (el) el.classList.remove('selected');
+    }
+    const el = document.getElementById(`q${qIdx}o${oIdx}`);
+    if (el) el.classList.add('selected');
+    selectedAnswers[qIdx] = oIdx;
+}
+
+function submitQuiz() {
+    let correct = 0;
+    questions.forEach((q, i) => {
+        const selected = selectedAnswers[i];
+        for (let j = 0; j < 4; j++) {
+            const el = document.getElementById(`q${i}o${j}`);
+            if (el) {
+                el.classList.remove('selected');
+                if (j === q.correct) el.classList.add('correct');
+                else if (j === selected) el.classList.add('incorrect');
+            }
+        }
+        if (selected === q.correct) correct++;
+        document.getElementById(`exp${i}`).style.display = 'block';
+    });
+    
+    const pct = Math.round((correct / questions.length) * 100);
+    const scoreEl = document.getElementById('quizScore');
+    scoreEl.style.display = 'block';
+    scoreEl.innerHTML = `<h3>${pct}% — ${correct}/${questions.length} Correct</h3><p>${pct >= 70 ? 'Great job! You passed!' : 'Keep studying and try again.'}</p>`;
+    scoreEl.style.borderColor = pct >= 70 ? '#27AE60' : '#E74C3C';
+    scoreEl.querySelector('h3').style.color = pct >= 70 ? '#27AE60' : '#E74C3C';
+}
+
+// Show welcome by default
+showSection('welcome');
+</script>
+</body>
+</html>

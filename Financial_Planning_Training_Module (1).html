@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Planning — Interactive Training Module</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, Helvetica, sans-serif; background: #F4F6F9; color: #2C3E50; line-height: 1.6; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #1B4F72, #2E75B6); color: white; padding: 20px 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.header h1 { font-size: 1.4em; margin-bottom: 5px; }
+.header .subtitle { font-size: 0.85em; opacity: 0.85; }
+.progress-bar { background: rgba(255,255,255,0.2); border-radius: 10px; height: 8px; margin-top: 10px; }
+.progress-fill { background: #27AE60; height: 100%; border-radius: 10px; transition: width 0.5s ease; width: 0%; }
+.progress-text { font-size: 0.75em; margin-top: 4px; opacity: 0.8; }
+
+/* Layout */
+.container { display: flex; margin-top: 100px; min-height: calc(100vh - 100px); }
+
+/* Sidebar */
+.sidebar { width: 280px; background: white; border-right: 1px solid #E5E8EB; padding: 20px 0; position: fixed; top: 100px; bottom: 0; overflow-y: auto; }
+.sidebar .nav-title { padding: 10px 20px; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #95A5A6; font-weight: bold; }
+.nav-item { display: block; padding: 10px 20px; color: #2C3E50; text-decoration: none; font-size: 0.9em; border-left: 3px solid transparent; transition: all 0.2s; cursor: pointer; }
+.nav-item:hover { background: #F0F3F5; border-left-color: #2E75B6; }
+.nav-item.active { background: #E8F0FE; border-left-color: #1B4F72; color: #1B4F72; font-weight: bold; }
+.nav-item.completed { color: #27AE60; }
+.nav-item.completed::after { content: " ✓"; color: #27AE60; }
+.nav-quiz { display: block; padding: 12px 20px; color: #E67E22; text-decoration: none; font-size: 0.9em; font-weight: bold; border-left: 3px solid #E67E22; cursor: pointer; margin-top: 10px; }
+.nav-quiz:hover { background: #FFF3E0; }
+
+/* Main Content */
+.main { margin-left: 280px; padding: 30px 40px; max-width: 900px; flex: 1; }
+.section h2 { color: #1B4F72; font-size: 1.6em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #1B4F72; }
+.section h3 { color: #2E75B6; font-size: 1.2em; margin: 20px 0 10px; }
+.section h4 { color: #2C3E50; font-size: 1.05em; margin: 15px 0 8px; }
+.section p { margin-bottom: 12px; text-align: justify; }
+
+/* Tables */
+.table-wrapper { overflow-x: auto; margin: 15px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+th { background: #1B4F72; color: white; padding: 10px 12px; text-align: left; font-weight: bold; }
+td { padding: 8px 12px; border-bottom: 1px solid #E5E8EB; }
+tr:nth-child(even) td { background: #F8F9FA; }
+tr:hover td { background: #E8F0FE; }
+
+/* Buttons */
+.section-footer { display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #E5E8EB; }
+.btn-complete { background: #27AE60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: bold; transition: all 0.2s; }
+.btn-complete:hover { background: #219A52; transform: translateY(-1px); }
+.btn-complete.done { background: #95A5A6; cursor: default; }
+.btn-next { background: #2E75B6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: bold; transition: all 0.2s; }
+.btn-next:hover { background: #1A5F8B; transform: translateY(-1px); }
+
+/* Quiz */
+.quiz-container { display: none; }
+.quiz-container h2 { color: #E67E22; border-bottom-color: #E67E22; }
+.question { background: white; border: 1px solid #E5E8EB; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.question-text { font-weight: bold; margin-bottom: 12px; color: #1B4F72; }
+.option { display: block; padding: 10px 15px; margin: 5px 0; border: 2px solid #E5E8EB; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+.option:hover { border-color: #2E75B6; background: #F0F7FF; }
+.option.selected { border-color: #2E75B6; background: #E8F0FE; }
+.option.correct { border-color: #27AE60; background: #E8F5E9; }
+.option.incorrect { border-color: #E74C3C; background: #FDEDEC; }
+.explanation { display: none; margin-top: 10px; padding: 10px; background: #FFF3E0; border-left: 3px solid #E67E22; border-radius: 4px; font-size: 0.9em; }
+.quiz-score { text-align: center; padding: 30px; background: white; border-radius: 8px; border: 2px solid #27AE60; margin-top: 20px; }
+.quiz-score h3 { color: #27AE60; font-size: 1.5em; }
+.btn-submit { background: #E67E22; color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin-top: 20px; }
+.btn-submit:hover { background: #D35400; }
+
+/* Welcome */
+.welcome { text-align: center; padding: 60px 20px; }
+.welcome h2 { color: #1B4F72; font-size: 2em; margin-bottom: 15px; }
+.welcome p { font-size: 1.1em; color: #7F8C8D; max-width: 600px; margin: 0 auto 20px; }
+.welcome .stats { display: flex; justify-content: center; gap: 30px; margin-top: 30px; }
+.stat { text-align: center; }
+.stat .number { font-size: 2em; font-weight: bold; color: #1B4F72; }
+.stat .label { font-size: 0.85em; color: #95A5A6; }
+.btn-start { background: #1B4F72; color: white; border: none; padding: 15px 40px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin-top: 30px; }
+.btn-start:hover { background: #2E75B6; }
+
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 20px; }
+    .header h1 { font-size: 1.1em; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Financial Planning — Interactive Training Module</h1>
+    <div class="subtitle">WealthBridge Study Library | EMBA-Quality Professional Development</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0% Complete</div>
+</div>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="nav-title">Chapters</div>
+        <a href="#" class="nav-item active" data-section="welcome" onclick="showSection('welcome')">Welcome</a>
+        <a href="#" class="nav-item" data-section="section-0" onclick="showSection('section-0')">Introduction</a>
+<a href="#" class="nav-item" data-section="section-1" onclick="showSection('section-1')">Table of Contents</a>
+<a href="#" class="nav-item" data-section="section-2" onclick="showSection('section-2')">How to Use This Manual</a>
+<a href="#" class="nav-item" data-section="section-3" onclick="showSection('section-3')">Practice Exam: Financial Planning</a>
+
+        <a href="#" class="nav-quiz" onclick="showQuiz()">Practice Quiz (7 Questions)</a>
+    </div>
+    
+    <div class="main">
+        <div id="welcome" class="section">
+            <div class="welcome">
+                <h2>Welcome to Financial Planning</h2>
+                <p>This interactive training module covers all key concepts, formulas, and exam strategies. Track your progress as you work through each section.</p>
+                <div class="stats">
+                    <div class="stat"><div class="number">4</div><div class="label">Sections</div></div>
+                    <div class="stat"><div class="number">7</div><div class="label">Quiz Questions</div></div>
+                    <div class="stat"><div class="number">0%</div><div class="label" id="masteryLabel">Mastery</div></div>
+                </div>
+                <button class="btn-start" onclick="nextSection(-1)">Begin Training →</button>
+            </div>
+        </div>
+        
+        <div id="section-0" class="section" style="display:none;">
+<h2>Introduction</h2>
+<p>Financial Planning</p>
+<p>Comprehensive Financial Planning Study Manual</p>
+<p>Comprehensive Study Guide</p>
+<p>Updated March 2026  |  OBBBA Integrated</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-0', 0)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(0)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-1" class="section" style="display:none;">
+<h2>Table of Contents</h2>
+<p>Right-click → &#x27;Update Field&#x27; in Word for clickable page numbers.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-1', 1)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(1)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-2" class="section" style="display:none;">
+<h2>How to Use This Manual</h2>
+<p>Financial planning is the process of developing a comprehensive strategy to help clients achieve their life goals through the proper management of their financial resources. Unlike specialized exams that focus on a single area (securities, insurance, or tax), financial planning requires integration across all areas: cash flow management, risk management, investment planning, tax planning, retirement planning, and estate planning. This manual provides the foundational framework for understanding how these areas interconnect.</p>
+<p>This manual is organized around the six-step financial planning process and covers the essential knowledge areas that every financial planner must master. Each chapter includes practical examples, key formulas, and exam-focused tips. The emphasis is on understanding the planning process and how to apply financial concepts to real client situations, rather than memorizing isolated facts.</p>
+<p>The financial planning process consists of six steps: (1) Establish and define the client-planner relationship (scope of engagement, responsibilities, compensation), (2) Gather client data and determine goals and expectations (financial statements, risk tolerance, time horizon, values), (3) Analyze and evaluate the client&#x27;s financial status (identify strengths, weaknesses, and gaps), (4) Develop and present financial planning recommendations (prioritized, actionable strategies), (5) Implement the financial planning recommendations (coordinate with other professionals, execute transactions), and (6) Monitor the plan and make adjustments (ongoing review, life event triggers).</p>
+<p>The client-planner relationship must be built on trust, transparency, and clear communication. The engagement letter defines the scope of services, the compensation arrangement (fee-only, commission-based, or fee-based), the responsibilities of each party, and the duration of the engagement. The planner must disclose all material conflicts of interest and obtain the client&#x27;s informed consent. Data gathering includes both quantitative information (income, expenses, assets, liabilities, insurance coverage, tax returns) and qualitative information (values, attitudes toward risk, family dynamics, health concerns, charitable interests).</p>
+<p>The personal balance sheet (statement of financial position) lists all assets, liabilities, and net worth at a specific point in time. Assets are categorized as monetary (cash, checking, savings), investment (stocks, bonds, retirement accounts), and personal use (home, vehicles). Liabilities are current (due within 12 months) and long-term (mortgage, student loans). Net worth = Total Assets - Total Liabilities. Key ratios: emergency fund ratio (liquid assets / monthly expenses, target 3-6 months), savings ratio (savings / gross income, target 10-20%), debt-to-income ratio (total debt payments / gross income, target below 36%).</p>
+<p>The personal cash flow statement tracks income and expenses over a period. Gross income minus taxes and deductions equals net income. Net income minus fixed expenses (mortgage, insurance, loan payments) and variable expenses (food, entertainment, clothing) equals discretionary income (savings capacity). A negative cash flow indicates the client is spending more than earning and accumulating debt. The first priority in any financial plan is to establish positive cash flow and build an emergency fund before addressing investment, insurance, or estate planning goals.</p>
+<p>An emergency fund provides a financial cushion against unexpected expenses (job loss, medical emergency, major repair). The recommended size is 3-6 months of essential living expenses, held in liquid, low-risk accounts (savings, money market, short-term CDs). Self-employed individuals, single-income households, and those with variable income should maintain larger emergency funds (6-12 months). The emergency fund should be established before pursuing aggressive investment strategies or making large discretionary purchases.</p>
+<p>Risk management involves identifying, evaluating, and addressing risks that could derail the financial plan. The four risk management techniques are: avoidance (eliminating the activity), reduction (minimizing frequency or severity), retention (self-insuring for small, predictable losses), and transfer (purchasing insurance for large, unpredictable losses). Insurance needs analysis should cover: life insurance (income replacement, debt payoff, education funding), disability insurance (60-70% of income), health insurance (major medical, dental, vision), property insurance (homeowners, auto), liability insurance (umbrella policy), and long-term care insurance (for those age 50+).</p>
+<p>Asset allocation is the primary driver of portfolio returns. The appropriate allocation depends on the client&#x27;s risk tolerance, time horizon, and financial goals. A young professional with a 30+ year time horizon and high risk tolerance might allocate 90% to equities and 10% to bonds. A retiree with a 20-year time horizon and moderate risk tolerance might allocate 50% to equities, 40% to bonds, and 10% to cash. Diversification across asset classes, sectors, and geographies reduces portfolio risk without sacrificing expected return.</p>
+<p>The time value of money is the foundation of all financial planning calculations. The five TVM variables (N, I/Y, PV, PMT, FV) allow planners to calculate future values of savings, present values of future obligations, loan payments, and rates of return. The rule of 72 provides a quick estimate of doubling time: 72 / rate = years to double. Dollar-cost averaging (investing a fixed amount at regular intervals) reduces the impact of market volatility and eliminates the need to time the market.</p>
+<p>Tax planning is integral to every aspect of financial planning. The federal income tax uses progressive rates (10%, 12%, 22%, 24%, 32%, 35%, 37% for 2026). The marginal rate determines the tax impact of additional income or deductions. Tax-advantaged accounts (401(k), IRA, Roth IRA, HSA, 529) provide significant benefits: traditional accounts offer tax-deferred growth with a current deduction; Roth accounts offer tax-free growth with no current deduction; HSAs offer triple tax benefits (deduction, tax-free growth, tax-free withdrawals for medical expenses).</p>
+<p>Key tax planning strategies include: maximizing contributions to tax-advantaged accounts, timing income and deductions to manage bracket exposure, harvesting tax losses to offset gains, using municipal bonds for tax-exempt income, making charitable contributions (cash, appreciated securities, donor-advised funds), and coordinating Roth conversions with low-income years. The standard deduction for 2026 is $15,000 (single) / $30,000 (MFJ). Itemized deductions include state and local taxes (SALT, capped at $40,400 under OBBBA), mortgage interest (on up to $750,000 of acquisition debt), charitable contributions, and medical expenses exceeding 7.5% of AGI.</p>
+<p>The comprehensive financial plan integrates all planning areas into a coherent, prioritized strategy. The plan should address: (1) Emergency fund adequacy, (2) Risk management gaps (insurance), (3) Debt management strategy, (4) Retirement savings adequacy, (5) Education funding, (6) Tax optimization, (7) Estate planning documents and strategies, and (8) Investment allocation and monitoring. Recommendations should be prioritized by urgency and impact, with immediate actions (close insurance gaps, establish emergency fund) before long-term strategies (optimize estate plan, implement advanced tax strategies).</p>
+<p>The financial plan is a living document that must be monitored and updated regularly. Annual reviews should assess progress toward goals, evaluate changes in the client&#x27;s circumstances (marriage, divorce, birth, death, job change, inheritance), review investment performance and rebalance as needed, update tax projections, and ensure insurance coverage remains adequate. Major life events should trigger an immediate plan review. The planner&#x27;s ongoing role is to serve as a trusted advisor, helping the client navigate financial decisions and stay on track toward their goals.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-2', 2)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(2)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-3" class="section" style="display:none;">
+<h2>Practice Exam: Financial Planning</h2>
+<h3>1. The recommended emergency fund size is:</h3>
+<p>A) 1-2 months of expenses
+B) 3-6 months of expenses
+C) 12-24 months of expenses
+D) Equal to annual income</p>
+<h3>2. Which step comes FIRST in the financial planning process?</h3>
+<p>A) Gather client data
+B) Develop recommendations
+C) Establish the client-planner relationship
+D) Implement the plan</p>
+<h3>3. Asset allocation is the primary determinant of:</h3>
+<p>A) Individual stock selection
+B) Market timing success
+C) Portfolio return variability
+D) Tax efficiency</p>
+<div class="table-wrapper"><table>
+<tr><th></th><th>How to Use This Manual</th></tr>
+<tr><td>CH 1</td><td>The Financial Planning Process</td></tr>
+<tr><td>CH 2</td><td>Personal Financial Statements and Budgeting</td></tr>
+<tr><td>CH 3</td><td>Emergency Planning and Risk Management</td></tr>
+<tr><td>CH 4</td><td>Investment Fundamentals for Planners</td></tr>
+<tr><td>CH 5</td><td>Tax Planning Essentials</td></tr>
+<tr><td>CH 6</td><td>Integrating the Financial Plan</td></tr>
+<tr><td></td><td>Practice Exam</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Vehicle</th><th>Annual Limit</th><th>Tax Benefit</th><th>Best For</th></tr>
+<tr><td>529 Plan</td><td>Varies ($300K-$550K lifetime)</td><td>Tax-free growth and withdrawals</td><td>Most families</td></tr>
+<tr><td>Coverdell ESA</td><td>$2,000/year</td><td>Tax-free for education</td><td>Lower-income families</td></tr>
+<tr><td>UGMA/UTMA</td><td>No limit (gift tax applies)</td><td>Kiddie tax rules apply</td><td>Flexible use</td></tr>
+<tr><td>AOTC</td><td>N/A (tax credit)</td><td>Up to $2,500/year credit</td><td>First 4 years of college</td></tr>
+<tr><td>Lifetime Learning</td><td>N/A (tax credit)</td><td>Up to $2,000/year credit</td><td>Graduate school, continuing ed</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Withdrawal Strategy</th><th>Approach</th><th>Pros</th><th>Cons</th></tr>
+<tr><td>4% Rule</td><td>Fixed initial %, inflation-adjusted</td><td>Simple, historically reliable</td><td>Rigid, ignores market conditions</td></tr>
+<tr><td>% of Portfolio</td><td>Fixed % of current balance</td><td>Adjusts to market</td><td>Income varies significantly</td></tr>
+<tr><td>Guardrails</td><td>Raise/cut based on thresholds</td><td>Balances stability and flexibility</td><td>More complex to implement</td></tr>
+<tr><td>Floor + Upside</td><td>Guaranteed floor + variable</td><td>Security + growth potential</td><td>May require annuity purchase</td></tr>
+</table></div>
+<p>Effective financial planning begins with understanding and managing cash flow. The cash flow statement tracks all sources of income and all expenses (fixed: mortgage, insurance, loan payments; variable: food, utilities, entertainment; periodic: property taxes, vacations). The goal is to identify the client&#x27;s savings capacity and develop a plan to maximize it through systematic budgeting and expense optimization.</p>
+<p>The emergency fund is the foundation of financial security. Standard recommendation: 3-6 months of essential expenses for dual-income stable households; 6-12 months for single-income, self-employed, or volatile-industry clients. The fund should be in liquid, low-risk accounts (high-yield savings, money market). Debt management uses the avalanche method (highest interest first, mathematically optimal) or snowball method (smallest balance first, psychologically motivating).</p>
+<p>A comprehensive insurance review evaluates coverage across all risk categories: life insurance (income replacement, debt payoff, education funding), disability insurance (income protection during working years), health insurance, property insurance, liability insurance, and long-term care insurance. Many clients are underinsured because they rely solely on employer-provided group coverage, which is typically 1-2x salary (far below the 10-15x recommended) and is not portable when changing jobs.</p>
+<p>Goal-based financial planning organizes the client&#x27;s financial life around specific, measurable, time-bound goals: retirement at a specific age, education funding, home purchase, debt elimination, charitable giving, and legacy planning. Each goal has a target amount, time horizon, and priority level. The planner helps prioritize goals, develop strategies, and monitor progress. Trade-offs are inevitable: funding education may delay retirement, buying a larger home may reduce retirement savings.</p>
+<p>Monte Carlo simulation runs thousands of scenarios with randomized market returns, inflation rates, and other variables to estimate the probability of achieving each goal. A 90%+ probability is considered strong; below 80% suggests adjustments are needed: increase savings, reduce goal amounts, extend timelines, or accept more investment risk. This probabilistic approach is far more realistic than deterministic projections that assume a single rate of return.</p>
+<h3>Financial Planning Practice Questions</h3>
+<h3>11. The recommended emergency fund for a single-income household is:</h3>
+<p>A) 1-2 months
+B) 3-6 months
+C) 6-12 months
+D) 12-24 months</p>
+<h3>12. A Monte Carlo simulation showing 75% probability suggests:</h3>
+<p>A) The plan is excellent
+B) Adjustments are needed
+C) The client should retire immediately
+D) The simulation is unreliable</p>
+<p>529 plans are the most popular education savings vehicle. Contributions are made with after-tax dollars but grow tax-free, and withdrawals for qualified education expenses (tuition, fees, books, room and board, computers, and up to $10,000/year for K-12 tuition) are completely tax-free. Most states offer a state income tax deduction for contributions. The 2026 contribution limit varies by state (typically $300,000-$550,000 lifetime). SECURE 2.0 allows 529-to-Roth IRA rollovers up to $35,000 lifetime (529 must be open 15+ years, subject to annual Roth contribution limits).</p>
+<p>Coverdell Education Savings Accounts (ESAs) allow $2,000 annual contributions per beneficiary (income limits apply: MAGI below $110,000 single / $220,000 MFJ). Withdrawals for qualified education expenses (including K-12) are tax-free. Coverdells offer more investment flexibility than 529 plans but have much lower contribution limits. UGMA/UTMA custodial accounts can be used for education but have no tax advantages for education specifically — income is taxed under the kiddie tax rules (unearned income above $2,500 for children under 19, or under 24 if full-time students, is taxed at the parent&#x27;s rate).</p>
+<p>The American Opportunity Tax Credit (AOTC) provides up to $2,500 per student per year for the first 4 years of post-secondary education (100% of the first $2,000 + 25% of the next $2,000 in qualified expenses). 40% is refundable (up to $1,000). Income phase-out: $80,000-$90,000 (single) / $160,000-$180,000 (MFJ). The Lifetime Learning Credit provides up to $2,000 per tax return (20% of the first $10,000 in qualified expenses) with no limit on years claimed. Student loan interest is deductible up to $2,500/year (income limits apply).</p>
+<p>Tax planning is integral to financial planning. Key strategies include: maximizing tax-advantaged accounts (401(k), IRA, HSA, 529), tax-loss harvesting (selling losers to offset gains), asset location (placing tax-inefficient investments like bonds and REITs in tax-deferred accounts, and tax-efficient investments like index funds in taxable accounts), Roth conversion strategies (converting traditional IRA to Roth in low-income years to lock in lower tax rates), and charitable giving strategies (bunching deductions, donor-advised funds, qualified charitable distributions from IRAs for those 70 1/2+).</p>
+<p>The marginal tax rate is the rate applied to the next dollar of income. The effective tax rate is total tax divided by total income. Understanding the difference is critical for planning: a client in the 32% marginal bracket does not pay 32% on all income — only on income within that bracket. Tax bracket management involves timing income and deductions to stay in lower brackets. For example, a client expecting lower income next year might defer a bonus or accelerate deductions into the current year.</p>
+<p>Qualified Charitable Distributions (QCDs) allow individuals age 70 1/2 and older to donate up to $105,000 per year directly from their IRA to a qualified charity. The distribution satisfies the RMD requirement (if applicable) and is excluded from gross income. This is more beneficial than taking the RMD as income and claiming a charitable deduction because: (1) it reduces AGI (which affects Medicare premiums, Social Security taxation, and other AGI-based thresholds), and (2) it benefits taxpayers who take the standard deduction and would not otherwise benefit from a charitable deduction.</p>
+<p>Social Security retirement benefits are based on the worker&#x27;s 35 highest-earning years (adjusted for inflation). The Primary Insurance Amount (PIA) is the benefit at full retirement age (FRA). FRA is 67 for those born in 1960 or later. Early retirement is available at age 62 with a permanent reduction of approximately 6.67% per year for the first 3 years early and 5% per year for additional years (up to 30% reduction at age 62 for FRA of 67). Delayed retirement credits increase benefits by 8% per year from FRA to age 70 (up to 24% increase).</p>
+<p>Social Security taxation: up to 85% of benefits may be taxable depending on provisional income (AGI + tax-exempt interest + 50% of Social Security benefits). For single filers: below $25,000 = no tax; $25,000-$34,000 = up to 50% taxable; above $34,000 = up to 85% taxable. For MFJ: below $32,000 = no tax; $32,000-$44,000 = up to 50% taxable; above $44,000 = up to 85% taxable. Spousal benefits equal the greater of the spouse&#x27;s own benefit or 50% of the higher-earning spouse&#x27;s PIA. Survivor benefits equal 100% of the deceased spouse&#x27;s benefit.</p>
+<p>Social Security claiming strategies: for married couples, the higher earner should generally delay to age 70 to maximize the survivor benefit (the surviving spouse receives the higher of the two benefits). The lower earner may claim earlier to provide income during the delay period. For single individuals, the break-even age for delaying from 62 to 70 is approximately 80-82 — those expecting to live beyond this age benefit from delaying. The earnings test reduces benefits for those claiming before FRA who continue to work: $1 reduction for every $2 earned above $22,320 (2026). Benefits are recalculated at FRA to credit the withheld amounts.</p>
+<p>The retirement income plan must address: income needs (essential expenses vs. discretionary), income sources (Social Security, pensions, retirement accounts, taxable accounts, annuities, part-time work), withdrawal sequencing (which accounts to draw from first), tax management (managing bracket exposure across account types), inflation protection (maintaining purchasing power over a 25-30 year retirement), and longevity risk (the risk of outliving assets).</p>
+<p>The 4% rule (Bengen rule) suggests withdrawing 4% of the initial portfolio value in the first year of retirement, then adjusting for inflation each subsequent year. Historical analysis shows this approach has sustained a 30-year retirement in approximately 95% of rolling periods. However, the 4% rule assumes a 50/50 stock/bond allocation and does not account for individual circumstances, variable spending, or current market valuations. Dynamic withdrawal strategies (guardrails approach, percentage of portfolio, floor-and-ceiling) may be more appropriate for individual clients.</p>
+<p>The time value of money (TVM) is the foundation of financial planning calculations. Present Value (PV) is the current value of a future sum, discounted at a given rate. Future Value (FV) is the value of a current sum at a future date, compounded at a given rate. FV = PV x (1 + r)^n. PV = FV / (1 + r)^n. An annuity is a series of equal payments at regular intervals. An ordinary annuity has payments at the end of each period; an annuity due has payments at the beginning. The annuity due is always worth more because each payment has one additional period of compounding.</p>
+<p>The Rule of 72 provides a quick estimate of how long it takes to double an investment: Years to Double = 72 / Rate of Return. At 8% return, money doubles in approximately 9 years (72/8). At 6%, approximately 12 years. Net Present Value (NPV) is the difference between the present value of cash inflows and outflows — a positive NPV indicates the investment adds value. Internal Rate of Return (IRR) is the discount rate that makes NPV equal to zero — it represents the investment&#x27;s effective annual return. When comparing investments, choose the one with the highest NPV (if using the same discount rate) or the highest IRR.</p>
+<p>Practical applications: calculating how much to save monthly to reach a retirement goal (PMT calculation), determining whether to take a lump sum or annuity from a pension (compare PV of annuity to lump sum), evaluating mortgage refinancing (compare PV of savings to closing costs), and projecting education costs (FV of current costs at education inflation rate). Financial calculators and spreadsheet functions (PV, FV, PMT, RATE, NPER) are essential tools. Always ensure consistency: if payments are monthly, the rate must be monthly (annual rate / 12) and N must be in months.</p>
+<p>The CFP Board&#x27;s financial planning process consists of seven steps: (1) Understanding the client&#x27;s personal and financial circumstances, (2) Identifying and selecting goals, (3) Analyzing the client&#x27;s current course of action and potential alternative courses, (4) Developing financial planning recommendations, (5) Presenting the recommendations, (6) Implementing the recommendations, (7) Monitoring the recommendations. This process is iterative — changes in circumstances, goals, or the economic environment require revisiting earlier steps.</p>
+<p>Ethical standards for financial planners include: acting in the client&#x27;s best interest (fiduciary duty), providing full disclosure of all material information including conflicts of interest, maintaining competence through continuing education, maintaining confidentiality of client information, acting with integrity and professionalism, and complying with all applicable laws and regulations. The CFP Board&#x27;s Code of Ethics and Standards of Conduct establishes these requirements for CFP professionals. Violations can result in public censure, suspension, or permanent revocation of the CFP certification.</p>
+<p>Scope of engagement defines the boundaries of the financial planning relationship: which areas of planning will be addressed (comprehensive vs. modular), the responsibilities of both the planner and the client, the compensation arrangement, and the duration of the engagement. A comprehensive financial plan addresses all major areas: financial position, risk management, investments, tax planning, retirement planning, estate planning, and education planning. A modular plan focuses on one or two specific areas based on the client&#x27;s immediate needs and budget.</p>
+<p>11. Under the Rule of 72, how long does it take to double an investment earning 6% annually? A) 6 years B) 8 years C) 10 years D) 12 years. Answer: D. Rule of 72: 72 / 6 = 12 years. At 8%, it takes 9 years (72/8). At 12%, it takes 6 years (72/12).</p>
+<p>12. A 529 plan offers which tax advantage? A) Tax-deductible contributions at the federal level B) Tax-free growth and withdrawals for qualified education expenses C) Tax credit for contributions D) Tax-free withdrawals for any purpose. Answer: B. 529 plans offer tax-free growth and tax-free withdrawals for qualified education expenses. Contributions are not federally deductible (but may be state-deductible).</p>
+<p>13. The maximum Social Security retirement benefit reduction for claiming at age 62 (with FRA of 67) is: A) 20% B) 25% C) 30% D) 35%. Answer: C. 30% reduction: 6.67% per year for the first 3 years early (20%) plus 5% per year for the next 2 years (10%) = 30% total reduction from FRA benefit.</p>
+<p>14. Which withdrawal strategy adjusts spending based on portfolio performance thresholds? A) 4% rule B) Percentage of portfolio C) Guardrails approach D) Capital preservation. Answer: C. The guardrails approach raises or cuts spending when the withdrawal rate crosses predetermined upper and lower thresholds, balancing income stability with portfolio sustainability.</p>
+<p>Education planning vehicles: 529 plans offer tax-free growth and withdrawals for qualified education expenses (tuition, fees, room and board, books, computers). Coverdell Education Savings Accounts (ESAs) allow $2,000 annual contributions per beneficiary with tax-free withdrawals for qualified education expenses including K-12 expenses. UGMA/UTMA custodial accounts provide flexibility but count as the child&#x27;s asset for financial aid purposes (assessed at 20% vs. 5.64% for parent assets). The kiddie tax applies to unearned income of children under 19 (or under 24 if full-time students): the first $1,300 is tax-free, the next $1,300 is taxed at the child&#x27;s rate, and amounts above $2,600 are taxed at the parent&#x27;s marginal rate.</p>
+<p>Emergency fund guidelines: maintain 3-6 months of essential expenses in liquid, accessible accounts (high-yield savings, money market). Self-employed individuals and those with variable income should maintain 6-12 months. The emergency fund should be separate from investment accounts and not subject to market risk. Debt management: prioritize high-interest debt (credit cards) using either the avalanche method (highest interest rate first — mathematically optimal) or the snowball method (smallest balance first — psychologically motivating). Student loan repayment options include income-driven repayment plans (IBR, PAYE, REPAYE) and Public Service Loan Forgiveness (PSLF) for qualifying public service employment after 120 qualifying payments.</p>
+<p>The financial planning profession continues to evolve with increasing emphasis on holistic, goals-based planning rather than product-driven sales. Technology tools including financial planning software, client portals, and robo-advisory platforms are transforming service delivery. However, the core value proposition remains unchanged: helping clients make informed financial decisions through comprehensive analysis, personalized recommendations, and ongoing guidance throughout life transitions.</p>
+<p>Successful financial planners combine technical expertise with strong interpersonal skills. The ability to listen actively, communicate complex concepts clearly, and build trust-based relationships is as important as mastering the quantitative tools and regulatory frameworks that underpin the profession.</p>
+<p>Financial planning transforms complexity into clarity, empowering clients to achieve their most important life goals through disciplined strategy and ongoing professional guidance.</p>
+<h3>A.1 Cash Flow Management and Budgeting</h3>
+<p>Effective financial planning begins with understanding and managing cash flow. The cash flow statement tracks all sources of income and all expenses (fixed: mortgage, insurance, loan payments; variable: food, utilities, entertainment; periodic: property taxes, vacations). The goal is to identify the client&#x27;s savings capacity and develop a plan to maximize it through systematic budgeting and expense optimization.</p>
+<p>The emergency fund is the foundation of financial security. Standard recommendation: 3-6 months of essential expenses for dual-income stable households; 6-12 months for single-income, self-employed, or volatile-industry clients. The fund should be in liquid, low-risk accounts (high-yield savings, money market). Debt management uses the avalanche method (highest interest first, mathematically optimal) or snowball method (smallest balance first, psychologically motivating).</p>
+<h3>A.2 Insurance Needs Assessment</h3>
+<p>A comprehensive insurance review evaluates coverage across all risk categories: life insurance (income replacement, debt payoff, education funding), disability insurance (income protection during working years), health insurance, property insurance, liability insurance, and long-term care insurance. Many clients are underinsured because they rely solely on employer-provided group coverage, which is typically 1-2x salary (far below the 10-15x recommended) and is not portable when changing jobs.</p>
+<h3>A.3 Goal-Based Planning and Monte Carlo Simulation</h3>
+<p>Goal-based financial planning organizes the client&#x27;s financial life around specific, measurable, time-bound goals: retirement at a specific age, education funding, home purchase, debt elimination, charitable giving, and legacy planning. Each goal has a target amount, time horizon, and priority level. The planner helps prioritize goals, develop strategies, and monitor progress. Trade-offs are inevitable: funding education may delay retirement, buying a larger home may reduce retirement savings.</p>
+<p>Monte Carlo simulation runs thousands of scenarios with randomized market returns, inflation rates, and other variables to estimate the probability of achieving each goal. A 90%+ probability is considered strong; below 80% suggests adjustments are needed: increase savings, reduce goal amounts, extend timelines, or accept more investment risk. This probabilistic approach is far more realistic than deterministic projections that assume a single rate of return.</p>
+<h4>Financial Planning Practice Questions</h4>
+<h4>11. The recommended emergency fund for a single-income household is:</h4>
+<p>A) 1-2 months
+B) 3-6 months
+C) 6-12 months
+D) 12-24 months</p>
+<h4>12. A Monte Carlo simulation showing 75% probability suggests:</h4>
+<p>A) The plan is excellent
+B) Adjustments are needed
+C) The client should retire immediately
+D) The simulation is unreliable</p>
+<h3>Education Funding Strategies</h3>
+<p>529 plans are the most popular education savings vehicle. Contributions are made with after-tax dollars but grow tax-free, and withdrawals for qualified education expenses (tuition, fees, books, room and board, computers, and up to $10,000/year for K-12 tuition) are completely tax-free. Most states offer a state income tax deduction for contributions. The 2026 contribution limit varies by state (typically $300,000-$550,000 lifetime). SECURE 2.0 allows 529-to-Roth IRA rollovers up to $35,000 lifetime (529 must be open 15+ years, subject to annual Roth contribution limits).</p>
+<p>Coverdell Education Savings Accounts (ESAs) allow $2,000 annual contributions per beneficiary (income limits apply: MAGI below $110,000 single / $220,000 MFJ). Withdrawals for qualified education expenses (including K-12) are tax-free. Coverdells offer more investment flexibility than 529 plans but have much lower contribution limits. UGMA/UTMA custodial accounts can be used for education but have no tax advantages for education specifically — income is taxed under the kiddie tax rules (unearned income above $2,500 for children under 19, or under 24 if full-time students, is taxed at the parent&#x27;s rate).</p>
+<p>The American Opportunity Tax Credit (AOTC) provides up to $2,500 per student per year for the first 4 years of post-secondary education (100% of the first $2,000 + 25% of the next $2,000 in qualified expenses). 40% is refundable (up to $1,000). Income phase-out: $80,000-$90,000 (single) / $160,000-$180,000 (MFJ). The Lifetime Learning Credit provides up to $2,000 per tax return (20% of the first $10,000 in qualified expenses) with no limit on years claimed. Student loan interest is deductible up to $2,500/year (income limits apply).</p>
+<h3>Tax Planning Strategies</h3>
+<p>Tax planning is integral to financial planning. Key strategies include: maximizing tax-advantaged accounts (401(k), IRA, HSA, 529), tax-loss harvesting (selling losers to offset gains), asset location (placing tax-inefficient investments like bonds and REITs in tax-deferred accounts, and tax-efficient investments like index funds in taxable accounts), Roth conversion strategies (converting traditional IRA to Roth in low-income years to lock in lower tax rates), and charitable giving strategies (bunching deductions, donor-advised funds, qualified charitable distributions from IRAs for those 70 1/2+).</p>
+<p>The marginal tax rate is the rate applied to the next dollar of income. The effective tax rate is total tax divided by total income. Understanding the difference is critical for planning: a client in the 32% marginal bracket does not pay 32% on all income — only on income within that bracket. Tax bracket management involves timing income and deductions to stay in lower brackets. For example, a client expecting lower income next year might defer a bonus or accelerate deductions into the current year.</p>
+<p>Qualified Charitable Distributions (QCDs) allow individuals age 70 1/2 and older to donate up to $105,000 per year directly from their IRA to a qualified charity. The distribution satisfies the RMD requirement (if applicable) and is excluded from gross income. This is more beneficial than taking the RMD as income and claiming a charitable deduction because: (1) it reduces AGI (which affects Medicare premiums, Social Security taxation, and other AGI-based thresholds), and (2) it benefits taxpayers who take the standard deduction and would not otherwise benefit from a charitable deduction.</p>
+<h3>Social Security Benefits</h3>
+<p>Social Security retirement benefits are based on the worker&#x27;s 35 highest-earning years (adjusted for inflation). The Primary Insurance Amount (PIA) is the benefit at full retirement age (FRA). FRA is 67 for those born in 1960 or later. Early retirement is available at age 62 with a permanent reduction of approximately 6.67% per year for the first 3 years early and 5% per year for additional years (up to 30% reduction at age 62 for FRA of 67). Delayed retirement credits increase benefits by 8% per year from FRA to age 70 (up to 24% increase).</p>
+<p>Social Security taxation: up to 85% of benefits may be taxable depending on provisional income (AGI + tax-exempt interest + 50% of Social Security benefits). For single filers: below $25,000 = no tax; $25,000-$34,000 = up to 50% taxable; above $34,000 = up to 85% taxable. For MFJ: below $32,000 = no tax; $32,000-$44,000 = up to 50% taxable; above $44,000 = up to 85% taxable. Spousal benefits equal the greater of the spouse&#x27;s own benefit or 50% of the higher-earning spouse&#x27;s PIA. Survivor benefits equal 100% of the deceased spouse&#x27;s benefit.</p>
+<p>Social Security claiming strategies: for married couples, the higher earner should generally delay to age 70 to maximize the survivor benefit (the surviving spouse receives the higher of the two benefits). The lower earner may claim earlier to provide income during the delay period. For single individuals, the break-even age for delaying from 62 to 70 is approximately 80-82 — those expecting to live beyond this age benefit from delaying. The earnings test reduces benefits for those claiming before FRA who continue to work: $1 reduction for every $2 earned above $22,320 (2026). Benefits are recalculated at FRA to credit the withheld amounts.</p>
+<h3>Retirement Income Planning</h3>
+<p>The retirement income plan must address: income needs (essential expenses vs. discretionary), income sources (Social Security, pensions, retirement accounts, taxable accounts, annuities, part-time work), withdrawal sequencing (which accounts to draw from first), tax management (managing bracket exposure across account types), inflation protection (maintaining purchasing power over a 25-30 year retirement), and longevity risk (the risk of outliving assets).</p>
+<p>The 4% rule (Bengen rule) suggests withdrawing 4% of the initial portfolio value in the first year of retirement, then adjusting for inflation each subsequent year. Historical analysis shows this approach has sustained a 30-year retirement in approximately 95% of rolling periods. However, the 4% rule assumes a 50/50 stock/bond allocation and does not account for individual circumstances, variable spending, or current market valuations. Dynamic withdrawal strategies (guardrails approach, percentage of portfolio, floor-and-ceiling) may be more appropriate for individual clients.</p>
+<h3>Time Value of Money</h3>
+<p>The time value of money (TVM) is the foundation of financial planning calculations. Present Value (PV) is the current value of a future sum, discounted at a given rate. Future Value (FV) is the value of a current sum at a future date, compounded at a given rate. FV = PV x (1 + r)^n. PV = FV / (1 + r)^n. An annuity is a series of equal payments at regular intervals. An ordinary annuity has payments at the end of each period; an annuity due has payments at the beginning. The annuity due is always worth more because each payment has one additional period of compounding.</p>
+<p>The Rule of 72 provides a quick estimate of how long it takes to double an investment: Years to Double = 72 / Rate of Return. At 8% return, money doubles in approximately 9 years (72/8). At 6%, approximately 12 years. Net Present Value (NPV) is the difference between the present value of cash inflows and outflows — a positive NPV indicates the investment adds value. Internal Rate of Return (IRR) is the discount rate that makes NPV equal to zero — it represents the investment&#x27;s effective annual return. When comparing investments, choose the one with the highest NPV (if using the same discount rate) or the highest IRR.</p>
+<p>Practical applications: calculating how much to save monthly to reach a retirement goal (PMT calculation), determining whether to take a lump sum or annuity from a pension (compare PV of annuity to lump sum), evaluating mortgage refinancing (compare PV of savings to closing costs), and projecting education costs (FV of current costs at education inflation rate). Financial calculators and spreadsheet functions (PV, FV, PMT, RATE, NPER) are essential tools. Always ensure consistency: if payments are monthly, the rate must be monthly (annual rate / 12) and N must be in months.</p>
+<h3>Financial Planning Process and Ethics</h3>
+<p>The CFP Board&#x27;s financial planning process consists of seven steps: (1) Understanding the client&#x27;s personal and financial circumstances, (2) Identifying and selecting goals, (3) Analyzing the client&#x27;s current course of action and potential alternative courses, (4) Developing financial planning recommendations, (5) Presenting the recommendations, (6) Implementing the recommendations, (7) Monitoring the recommendations. This process is iterative — changes in circumstances, goals, or the economic environment require revisiting earlier steps.</p>
+<p>Ethical standards for financial planners include: acting in the client&#x27;s best interest (fiduciary duty), providing full disclosure of all material information including conflicts of interest, maintaining competence through continuing education, maintaining confidentiality of client information, acting with integrity and professionalism, and complying with all applicable laws and regulations. The CFP Board&#x27;s Code of Ethics and Standards of Conduct establishes these requirements for CFP professionals. Violations can result in public censure, suspension, or permanent revocation of the CFP certification.</p>
+<p>Scope of engagement defines the boundaries of the financial planning relationship: which areas of planning will be addressed (comprehensive vs. modular), the responsibilities of both the planner and the client, the compensation arrangement, and the duration of the engagement. A comprehensive financial plan addresses all major areas: financial position, risk management, investments, tax planning, retirement planning, estate planning, and education planning. A modular plan focuses on one or two specific areas based on the client&#x27;s immediate needs and budget.</p>
+<h3>Financial Planning Additional Practice Questions</h3>
+<p>11. Under the Rule of 72, how long does it take to double an investment earning 6% annually? A) 6 years B) 8 years C) 10 years D) 12 years. Answer: D. Rule of 72: 72 / 6 = 12 years. At 8%, it takes 9 years (72/8). At 12%, it takes 6 years (72/12).</p>
+<p>12. A 529 plan offers which tax advantage? A) Tax-deductible contributions at the federal level B) Tax-free growth and withdrawals for qualified education expenses C) Tax credit for contributions D) Tax-free withdrawals for any purpose. Answer: B. 529 plans offer tax-free growth and tax-free withdrawals for qualified education expenses. Contributions are not federally deductible (but may be state-deductible).</p>
+<p>13. The maximum Social Security retirement benefit reduction for claiming at age 62 (with FRA of 67) is: A) 20% B) 25% C) 30% D) 35%. Answer: C. 30% reduction: 6.67% per year for the first 3 years early (20%) plus 5% per year for the next 2 years (10%) = 30% total reduction from FRA benefit.</p>
+<p>14. Which withdrawal strategy adjusts spending based on portfolio performance thresholds? A) 4% rule B) Percentage of portfolio C) Guardrails approach D) Capital preservation. Answer: C. The guardrails approach raises or cuts spending when the withdrawal rate crosses predetermined upper and lower thresholds, balancing income stability with portfolio sustainability.</p>
+<h3>Financial Planning Final Key Facts</h3>
+<p>Education planning vehicles: 529 plans offer tax-free growth and withdrawals for qualified education expenses (tuition, fees, room and board, books, computers). Coverdell Education Savings Accounts (ESAs) allow $2,000 annual contributions per beneficiary with tax-free withdrawals for qualified education expenses including K-12 expenses. UGMA/UTMA custodial accounts provide flexibility but count as the child&#x27;s asset for financial aid purposes (assessed at 20% vs. 5.64% for parent assets). The kiddie tax applies to unearned income of children under 19 (or under 24 if full-time students): the first $1,300 is tax-free, the next $1,300 is taxed at the child&#x27;s rate, and amounts above $2,600 are taxed at the parent&#x27;s marginal rate.</p>
+<p>Emergency fund guidelines: maintain 3-6 months of essential expenses in liquid, accessible accounts (high-yield savings, money market). Self-employed individuals and those with variable income should maintain 6-12 months. The emergency fund should be separate from investment accounts and not subject to market risk. Debt management: prioritize high-interest debt (credit cards) using either the avalanche method (highest interest rate first — mathematically optimal) or the snowball method (smallest balance first — psychologically motivating). Student loan repayment options include income-driven repayment plans (IBR, PAYE, REPAYE) and Public Service Loan Forgiveness (PSLF) for qualifying public service employment after 120 qualifying payments.</p>
+<p>The financial planning profession continues to evolve with increasing emphasis on holistic, goals-based planning rather than product-driven sales. Technology tools including financial planning software, client portals, and robo-advisory platforms are transforming service delivery. However, the core value proposition remains unchanged: helping clients make informed financial decisions through comprehensive analysis, personalized recommendations, and ongoing guidance throughout life transitions.</p>
+<p>Successful financial planners combine technical expertise with strong interpersonal skills. The ability to listen actively, communicate complex concepts clearly, and build trust-based relationships is as important as mastering the quantitative tools and regulatory frameworks that underpin the profession.</p>
+<p>Financial planning transforms complexity into clarity, empowering clients to achieve their most important life goals through disciplined strategy and ongoing professional guidance.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-3', 3)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(3)">Next Section →</button>
+        </div>
+        </div>
+
+        
+        <div id="quiz" class="quiz-container">
+            <h2>Practice Quiz</h2>
+            <p>Test your knowledge with these practice questions. Select the best answer for each question.</p>
+            <div id="quizQuestions"></div>
+            <button class="btn-submit" onclick="submitQuiz()">Submit Answers</button>
+            <div id="quizScore" class="quiz-score" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SECTIONS = document.querySelectorAll('.section');
+const NAV_ITEMS = document.querySelectorAll('.nav-item');
+const TOTAL_SECTIONS = 4;
+let completedSections = new Set();
+const STORAGE_KEY = 'Financial_Planning_progress';
+
+// Load saved progress
+try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    saved.forEach(s => completedSections.add(s));
+    updateProgress();
+    NAV_ITEMS.forEach(item => {
+        if (completedSections.has(item.dataset.section)) item.classList.add('completed');
+    });
+} catch(e) {}
+
+function showSection(id) {
+    SECTIONS.forEach(s => s.style.display = 'none');
+    document.querySelector('.quiz-container').style.display = 'none';
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+    NAV_ITEMS.forEach(n => n.classList.remove('active'));
+    document.querySelector(`[data-section="${id}"]`)?.classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+function nextSection(currentIdx) {
+    const sectionIds = Array.from(SECTIONS).map(s => s.id).filter(id => id !== 'welcome');
+    const nextIdx = currentIdx + 1;
+    if (nextIdx < sectionIds.length) showSection(sectionIds[nextIdx]);
+}
+
+function markComplete(sectionId, idx) {
+    completedSections.add(sectionId);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedSections]));
+    updateProgress();
+    document.querySelector(`[data-section="${sectionId}"]`)?.classList.add('completed');
+    const btn = event.target;
+    btn.textContent = 'Completed ✓';
+    btn.classList.add('done');
+}
+
+function updateProgress() {
+    const pct = Math.round((completedSections.size / TOTAL_SECTIONS) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = pct + '% Complete (' + completedSections.size + '/' + TOTAL_SECTIONS + ' sections)';
+}
+
+// Quiz
+const questions = [{"question": "Under the Rule of 72, how long does it take to double an investment earning 6% annually?", "options": ["6 years", "8 years", "10 years", "12 years."], "correct": 3, "explanation": "Rule of 72: 72 / 6 = 12 years. At 8%, it takes 9 years (72/8). At 12%, it takes 6 years (72/12)."}, {"question": "A 529 plan offers which tax advantage?", "options": ["Tax-deductible contributions at the federal level", "Tax-free growth and withdrawals for qualified education expenses", "Tax credit for contributions", "Tax-free withdrawals for any purpose."], "correct": 1, "explanation": "529 plans offer tax-free growth and tax-free withdrawals for qualified education expenses. Contributions are not federally deductible (but may be state-deductible)."}, {"question": "Which withdrawal strategy adjusts spending based on portfolio performance thresholds?", "options": ["4% rule", "Percentage of portfolio", "Guardrails approach", "Capital preservation."], "correct": 2, "explanation": "The guardrails approach raises or cuts spending when the withdrawal rate crosses predetermined upper and lower thresholds, balancing income stability with portfolio sustainability."}, {"question": "Which of the following best describes the key concept covered in 'Introduction'?", "options": ["A foundational concept in Financial Planning", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Financial Planning curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Table of Contents'?", "options": ["A foundational concept in Financial Planning", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Financial Planning curriculum."}, {"question": "Which of the following best describes the key concept covered in 'How to Use This Manual'?", "options": ["A foundational concept in Financial Planning", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Financial Planning curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Practice Exam: Financial Planning'?", "options": ["A foundational concept in Financial Planning", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Financial Planning curriculum."}];
+
+function showQuiz() {
+    SECTIONS.forEach(s => s.style.display = 'none');
+    const qc = document.querySelector('.quiz-container');
+    qc.style.display = 'block';
+    NAV_ITEMS.forEach(n => n.classList.remove('active'));
+    
+    const container = document.getElementById('quizQuestions');
+    container.innerHTML = '';
+    
+    questions.forEach((q, i) => {
+        let html = `<div class="question" id="q${i}">`;
+        html += `<div class="question-text">${i+1}. ${q.question}</div>`;
+        q.options.forEach((opt, j) => {
+            html += `<div class="option" onclick="selectOption(${i}, ${j})" id="q${i}o${j}">${String.fromCharCode(65+j)}. ${opt}</div>`;
+        });
+        html += `<div class="explanation" id="exp${i}">${q.explanation}</div>`;
+        html += '</div>';
+        container.innerHTML += html;
+    });
+    
+    document.getElementById('quizScore').style.display = 'none';
+    window.scrollTo(0, 0);
+}
+
+let selectedAnswers = {};
+
+function selectOption(qIdx, oIdx) {
+    // Clear previous selection
+    for (let j = 0; j < 4; j++) {
+        const el = document.getElementById(`q${qIdx}o${j}`);
+        if (el) el.classList.remove('selected');
+    }
+    const el = document.getElementById(`q${qIdx}o${oIdx}`);
+    if (el) el.classList.add('selected');
+    selectedAnswers[qIdx] = oIdx;
+}
+
+function submitQuiz() {
+    let correct = 0;
+    questions.forEach((q, i) => {
+        const selected = selectedAnswers[i];
+        for (let j = 0; j < 4; j++) {
+            const el = document.getElementById(`q${i}o${j}`);
+            if (el) {
+                el.classList.remove('selected');
+                if (j === q.correct) el.classList.add('correct');
+                else if (j === selected) el.classList.add('incorrect');
+            }
+        }
+        if (selected === q.correct) correct++;
+        document.getElementById(`exp${i}`).style.display = 'block';
+    });
+    
+    const pct = Math.round((correct / questions.length) * 100);
+    const scoreEl = document.getElementById('quizScore');
+    scoreEl.style.display = 'block';
+    scoreEl.innerHTML = `<h3>${pct}% — ${correct}/${questions.length} Correct</h3><p>${pct >= 70 ? 'Great job! You passed!' : 'Keep studying and try again.'}</p>`;
+    scoreEl.style.borderColor = pct >= 70 ? '#27AE60' : '#E74C3C';
+    scoreEl.querySelector('h3').style.color = pct >= 70 ? '#27AE60' : '#E74C3C';
+}
+
+// Show welcome by default
+showSection('welcome');
+</script>
+</body>
+</html>

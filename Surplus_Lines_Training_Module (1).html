@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Surplus Lines — Interactive Training Module</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, Helvetica, sans-serif; background: #F4F6F9; color: #2C3E50; line-height: 1.6; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #1B4F72, #2E75B6); color: white; padding: 20px 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.header h1 { font-size: 1.4em; margin-bottom: 5px; }
+.header .subtitle { font-size: 0.85em; opacity: 0.85; }
+.progress-bar { background: rgba(255,255,255,0.2); border-radius: 10px; height: 8px; margin-top: 10px; }
+.progress-fill { background: #27AE60; height: 100%; border-radius: 10px; transition: width 0.5s ease; width: 0%; }
+.progress-text { font-size: 0.75em; margin-top: 4px; opacity: 0.8; }
+
+/* Layout */
+.container { display: flex; margin-top: 100px; min-height: calc(100vh - 100px); }
+
+/* Sidebar */
+.sidebar { width: 280px; background: white; border-right: 1px solid #E5E8EB; padding: 20px 0; position: fixed; top: 100px; bottom: 0; overflow-y: auto; }
+.sidebar .nav-title { padding: 10px 20px; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #95A5A6; font-weight: bold; }
+.nav-item { display: block; padding: 10px 20px; color: #2C3E50; text-decoration: none; font-size: 0.9em; border-left: 3px solid transparent; transition: all 0.2s; cursor: pointer; }
+.nav-item:hover { background: #F0F3F5; border-left-color: #2E75B6; }
+.nav-item.active { background: #E8F0FE; border-left-color: #1B4F72; color: #1B4F72; font-weight: bold; }
+.nav-item.completed { color: #27AE60; }
+.nav-item.completed::after { content: " ✓"; color: #27AE60; }
+.nav-quiz { display: block; padding: 12px 20px; color: #E67E22; text-decoration: none; font-size: 0.9em; font-weight: bold; border-left: 3px solid #E67E22; cursor: pointer; margin-top: 10px; }
+.nav-quiz:hover { background: #FFF3E0; }
+
+/* Main Content */
+.main { margin-left: 280px; padding: 30px 40px; max-width: 900px; flex: 1; }
+.section h2 { color: #1B4F72; font-size: 1.6em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #1B4F72; }
+.section h3 { color: #2E75B6; font-size: 1.2em; margin: 20px 0 10px; }
+.section h4 { color: #2C3E50; font-size: 1.05em; margin: 15px 0 8px; }
+.section p { margin-bottom: 12px; text-align: justify; }
+
+/* Tables */
+.table-wrapper { overflow-x: auto; margin: 15px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+th { background: #1B4F72; color: white; padding: 10px 12px; text-align: left; font-weight: bold; }
+td { padding: 8px 12px; border-bottom: 1px solid #E5E8EB; }
+tr:nth-child(even) td { background: #F8F9FA; }
+tr:hover td { background: #E8F0FE; }
+
+/* Buttons */
+.section-footer { display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #E5E8EB; }
+.btn-complete { background: #27AE60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: bold; transition: all 0.2s; }
+.btn-complete:hover { background: #219A52; transform: translateY(-1px); }
+.btn-complete.done { background: #95A5A6; cursor: default; }
+.btn-next { background: #2E75B6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: bold; transition: all 0.2s; }
+.btn-next:hover { background: #1A5F8B; transform: translateY(-1px); }
+
+/* Quiz */
+.quiz-container { display: none; }
+.quiz-container h2 { color: #E67E22; border-bottom-color: #E67E22; }
+.question { background: white; border: 1px solid #E5E8EB; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.question-text { font-weight: bold; margin-bottom: 12px; color: #1B4F72; }
+.option { display: block; padding: 10px 15px; margin: 5px 0; border: 2px solid #E5E8EB; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+.option:hover { border-color: #2E75B6; background: #F0F7FF; }
+.option.selected { border-color: #2E75B6; background: #E8F0FE; }
+.option.correct { border-color: #27AE60; background: #E8F5E9; }
+.option.incorrect { border-color: #E74C3C; background: #FDEDEC; }
+.explanation { display: none; margin-top: 10px; padding: 10px; background: #FFF3E0; border-left: 3px solid #E67E22; border-radius: 4px; font-size: 0.9em; }
+.quiz-score { text-align: center; padding: 30px; background: white; border-radius: 8px; border: 2px solid #27AE60; margin-top: 20px; }
+.quiz-score h3 { color: #27AE60; font-size: 1.5em; }
+.btn-submit { background: #E67E22; color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin-top: 20px; }
+.btn-submit:hover { background: #D35400; }
+
+/* Welcome */
+.welcome { text-align: center; padding: 60px 20px; }
+.welcome h2 { color: #1B4F72; font-size: 2em; margin-bottom: 15px; }
+.welcome p { font-size: 1.1em; color: #7F8C8D; max-width: 600px; margin: 0 auto 20px; }
+.welcome .stats { display: flex; justify-content: center; gap: 30px; margin-top: 30px; }
+.stat { text-align: center; }
+.stat .number { font-size: 2em; font-weight: bold; color: #1B4F72; }
+.stat .label { font-size: 0.85em; color: #95A5A6; }
+.btn-start { background: #1B4F72; color: white; border: none; padding: 15px 40px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin-top: 30px; }
+.btn-start:hover { background: #2E75B6; }
+
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 20px; }
+    .header h1 { font-size: 1.1em; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Surplus Lines — Interactive Training Module</h1>
+    <div class="subtitle">WealthBridge Study Library | EMBA-Quality Professional Development</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0% Complete</div>
+</div>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="nav-title">Chapters</div>
+        <a href="#" class="nav-item active" data-section="welcome" onclick="showSection('welcome')">Welcome</a>
+        <a href="#" class="nav-item" data-section="section-0" onclick="showSection('section-0')">Introduction</a>
+<a href="#" class="nav-item" data-section="section-1" onclick="showSection('section-1')">Table of Contents</a>
+<a href="#" class="nav-item" data-section="section-2" onclick="showSection('section-2')">How to Use This Manual</a>
+<a href="#" class="nav-item" data-section="section-3" onclick="showSection('section-3')">Practice Exam: Surplus Lines Insurance</a>
+
+        <a href="#" class="nav-quiz" onclick="showQuiz()">Practice Quiz (4 Questions)</a>
+    </div>
+    
+    <div class="main">
+        <div id="welcome" class="section">
+            <div class="welcome">
+                <h2>Welcome to Surplus Lines</h2>
+                <p>This interactive training module covers all key concepts, formulas, and exam strategies. Track your progress as you work through each section.</p>
+                <div class="stats">
+                    <div class="stat"><div class="number">4</div><div class="label">Sections</div></div>
+                    <div class="stat"><div class="number">4</div><div class="label">Quiz Questions</div></div>
+                    <div class="stat"><div class="number">0%</div><div class="label" id="masteryLabel">Mastery</div></div>
+                </div>
+                <button class="btn-start" onclick="nextSection(-1)">Begin Training →</button>
+            </div>
+        </div>
+        
+        <div id="section-0" class="section" style="display:none;">
+<h2>Introduction</h2>
+<p>Surplus Lines Insurance</p>
+<p>Surplus Lines Insurance Study Manual (Arizona)</p>
+<p>Comprehensive Study Guide</p>
+<p>Updated March 2026  |  OBBBA Integrated</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-0', 0)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(0)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-1" class="section" style="display:none;">
+<h2>Table of Contents</h2>
+<p>Right-click → &#x27;Update Field&#x27; in Word for clickable page numbers.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-1', 1)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(1)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-2" class="section" style="display:none;">
+<h2>How to Use This Manual</h2>
+<p>Surplus lines insurance provides coverage for risks that the standard (admitted) insurance market is unable or unwilling to insure. These are typically unusual, high-risk, or hard-to-place risks such as special events, unique properties, high-hazard businesses, or emerging risks that lack sufficient actuarial data. Surplus lines insurers (also called non-admitted or excess and surplus lines insurers) are not licensed in the state where the risk is located but are permitted to write business through licensed surplus lines brokers.</p>
+<p>This manual focuses on Arizona surplus lines requirements while covering the general principles applicable in most states. The surplus lines market plays a critical role in the insurance ecosystem by providing coverage that would otherwise be unavailable, ensuring that businesses and individuals can obtain necessary protection even for non-standard risks.</p>
+<p>The admitted market consists of insurance companies licensed by the state insurance department. Admitted insurers must comply with state rate and form filing requirements, participate in state guaranty funds, and meet state solvency requirements. The surplus lines (non-admitted) market consists of insurers not licensed in the state but permitted to write business through surplus lines brokers. Surplus lines insurers have greater flexibility in pricing and policy forms but do NOT participate in state guaranty funds, meaning policyholders have no guaranty fund protection if the surplus lines insurer becomes insolvent.</p>
+<p>The diligent search requirement is the cornerstone of surplus lines regulation. Before placing business with a surplus lines insurer, the broker must demonstrate that the coverage was declined by the admitted market. This typically requires obtaining declinations from a specified number of admitted insurers (usually 3) or documenting that the type of coverage is not available in the admitted market. The purpose is to protect the admitted market and ensure that surplus lines are used only when necessary. Some states maintain export lists of risks that are automatically eligible for surplus lines placement without a diligent search.</p>
+<p>Eligible surplus lines insurers must meet minimum financial requirements established by the state. In most states, including Arizona, eligible surplus lines insurers must maintain minimum capital and surplus (typically $15 million or more), be listed on the state&#x27;s approved list of eligible surplus lines insurers, and maintain a satisfactory financial rating. The NAIC International Insurers Department (IID) maintains a list of eligible alien (non-U.S.) surplus lines insurers that meet specified financial standards.</p>
+<p>Certain types of insurance are typically NOT eligible for surplus lines placement, including workers&#x27; compensation (which must be written by admitted carriers or through the state fund), personal auto liability (which is mandatory and must be available through the admitted market or assigned risk plans), and other compulsory coverages required by state law. The Nonadmitted and Reinsurance Reform Act (NRRA), part of the Dodd-Frank Act (2010), established that surplus lines taxation is governed by the home state of the insured, simplifying multi-state surplus lines transactions.</p>
+<p>In Arizona, surplus lines brokers must hold a specific surplus lines license issued by the Arizona Department of Insurance and Financial Institutions (DIFI). The broker must conduct a diligent search of the admitted market before placing business with a surplus lines insurer. Arizona requires that the surplus lines insurer be on the state&#x27;s list of eligible surplus lines insurers or meet specified financial requirements. The broker must provide the insured with a written disclosure that the surplus lines insurer is not admitted in Arizona and that the policy is not protected by the Arizona Property and Casualty Insurance Guaranty Fund.</p>
+<p>Arizona surplus lines brokers must file an affidavit with DIFI for each surplus lines policy placed, documenting the diligent search, the declinations received, and the surplus lines insurer selected. The affidavit must be filed within a specified time period after policy placement. Brokers must maintain records of all surplus lines transactions for a minimum of 5 years. The broker is responsible for collecting and remitting the surplus lines premium tax to the state.</p>
+<p>Arizona imposes a surplus lines premium tax of 3% on the gross premium for surplus lines policies. The broker is responsible for collecting the tax from the insured and remitting it to DIFI on a quarterly basis. The tax applies to the full premium, including any policy fees or surcharges. Failure to collect and remit the tax can result in penalties, fines, and license revocation. Under the NRRA, the home state of the insured collects 100% of the surplus lines tax, even for multi-state risks.</p>
+<p>Compliance requirements for surplus lines brokers include: maintaining a valid surplus lines license, conducting diligent searches, filing required affidavits, collecting and remitting premium taxes, providing required disclosures to insureds, maintaining records, and complying with all applicable state laws and regulations. The Arizona Department of Insurance conducts periodic examinations of surplus lines brokers to ensure compliance. Violations can result in administrative actions including fines, license suspension, and license revocation.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-2', 2)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(2)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-3" class="section" style="display:none;">
+<h2>Practice Exam: Surplus Lines Insurance</h2>
+<h3>1. Surplus lines insurers are also known as:</h3>
+<p>A) Admitted insurers
+B) Non-admitted insurers
+C) Reinsurers
+D) Captive insurers</p>
+<h3>2. The diligent search requirement ensures:</h3>
+<p>A) The lowest premium is obtained
+B) Coverage was declined by the admitted market
+C) The insured receives the best policy
+D) The broker earns the highest commission</p>
+<h3>3. Arizona&#x27;s surplus lines premium tax rate is:</h3>
+<p>A) 1%
+B) 2%
+C) 3%
+D) 5%</p>
+<div class="table-wrapper"><table>
+<tr><th></th><th>How to Use This Manual</th></tr>
+<tr><td>CH 1</td><td>Surplus Lines Fundamentals</td></tr>
+<tr><td>CH 2</td><td>Eligible and Non-Eligible Surplus Lines</td></tr>
+<tr><td>CH 3</td><td>Arizona Surplus Lines Requirements</td></tr>
+<tr><td>CH 4</td><td>Surplus Lines Taxation and Compliance</td></tr>
+<tr><td></td><td>Practice Exam</td></tr>
+</table></div>
+<p>The surplus lines (E&amp;S) market provides insurance for risks the admitted market cannot or will not insure: unusual risks, high-hazard risks, hard-to-place risks, and emerging risks (cyber liability, cannabis, sharing economy). Surplus lines insurers are not subject to state rate and form filing requirements, allowing customized policies and individual pricing. However, surplus lines policies are NOT protected by the state guaranty fund, which must be disclosed to the insured.</p>
+<p>In Arizona, surplus lines are regulated under ARS Title 20. The Arizona DIFI maintains a list of eligible surplus lines insurers. To be eligible, an insurer must meet minimum capital and surplus requirements, be licensed in its domiciliary state, and have a satisfactory financial rating. The surplus lines broker verifies eligibility before placing business.</p>
+<p>Before placing surplus lines business, the broker must conduct a diligent search of the admitted market: contact at least three admitted insurers, document declinations, and demonstrate coverage unavailability. Exempt commercial purchasers (net worth &gt;$20M, revenue &gt;$50M, or 500+ employees) may be exempt under the NRRA. The NRRA also established that surplus lines taxes are paid only to the insured&#x27;s home state.</p>
+<p>Broker responsibilities: verify insurer eligibility, conduct/document diligent search, collect/remit surplus lines taxes (Arizona: 3% + 0.3% fire marshal tax on property), file surplus lines affidavit, maintain records for 5+ years, and disclose non-admitted status. The broker acts as agent of the insured (not the insurer) and may be liable for placing coverage with an insolvent insurer if due diligence was lacking.</p>
+<h3>Surplus Lines Practice Questions</h3>
+<h3>11. Surplus lines policies are NOT protected by:</h3>
+<p>A) Reinsurance
+B) The state guaranty fund
+C) E&amp;O insurance
+D) Federal deposit insurance</p>
+<h3>12. Arizona diligent search requires contacting:</h3>
+<p>A) 1 admitted insurer
+B) 2 admitted insurers
+C) 3 admitted insurers
+D) 5 admitted insurers</p>
+<p>Arizona&#x27;s surplus lines regulatory framework is governed by ARS Title 20, Chapter 2, Article 5. The Arizona Department of Insurance and Financial Institutions (DIFI) maintains the list of eligible surplus lines insurers. To be eligible, a non-admitted insurer must: be authorized in its domiciliary state, maintain minimum capital and surplus of $15 million (or meet alternative financial requirements), have a satisfactory financial rating from a recognized rating agency, and file an annual statement with DIFI. The surplus lines broker must verify eligibility before each placement.</p>
+<p>Arizona surplus lines brokers must hold a specific surplus lines license (in addition to any other insurance licenses). License requirements include: passing the surplus lines examination, completing pre-licensing education, maintaining errors and omissions (E&amp;O) insurance, and filing a surety bond. The broker must maintain detailed records of all surplus lines transactions for at least 5 years, including: the insured&#x27;s name and address, the coverage provided, the premium charged, the insurer&#x27;s name and eligibility status, the diligent search documentation, and the surplus lines tax calculations.</p>
+<p>The surplus lines tax in Arizona is 3% of gross premiums, plus an additional 0.3% fire marshal tax on property coverages. The broker is responsible for collecting the tax from the insured and remitting it to DIFI on a quarterly basis (due within 60 days after the end of each quarter). Failure to remit taxes timely can result in penalties, interest, and license revocation. The NRRA simplified multi-state surplus lines taxation by establishing that taxes are paid only to the insured&#x27;s home state, eliminating the need to allocate premiums across multiple states.</p>
+<p>The insurance market operates in cycles: hard markets (rising premiums, tighter underwriting, reduced capacity) and soft markets (falling premiums, relaxed underwriting, abundant capacity). During hard markets, the surplus lines market expands as more risks are declined by the admitted market and flow to E&amp;S carriers. During soft markets, the surplus lines market contracts as admitted carriers compete aggressively for business. Understanding market cycles helps brokers anticipate capacity changes and advise clients on coverage availability and pricing trends.</p>
+<p>Emerging risks driving surplus lines growth include: cyber liability (data breaches, ransomware, business interruption from cyber events), cannabis industry coverage (federally illegal but state-legal operations need property, liability, and product coverage), sharing economy risks (ride-sharing, home-sharing, peer-to-peer lending), autonomous vehicle liability, climate-related risks (wildfire, flood, hurricane in high-risk areas), and PFAS/environmental liability. These risks often lack sufficient actuarial data for admitted market pricing, making the surplus lines market&#x27;s flexibility essential.</p>
+<p>Cyber liability insurance is one of the fastest-growing segments of the surplus lines market. First-party coverages include: data breach response costs (notification, credit monitoring, forensic investigation), business interruption from cyber events (lost income during system downtime), cyber extortion (ransomware payments and negotiation costs), data recovery (costs to restore damaged or destroyed data), and reputational harm (crisis management and public relations). Third-party coverages include: network security liability (claims from third parties whose data was compromised), privacy liability (regulatory fines and penalties for privacy violations), and media liability (claims arising from electronic content).</p>
+<p>Cyber insurance underwriting evaluates: the applicant&#x27;s industry and data sensitivity (healthcare and financial services face higher risk), security controls (firewalls, encryption, multi-factor authentication, employee training), incident response planning, data backup procedures, vendor management practices, and prior loss history. Premiums have increased significantly due to the surge in ransomware attacks and the increasing cost of data breaches. The average cost of a data breach in 2025 exceeded $4.5 million. Cyber insurance is predominantly written in the surplus lines market because the risk is evolving rapidly and lacks the actuarial history needed for admitted market pricing.</p>
+<p>Environmental liability insurance covers claims arising from pollution conditions. Pollution Legal Liability (PLL) covers third-party claims for bodily injury and property damage from pollution emanating from the insured&#x27;s site, as well as cleanup costs. Contractors Pollution Liability (CPL) covers pollution claims arising from the contractor&#x27;s operations at job sites. These coverages are almost exclusively written in the surplus lines market because standard CGL policies contain absolute pollution exclusions. Environmental insurance is critical for real estate transactions (brownfield development), manufacturing operations, and waste management companies.</p>
+<p>Professional liability (Errors and Omissions) insurance covers claims arising from the insured&#x27;s professional services. Unlike CGL, which covers bodily injury and property damage, E&amp;O covers financial losses caused by the professional&#x27;s negligence, errors, or omissions. E&amp;O is typically written on a claims-made basis with a retroactive date. The surplus lines market provides E&amp;O coverage for professions that the admitted market finds difficult to underwrite: technology companies, consultants, real estate professionals, insurance agents, and emerging professions. Manuscript (custom) policies can be tailored to address the specific risks of each profession.</p>
+<p>Surplus lines brokers must maintain meticulous documentation to comply with state regulatory requirements. For each surplus lines transaction, the broker must maintain: the insured&#x27;s name, address, and contact information; a description of the risk and coverage provided; the policy number, effective dates, and premium; the name and NAIC number of the surplus lines insurer; evidence of the insurer&#x27;s eligibility (verified against the state&#x27;s approved list); the diligent search documentation (names of admitted insurers contacted, dates of contact, and reasons for declination); the surplus lines tax calculation and proof of payment; and copies of all correspondence with the insured regarding the non-admitted status of the coverage.</p>
+<p>Best practices for surplus lines compliance include: maintaining a compliance calendar with quarterly tax filing deadlines, conducting annual audits of surplus lines files for completeness, verifying insurer eligibility at the time of each placement (not relying on previous verifications), using standardized forms and checklists for diligent search documentation, training all staff on surplus lines regulatory requirements, and maintaining E&amp;O insurance with adequate limits. The broker should also monitor the financial condition of surplus lines insurers throughout the policy period — if an insurer&#x27;s financial condition deteriorates, the broker should consider moving the business to a more stable carrier at the next renewal.</p>
+<p>Common compliance violations include: failure to conduct or document diligent search, placing business with ineligible insurers, failure to collect and remit surplus lines taxes timely, failure to disclose non-admitted status to the insured, failure to maintain required records for the statutory retention period, and unauthorized binding of coverage. Penalties for violations can include: fines, license suspension or revocation, personal liability for unpaid taxes, and E&amp;O claims from insureds who suffer losses due to placement with insolvent or ineligible insurers.</p>
+<p>The Nonadmitted and Reinsurance Reform Act (NRRA), part of the Dodd-Frank Act, simplified surplus lines regulation by establishing that: surplus lines taxes are paid solely to the insured&#x27;s home state (eliminating multi-state tax allocation), the home state&#x27;s regulatory requirements govern the placement (eliminating the need to comply with multiple states&#x27; diligent search and eligibility requirements), and the home state is defined as the state where the insured maintains its principal place of business (for commercial insureds) or principal residence (for individual insureds).</p>
+<p>Before the NRRA, a surplus lines broker placing coverage for a multi-state risk had to: determine the premium allocation to each state, verify insurer eligibility in each state, comply with each state&#x27;s diligent search requirements, file affidavits in each state, and remit taxes to each state. The NRRA eliminated this complexity. However, states have responded differently: some have joined the Surplus Lines Insurance Multi-State Compliance Compact (SLIMPACT) or the Non-admitted Insurance Multi-State Agreement (NIMA) to share tax revenue, while others have not joined any compact. Arizona participates in tax-sharing arrangements to ensure equitable distribution of surplus lines tax revenue among states where risks are located.</p>
+<p>13. Under the NRRA, surplus lines taxes are paid to: A) Each state where the risk is located B) The insurer&#x27;s domiciliary state C) The insured&#x27;s home state only D) The federal government. Answer: C. The NRRA established that surplus lines taxes are paid solely to the insured&#x27;s home state, eliminating multi-state tax allocation.</p>
+<p>14. An exempt commercial purchaser under the NRRA is a business with: A) Any commercial insurance need B) Net worth exceeding $20 million, revenue exceeding $50 million, or 500+ employees C) A surplus lines broker D) Coverage from an admitted insurer. Answer: B. Exempt commercial purchasers meet size thresholds ($20M net worth, $50M revenue, or 500+ employees) and may be exempt from diligent search requirements.</p>
+<p>15. The Arizona surplus lines tax rate is: A) 2% B) 3% plus 0.3% fire marshal tax C) 5% D) 3.5%. Answer: B. Arizona charges 3% surplus lines tax plus an additional 0.3% fire marshal tax on property coverages, for a total of 3.3% on property risks.</p>
+<p>The Arizona Department of Insurance and Financial Institutions (DIFI) maintains the list of eligible surplus lines insurers. To be eligible, a non-admitted insurer must: maintain minimum capital and surplus requirements (typically $15 million for domestic insurers, $45 million for alien insurers), be licensed in its domiciliary jurisdiction, have a satisfactory financial rating (typically A.M. Best rating of A- or better), and comply with Arizona reporting requirements. The surplus lines broker must verify insurer eligibility at the time of each placement — relying on a previous verification is insufficient and can result in regulatory action.</p>
+<p>The surplus lines market continues to grow as emerging risks — including cyber liability, climate-related exposures, and autonomous vehicle liability — create demand for innovative coverage solutions that the admitted market cannot efficiently provide. Surplus lines brokers who develop expertise in these emerging areas will be well-positioned for career growth in this dynamic segment of the insurance industry.</p>
+<p>Surplus lines brokers play a vital and indispensable role in the insurance marketplace.</p>
+<h3>A.1 The Surplus Lines Market</h3>
+<p>The surplus lines (E&amp;S) market provides insurance for risks the admitted market cannot or will not insure: unusual risks, high-hazard risks, hard-to-place risks, and emerging risks (cyber liability, cannabis, sharing economy). Surplus lines insurers are not subject to state rate and form filing requirements, allowing customized policies and individual pricing. However, surplus lines policies are NOT protected by the state guaranty fund, which must be disclosed to the insured.</p>
+<p>In Arizona, surplus lines are regulated under ARS Title 20. The Arizona DIFI maintains a list of eligible surplus lines insurers. To be eligible, an insurer must meet minimum capital and surplus requirements, be licensed in its domiciliary state, and have a satisfactory financial rating. The surplus lines broker verifies eligibility before placing business.</p>
+<h3>A.2 Diligent Search and Broker Responsibilities</h3>
+<p>Before placing surplus lines business, the broker must conduct a diligent search of the admitted market: contact at least three admitted insurers, document declinations, and demonstrate coverage unavailability. Exempt commercial purchasers (net worth &gt;$20M, revenue &gt;$50M, or 500+ employees) may be exempt under the NRRA. The NRRA also established that surplus lines taxes are paid only to the insured&#x27;s home state.</p>
+<p>Broker responsibilities: verify insurer eligibility, conduct/document diligent search, collect/remit surplus lines taxes (Arizona: 3% + 0.3% fire marshal tax on property), file surplus lines affidavit, maintain records for 5+ years, and disclose non-admitted status. The broker acts as agent of the insured (not the insurer) and may be liable for placing coverage with an insolvent insurer if due diligence was lacking.</p>
+<h4>Surplus Lines Practice Questions</h4>
+<h4>11. Surplus lines policies are NOT protected by:</h4>
+<p>A) Reinsurance
+B) The state guaranty fund
+C) E&amp;O insurance
+D) Federal deposit insurance</p>
+<h4>12. Arizona diligent search requires contacting:</h4>
+<p>A) 1 admitted insurer
+B) 2 admitted insurers
+C) 3 admitted insurers
+D) 5 admitted insurers</p>
+<h3>Arizona Surplus Lines Regulatory Framework</h3>
+<p>Arizona&#x27;s surplus lines regulatory framework is governed by ARS Title 20, Chapter 2, Article 5. The Arizona Department of Insurance and Financial Institutions (DIFI) maintains the list of eligible surplus lines insurers. To be eligible, a non-admitted insurer must: be authorized in its domiciliary state, maintain minimum capital and surplus of $15 million (or meet alternative financial requirements), have a satisfactory financial rating from a recognized rating agency, and file an annual statement with DIFI. The surplus lines broker must verify eligibility before each placement.</p>
+<p>Arizona surplus lines brokers must hold a specific surplus lines license (in addition to any other insurance licenses). License requirements include: passing the surplus lines examination, completing pre-licensing education, maintaining errors and omissions (E&amp;O) insurance, and filing a surety bond. The broker must maintain detailed records of all surplus lines transactions for at least 5 years, including: the insured&#x27;s name and address, the coverage provided, the premium charged, the insurer&#x27;s name and eligibility status, the diligent search documentation, and the surplus lines tax calculations.</p>
+<p>The surplus lines tax in Arizona is 3% of gross premiums, plus an additional 0.3% fire marshal tax on property coverages. The broker is responsible for collecting the tax from the insured and remitting it to DIFI on a quarterly basis (due within 60 days after the end of each quarter). Failure to remit taxes timely can result in penalties, interest, and license revocation. The NRRA simplified multi-state surplus lines taxation by establishing that taxes are paid only to the insured&#x27;s home state, eliminating the need to allocate premiums across multiple states.</p>
+<h3>Surplus Lines Market Cycles and Trends</h3>
+<p>The insurance market operates in cycles: hard markets (rising premiums, tighter underwriting, reduced capacity) and soft markets (falling premiums, relaxed underwriting, abundant capacity). During hard markets, the surplus lines market expands as more risks are declined by the admitted market and flow to E&amp;S carriers. During soft markets, the surplus lines market contracts as admitted carriers compete aggressively for business. Understanding market cycles helps brokers anticipate capacity changes and advise clients on coverage availability and pricing trends.</p>
+<p>Emerging risks driving surplus lines growth include: cyber liability (data breaches, ransomware, business interruption from cyber events), cannabis industry coverage (federally illegal but state-legal operations need property, liability, and product coverage), sharing economy risks (ride-sharing, home-sharing, peer-to-peer lending), autonomous vehicle liability, climate-related risks (wildfire, flood, hurricane in high-risk areas), and PFAS/environmental liability. These risks often lack sufficient actuarial data for admitted market pricing, making the surplus lines market&#x27;s flexibility essential.</p>
+<h3>Cyber Liability Insurance</h3>
+<p>Cyber liability insurance is one of the fastest-growing segments of the surplus lines market. First-party coverages include: data breach response costs (notification, credit monitoring, forensic investigation), business interruption from cyber events (lost income during system downtime), cyber extortion (ransomware payments and negotiation costs), data recovery (costs to restore damaged or destroyed data), and reputational harm (crisis management and public relations). Third-party coverages include: network security liability (claims from third parties whose data was compromised), privacy liability (regulatory fines and penalties for privacy violations), and media liability (claims arising from electronic content).</p>
+<p>Cyber insurance underwriting evaluates: the applicant&#x27;s industry and data sensitivity (healthcare and financial services face higher risk), security controls (firewalls, encryption, multi-factor authentication, employee training), incident response planning, data backup procedures, vendor management practices, and prior loss history. Premiums have increased significantly due to the surge in ransomware attacks and the increasing cost of data breaches. The average cost of a data breach in 2025 exceeded $4.5 million. Cyber insurance is predominantly written in the surplus lines market because the risk is evolving rapidly and lacks the actuarial history needed for admitted market pricing.</p>
+<h3>Environmental and Professional Liability</h3>
+<p>Environmental liability insurance covers claims arising from pollution conditions. Pollution Legal Liability (PLL) covers third-party claims for bodily injury and property damage from pollution emanating from the insured&#x27;s site, as well as cleanup costs. Contractors Pollution Liability (CPL) covers pollution claims arising from the contractor&#x27;s operations at job sites. These coverages are almost exclusively written in the surplus lines market because standard CGL policies contain absolute pollution exclusions. Environmental insurance is critical for real estate transactions (brownfield development), manufacturing operations, and waste management companies.</p>
+<p>Professional liability (Errors and Omissions) insurance covers claims arising from the insured&#x27;s professional services. Unlike CGL, which covers bodily injury and property damage, E&amp;O covers financial losses caused by the professional&#x27;s negligence, errors, or omissions. E&amp;O is typically written on a claims-made basis with a retroactive date. The surplus lines market provides E&amp;O coverage for professions that the admitted market finds difficult to underwrite: technology companies, consultants, real estate professionals, insurance agents, and emerging professions. Manuscript (custom) policies can be tailored to address the specific risks of each profession.</p>
+<h3>Documentation and Record-Keeping</h3>
+<p>Surplus lines brokers must maintain meticulous documentation to comply with state regulatory requirements. For each surplus lines transaction, the broker must maintain: the insured&#x27;s name, address, and contact information; a description of the risk and coverage provided; the policy number, effective dates, and premium; the name and NAIC number of the surplus lines insurer; evidence of the insurer&#x27;s eligibility (verified against the state&#x27;s approved list); the diligent search documentation (names of admitted insurers contacted, dates of contact, and reasons for declination); the surplus lines tax calculation and proof of payment; and copies of all correspondence with the insured regarding the non-admitted status of the coverage.</p>
+<p>Best practices for surplus lines compliance include: maintaining a compliance calendar with quarterly tax filing deadlines, conducting annual audits of surplus lines files for completeness, verifying insurer eligibility at the time of each placement (not relying on previous verifications), using standardized forms and checklists for diligent search documentation, training all staff on surplus lines regulatory requirements, and maintaining E&amp;O insurance with adequate limits. The broker should also monitor the financial condition of surplus lines insurers throughout the policy period — if an insurer&#x27;s financial condition deteriorates, the broker should consider moving the business to a more stable carrier at the next renewal.</p>
+<p>Common compliance violations include: failure to conduct or document diligent search, placing business with ineligible insurers, failure to collect and remit surplus lines taxes timely, failure to disclose non-admitted status to the insured, failure to maintain required records for the statutory retention period, and unauthorized binding of coverage. Penalties for violations can include: fines, license suspension or revocation, personal liability for unpaid taxes, and E&amp;O claims from insureds who suffer losses due to placement with insolvent or ineligible insurers.</p>
+<h3>NRRA and Multi-State Surplus Lines Taxation</h3>
+<p>The Nonadmitted and Reinsurance Reform Act (NRRA), part of the Dodd-Frank Act, simplified surplus lines regulation by establishing that: surplus lines taxes are paid solely to the insured&#x27;s home state (eliminating multi-state tax allocation), the home state&#x27;s regulatory requirements govern the placement (eliminating the need to comply with multiple states&#x27; diligent search and eligibility requirements), and the home state is defined as the state where the insured maintains its principal place of business (for commercial insureds) or principal residence (for individual insureds).</p>
+<p>Before the NRRA, a surplus lines broker placing coverage for a multi-state risk had to: determine the premium allocation to each state, verify insurer eligibility in each state, comply with each state&#x27;s diligent search requirements, file affidavits in each state, and remit taxes to each state. The NRRA eliminated this complexity. However, states have responded differently: some have joined the Surplus Lines Insurance Multi-State Compliance Compact (SLIMPACT) or the Non-admitted Insurance Multi-State Agreement (NIMA) to share tax revenue, while others have not joined any compact. Arizona participates in tax-sharing arrangements to ensure equitable distribution of surplus lines tax revenue among states where risks are located.</p>
+<h3>Surplus Lines Additional Practice Questions</h3>
+<p>13. Under the NRRA, surplus lines taxes are paid to: A) Each state where the risk is located B) The insurer&#x27;s domiciliary state C) The insured&#x27;s home state only D) The federal government. Answer: C. The NRRA established that surplus lines taxes are paid solely to the insured&#x27;s home state, eliminating multi-state tax allocation.</p>
+<p>14. An exempt commercial purchaser under the NRRA is a business with: A) Any commercial insurance need B) Net worth exceeding $20 million, revenue exceeding $50 million, or 500+ employees C) A surplus lines broker D) Coverage from an admitted insurer. Answer: B. Exempt commercial purchasers meet size thresholds ($20M net worth, $50M revenue, or 500+ employees) and may be exempt from diligent search requirements.</p>
+<p>15. The Arizona surplus lines tax rate is: A) 2% B) 3% plus 0.3% fire marshal tax C) 5% D) 3.5%. Answer: B. Arizona charges 3% surplus lines tax plus an additional 0.3% fire marshal tax on property coverages, for a total of 3.3% on property risks.</p>
+<h3>Surplus Lines Final Key Facts</h3>
+<p>The Arizona Department of Insurance and Financial Institutions (DIFI) maintains the list of eligible surplus lines insurers. To be eligible, a non-admitted insurer must: maintain minimum capital and surplus requirements (typically $15 million for domestic insurers, $45 million for alien insurers), be licensed in its domiciliary jurisdiction, have a satisfactory financial rating (typically A.M. Best rating of A- or better), and comply with Arizona reporting requirements. The surplus lines broker must verify insurer eligibility at the time of each placement — relying on a previous verification is insufficient and can result in regulatory action.</p>
+<p>The surplus lines market continues to grow as emerging risks — including cyber liability, climate-related exposures, and autonomous vehicle liability — create demand for innovative coverage solutions that the admitted market cannot efficiently provide. Surplus lines brokers who develop expertise in these emerging areas will be well-positioned for career growth in this dynamic segment of the insurance industry.</p>
+<p>Surplus lines brokers play a vital and indispensable role in the insurance marketplace.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-3', 3)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(3)">Next Section →</button>
+        </div>
+        </div>
+
+        
+        <div id="quiz" class="quiz-container">
+            <h2>Practice Quiz</h2>
+            <p>Test your knowledge with these practice questions. Select the best answer for each question.</p>
+            <div id="quizQuestions"></div>
+            <button class="btn-submit" onclick="submitQuiz()">Submit Answers</button>
+            <div id="quizScore" class="quiz-score" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SECTIONS = document.querySelectorAll('.section');
+const NAV_ITEMS = document.querySelectorAll('.nav-item');
+const TOTAL_SECTIONS = 4;
+let completedSections = new Set();
+const STORAGE_KEY = 'Surplus_Lines_progress';
+
+// Load saved progress
+try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    saved.forEach(s => completedSections.add(s));
+    updateProgress();
+    NAV_ITEMS.forEach(item => {
+        if (completedSections.has(item.dataset.section)) item.classList.add('completed');
+    });
+} catch(e) {}
+
+function showSection(id) {
+    SECTIONS.forEach(s => s.style.display = 'none');
+    document.querySelector('.quiz-container').style.display = 'none';
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+    NAV_ITEMS.forEach(n => n.classList.remove('active'));
+    document.querySelector(`[data-section="${id}"]`)?.classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+function nextSection(currentIdx) {
+    const sectionIds = Array.from(SECTIONS).map(s => s.id).filter(id => id !== 'welcome');
+    const nextIdx = currentIdx + 1;
+    if (nextIdx < sectionIds.length) showSection(sectionIds[nextIdx]);
+}
+
+function markComplete(sectionId, idx) {
+    completedSections.add(sectionId);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedSections]));
+    updateProgress();
+    document.querySelector(`[data-section="${sectionId}"]`)?.classList.add('completed');
+    const btn = event.target;
+    btn.textContent = 'Completed ✓';
+    btn.classList.add('done');
+}
+
+function updateProgress() {
+    const pct = Math.round((completedSections.size / TOTAL_SECTIONS) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = pct + '% Complete (' + completedSections.size + '/' + TOTAL_SECTIONS + ' sections)';
+}
+
+// Quiz
+const questions = [{"question": "Which of the following best describes the key concept covered in 'Introduction'?", "options": ["A foundational concept in Surplus Lines", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Surplus Lines curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Table of Contents'?", "options": ["A foundational concept in Surplus Lines", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Surplus Lines curriculum."}, {"question": "Which of the following best describes the key concept covered in 'How to Use This Manual'?", "options": ["A foundational concept in Surplus Lines", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Surplus Lines curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Practice Exam: Surplus Lines Insurance'?", "options": ["A foundational concept in Surplus Lines", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the Surplus Lines curriculum."}];
+
+function showQuiz() {
+    SECTIONS.forEach(s => s.style.display = 'none');
+    const qc = document.querySelector('.quiz-container');
+    qc.style.display = 'block';
+    NAV_ITEMS.forEach(n => n.classList.remove('active'));
+    
+    const container = document.getElementById('quizQuestions');
+    container.innerHTML = '';
+    
+    questions.forEach((q, i) => {
+        let html = `<div class="question" id="q${i}">`;
+        html += `<div class="question-text">${i+1}. ${q.question}</div>`;
+        q.options.forEach((opt, j) => {
+            html += `<div class="option" onclick="selectOption(${i}, ${j})" id="q${i}o${j}">${String.fromCharCode(65+j)}. ${opt}</div>`;
+        });
+        html += `<div class="explanation" id="exp${i}">${q.explanation}</div>`;
+        html += '</div>';
+        container.innerHTML += html;
+    });
+    
+    document.getElementById('quizScore').style.display = 'none';
+    window.scrollTo(0, 0);
+}
+
+let selectedAnswers = {};
+
+function selectOption(qIdx, oIdx) {
+    // Clear previous selection
+    for (let j = 0; j < 4; j++) {
+        const el = document.getElementById(`q${qIdx}o${j}`);
+        if (el) el.classList.remove('selected');
+    }
+    const el = document.getElementById(`q${qIdx}o${oIdx}`);
+    if (el) el.classList.add('selected');
+    selectedAnswers[qIdx] = oIdx;
+}
+
+function submitQuiz() {
+    let correct = 0;
+    questions.forEach((q, i) => {
+        const selected = selectedAnswers[i];
+        for (let j = 0; j < 4; j++) {
+            const el = document.getElementById(`q${i}o${j}`);
+            if (el) {
+                el.classList.remove('selected');
+                if (j === q.correct) el.classList.add('correct');
+                else if (j === selected) el.classList.add('incorrect');
+            }
+        }
+        if (selected === q.correct) correct++;
+        document.getElementById(`exp${i}`).style.display = 'block';
+    });
+    
+    const pct = Math.round((correct / questions.length) * 100);
+    const scoreEl = document.getElementById('quizScore');
+    scoreEl.style.display = 'block';
+    scoreEl.innerHTML = `<h3>${pct}% — ${correct}/${questions.length} Correct</h3><p>${pct >= 70 ? 'Great job! You passed!' : 'Keep studying and try again.'}</p>`;
+    scoreEl.style.borderColor = pct >= 70 ? '#27AE60' : '#E74C3C';
+    scoreEl.querySelector('h3').style.color = pct >= 70 ? '#27AE60' : '#E74C3C';
+}
+
+// Show welcome by default
+showSection('welcome');
+</script>
+</body>
+</html>

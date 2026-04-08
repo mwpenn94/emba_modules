@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CFP — Interactive Training Module</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, Helvetica, sans-serif; background: #F4F6F9; color: #2C3E50; line-height: 1.6; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #1B4F72, #2E75B6); color: white; padding: 20px 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.header h1 { font-size: 1.4em; margin-bottom: 5px; }
+.header .subtitle { font-size: 0.85em; opacity: 0.85; }
+.progress-bar { background: rgba(255,255,255,0.2); border-radius: 10px; height: 8px; margin-top: 10px; }
+.progress-fill { background: #27AE60; height: 100%; border-radius: 10px; transition: width 0.5s ease; width: 0%; }
+.progress-text { font-size: 0.75em; margin-top: 4px; opacity: 0.8; }
+
+/* Layout */
+.container { display: flex; margin-top: 100px; min-height: calc(100vh - 100px); }
+
+/* Sidebar */
+.sidebar { width: 280px; background: white; border-right: 1px solid #E5E8EB; padding: 20px 0; position: fixed; top: 100px; bottom: 0; overflow-y: auto; }
+.sidebar .nav-title { padding: 10px 20px; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #95A5A6; font-weight: bold; }
+.nav-item { display: block; padding: 10px 20px; color: #2C3E50; text-decoration: none; font-size: 0.9em; border-left: 3px solid transparent; transition: all 0.2s; cursor: pointer; }
+.nav-item:hover { background: #F0F3F5; border-left-color: #2E75B6; }
+.nav-item.active { background: #E8F0FE; border-left-color: #1B4F72; color: #1B4F72; font-weight: bold; }
+.nav-item.completed { color: #27AE60; }
+.nav-item.completed::after { content: " ✓"; color: #27AE60; }
+.nav-quiz { display: block; padding: 12px 20px; color: #E67E22; text-decoration: none; font-size: 0.9em; font-weight: bold; border-left: 3px solid #E67E22; cursor: pointer; margin-top: 10px; }
+.nav-quiz:hover { background: #FFF3E0; }
+
+/* Main Content */
+.main { margin-left: 280px; padding: 30px 40px; max-width: 900px; flex: 1; }
+.section h2 { color: #1B4F72; font-size: 1.6em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #1B4F72; }
+.section h3 { color: #2E75B6; font-size: 1.2em; margin: 20px 0 10px; }
+.section h4 { color: #2C3E50; font-size: 1.05em; margin: 15px 0 8px; }
+.section p { margin-bottom: 12px; text-align: justify; }
+
+/* Tables */
+.table-wrapper { overflow-x: auto; margin: 15px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+th { background: #1B4F72; color: white; padding: 10px 12px; text-align: left; font-weight: bold; }
+td { padding: 8px 12px; border-bottom: 1px solid #E5E8EB; }
+tr:nth-child(even) td { background: #F8F9FA; }
+tr:hover td { background: #E8F0FE; }
+
+/* Buttons */
+.section-footer { display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #E5E8EB; }
+.btn-complete { background: #27AE60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: bold; transition: all 0.2s; }
+.btn-complete:hover { background: #219A52; transform: translateY(-1px); }
+.btn-complete.done { background: #95A5A6; cursor: default; }
+.btn-next { background: #2E75B6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: bold; transition: all 0.2s; }
+.btn-next:hover { background: #1A5F8B; transform: translateY(-1px); }
+
+/* Quiz */
+.quiz-container { display: none; }
+.quiz-container h2 { color: #E67E22; border-bottom-color: #E67E22; }
+.question { background: white; border: 1px solid #E5E8EB; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.question-text { font-weight: bold; margin-bottom: 12px; color: #1B4F72; }
+.option { display: block; padding: 10px 15px; margin: 5px 0; border: 2px solid #E5E8EB; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+.option:hover { border-color: #2E75B6; background: #F0F7FF; }
+.option.selected { border-color: #2E75B6; background: #E8F0FE; }
+.option.correct { border-color: #27AE60; background: #E8F5E9; }
+.option.incorrect { border-color: #E74C3C; background: #FDEDEC; }
+.explanation { display: none; margin-top: 10px; padding: 10px; background: #FFF3E0; border-left: 3px solid #E67E22; border-radius: 4px; font-size: 0.9em; }
+.quiz-score { text-align: center; padding: 30px; background: white; border-radius: 8px; border: 2px solid #27AE60; margin-top: 20px; }
+.quiz-score h3 { color: #27AE60; font-size: 1.5em; }
+.btn-submit { background: #E67E22; color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin-top: 20px; }
+.btn-submit:hover { background: #D35400; }
+
+/* Welcome */
+.welcome { text-align: center; padding: 60px 20px; }
+.welcome h2 { color: #1B4F72; font-size: 2em; margin-bottom: 15px; }
+.welcome p { font-size: 1.1em; color: #7F8C8D; max-width: 600px; margin: 0 auto 20px; }
+.welcome .stats { display: flex; justify-content: center; gap: 30px; margin-top: 30px; }
+.stat { text-align: center; }
+.stat .number { font-size: 2em; font-weight: bold; color: #1B4F72; }
+.stat .label { font-size: 0.85em; color: #95A5A6; }
+.btn-start { background: #1B4F72; color: white; border: none; padding: 15px 40px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin-top: 30px; }
+.btn-start:hover { background: #2E75B6; }
+
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 20px; }
+    .header h1 { font-size: 1.1em; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>CFP — Interactive Training Module</h1>
+    <div class="subtitle">WealthBridge Study Library | EMBA-Quality Professional Development</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0% Complete</div>
+</div>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="nav-title">Chapters</div>
+        <a href="#" class="nav-item active" data-section="welcome" onclick="showSection('welcome')">Welcome</a>
+        <a href="#" class="nav-item" data-section="section-0" onclick="showSection('section-0')">Introduction</a>
+<a href="#" class="nav-item" data-section="section-1" onclick="showSection('section-1')">Table of Contents</a>
+<a href="#" class="nav-item" data-section="section-2" onclick="showSection('section-2')">How to Use This Manual</a>
+<a href="#" class="nav-item" data-section="section-3" onclick="showSection('section-3')">Exam Overview</a>
+<a href="#" class="nav-item" data-section="section-4" onclick="showSection('section-4')">Practice Exam: CFP Comprehensive</a>
+<a href="#" class="nav-item" data-section="section-5" onclick="showSection('section-5')">Additional Practice Questions</a>
+
+        <a href="#" class="nav-quiz" onclick="showQuiz()">Practice Quiz (5 Questions)</a>
+    </div>
+    
+    <div class="main">
+        <div id="welcome" class="section">
+            <div class="welcome">
+                <h2>Welcome to CFP</h2>
+                <p>This interactive training module covers all key concepts, formulas, and exam strategies. Track your progress as you work through each section.</p>
+                <div class="stats">
+                    <div class="stat"><div class="number">6</div><div class="label">Sections</div></div>
+                    <div class="stat"><div class="number">5</div><div class="label">Quiz Questions</div></div>
+                    <div class="stat"><div class="number">0%</div><div class="label" id="masteryLabel">Mastery</div></div>
+                </div>
+                <button class="btn-start" onclick="nextSection(-1)">Begin Training →</button>
+            </div>
+        </div>
+        
+        <div id="section-0" class="section" style="display:none;">
+<h2>Introduction</h2>
+<p>CFP Examination</p>
+<p>Certified Financial Planner Study Manual</p>
+<p>Comprehensive Study Guide</p>
+<p>Updated March 2026  |  OBBBA Integrated</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-0', 0)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(0)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-1" class="section" style="display:none;">
+<h2>Table of Contents</h2>
+<p>Right-click → &#x27;Update Field&#x27; in Word for clickable page numbers.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-1', 1)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(1)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-2" class="section" style="display:none;">
+<h2>How to Use This Manual</h2>
+<p>The Certified Financial Planner (CFP) examination is the capstone credential in personal financial planning. It is the most comprehensive exam in the WealthBridge Library, testing integrated knowledge across nine domains that span the entire financial planning landscape. Unlike the Series 7 (which tests securities knowledge) or the SIE (which tests foundational industry concepts), the CFP exam tests your ability to synthesize knowledge from insurance, investments, tax, retirement, and estate planning into coherent, client-centered recommendations.</p>
+<p>This manual is organized by the nine CFP Board Principal Knowledge Topics. Each domain includes the conceptual framework, key formulas and calculations, exam-weighted emphasis areas, practice scenarios, and exam tips drawn from the most frequently tested concepts. The CFP exam uses case-study vignettes extensively: you will be given a detailed client scenario and asked multiple questions about the appropriate planning recommendations. Success requires not just knowing individual facts but understanding how different planning areas interact.</p>
+<p>Study strategy: The CFP exam weights Domains 4, 5, 6, 7, and 8 most heavily (collectively about 70% of the exam). Domain 9 (Financial Plan Development) tests your ability to integrate all other domains into a comprehensive plan. Begin with your weakest domain, but allocate the most time to Domains 5 (Investment) and 7 (Retirement), which together account for approximately 30% of the exam. Use the practice questions at the end of each domain to test your understanding before moving on.</p>
+<p>This manual reflects all changes from the One Big Beautiful Bill Act (OBBBA), signed July 4, 2025, which made permanent the individual tax rates, doubled the SALT deduction cap to $40,400, and permanently set the estate tax exemption at $15 million per person. All tax numbers, contribution limits, and planning strategies in this manual are current for the 2026 exam year.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-2', 2)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(2)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-3" class="section" style="display:none;">
+<h2>Exam Overview</h2>
+<p>The CFP Board Standards of Conduct, effective October 2019, establish three components: the Code of Ethics, the Standards of Conduct, and the Disciplinary Rules and Procedures. The Code of Ethics sets forth the principles that define ethical behavior: act with honesty, integrity, competence, and diligence; act in the client&#x27;s best interest; exercise due care; avoid or disclose and manage conflicts of interest; maintain confidentiality; and act in a manner that reflects positively on the profession.</p>
+<p>The fiduciary duty applies at all times when providing Financial Advice (capital F, capital A — the CFP Board&#x27;s defined term). Financial Advice includes financial planning, the financial planning process, and financial advisory activities. A CFP professional providing Financial Advice must act as a fiduciary, meaning they must act in the client&#x27;s best interest, with the care, skill, prudence, and diligence that a prudent professional would exercise.</p>
+<p>The duty of loyalty requires placing the client&#x27;s interests above the CFP professional&#x27;s own interests and the interests of the firm. The duty of care requires providing advice with competence and thoroughness appropriate to the situation. The duty to follow client instructions requires the CFP professional to comply with reasonable client directives. These three duties form the foundation of the fiduciary relationship and are tested extensively on the exam.</p>
+<p>Material conflicts of interest must be disclosed to the client in writing before or at the time of the engagement. Conflicts include compensation arrangements (commissions, referral fees, revenue sharing), proprietary products, affiliations with other financial services firms, and any financial interest the CFP professional has in the recommended products or services. The CFP professional must manage conflicts so they do not compromise the ability to act in the client&#x27;s best interest. If a conflict cannot be managed, the CFP professional must avoid the conflict entirely.</p>
+<p>The CFP Board defines financial planning as a collaborative process that helps maximize a client&#x27;s potential for meeting life goals through Financial Advice that integrates relevant elements of the client&#x27;s personal and financial circumstances. The seven-step process is: (1) Understanding the client&#x27;s personal and financial circumstances, (2) Identifying and selecting goals, (3) Analyzing the client&#x27;s current course of action and potential alternative courses, (4) Developing the financial planning recommendation(s), (5) Presenting the financial planning recommendation(s), (6) Implementing the financial planning recommendation(s), and (7) Monitoring progress and updating.</p>
+<p>Step 1 requires gathering both quantitative data (income, expenses, assets, liabilities, insurance coverage, tax returns, employee benefits, estate documents) and qualitative data (values, attitudes toward risk, family dynamics, health concerns, charitable interests, legacy goals). The scope of the engagement must be defined in writing, including the services to be provided, the compensation arrangement, the responsibilities of each party, and the duration of the engagement.</p>
+<p>Steps 3-5 represent the analytical core of financial planning. The CFP professional must analyze the client&#x27;s current financial position, identify gaps and opportunities, evaluate alternative strategies, and develop recommendations that are specific, actionable, and prioritized. Recommendations must be presented in a way the client can understand, with clear explanations of the rationale, expected outcomes, costs, risks, and trade-offs. The presentation should address how recommendations in one area affect other areas of the plan.</p>
+<p>Steps 6-7 ensure that the plan is implemented and monitored. Implementation may involve coordinating with other professionals (attorneys, CPAs, insurance agents) and executing specific transactions (opening accounts, purchasing insurance, updating estate documents). Monitoring requires regular reviews (at least annually) and updates triggered by life events (marriage, divorce, birth, death, job change, inheritance, health change). The financial plan is a living document, not a one-time deliverable.</p>
+<p>CFP professionals operate within a multi-layered regulatory framework. At the federal level, the SEC regulates investment advisers (Investment Advisers Act of 1940), broker-dealers (Securities Exchange Act of 1934), and securities offerings (Securities Act of 1933). FINRA regulates broker-dealers and their registered representatives. At the state level, state securities administrators regulate investment advisers and broker-dealers under the Uniform Securities Act. State insurance departments regulate insurance producers. The CFP Board provides an additional layer of professional regulation through its Standards of Conduct and disciplinary process.</p>
+<p>The Investment Advisers Act of 1940 requires investment advisers to register with the SEC (if AUM exceeds $100 million) or the state (if AUM is below $100 million). Form ADV is the registration document, with Part 2A (the brochure) describing services, fees, strategies, and conflicts. The Securities Exchange Act of 1934 requires broker-dealers to register with the SEC and join FINRA. Regulation Best Interest (Reg BI) requires broker-dealers to act in the customer&#x27;s best interest at the time of recommendation, but this is a lower standard than the CFP Board&#x27;s fiduciary duty.</p>
+<p>The personal balance sheet (statement of financial position) lists all assets, liabilities, and net worth at a specific point in time. Assets are categorized as monetary (cash, checking, savings, money market), investment (stocks, bonds, mutual funds, retirement accounts at current value), and personal use (home at FMV, vehicles, personal property). Liabilities are current (due within 12 months: credit cards, current portion of loans) and long-term (mortgage, student loans, auto loans). Net worth = Total Assets - Total Liabilities.</p>
+<p>The personal income statement (cash flow statement) tracks income and expenses over a period. Gross income minus payroll taxes and deductions equals net income. Net income minus fixed expenses (mortgage, insurance, loan payments) and variable expenses (food, entertainment, clothing) equals discretionary income (savings capacity). The savings rate (savings / gross income) is a key metric — target 10-20%. A negative cash flow indicates the client is spending more than earning and accumulating debt.</p>
+<p>Key financial ratios for the CFP exam: Emergency fund ratio (liquid assets / monthly expenses, target 3-6 months). Savings ratio (savings / gross income, target 10-20%). Debt-to-income ratio (total debt payments / gross income, target below 36%). Housing ratio (housing costs / gross income, target below 28%). Current ratio (liquid assets / current liabilities, target above 1.0). These ratios provide a quick diagnostic of the client&#x27;s financial health and help identify areas that need attention.</p>
+<p>Time value of money (TVM) calculations are foundational to the CFP exam. The five TVM variables are: N (number of periods), I/Y (interest rate per period), PV (present value), PMT (payment per period), and FV (future value). Given any four variables, you can solve for the fifth. The CFP exam requires proficiency with a financial calculator (HP 10bII+ or TI BAII Plus). Key applications include: calculating the future value of savings, determining the present value of a future obligation, computing loan payments, and determining the rate of return on an investment.</p>
+<p>Annuity calculations are critical. An ordinary annuity has payments at the end of each period (most common: loan payments, retirement withdrawals). An annuity due has payments at the beginning of each period (lease payments, insurance premiums). The annuity due is worth more because each payment earns one additional period of interest. On the HP 10bII+, set to BEG mode for annuity due calculations. Serial payments (payments that grow at a constant rate, such as inflation-adjusted retirement withdrawals) require the real rate of return: real rate = [(1 + nominal) / (1 + inflation)] - 1.</p>
+<p>The rule of 72 provides a quick estimate of doubling time: Years to Double = 72 / Rate of Return. At 8%, money doubles in approximately 9 years. At 6%, approximately 12 years. The rule of 72 also works in reverse: to double money in 10 years, you need approximately 72/10 = 7.2% return. For more precise calculations, always use the TVM functions on your financial calculator.</p>
+<p>The CFP exam tests fundamental economic concepts that affect financial planning. The business cycle consists of expansion (rising GDP, falling unemployment), peak, contraction (falling GDP, rising unemployment), and trough. Fiscal policy (government spending and taxation) and monetary policy (Federal Reserve actions affecting money supply and interest rates) influence the economic environment.</p>
+<p>The Federal Reserve&#x27;s primary tools are the federal funds rate target (the rate banks charge each other for overnight loans), open market operations (buying and selling Treasury securities to expand or contract the money supply), the discount rate (the rate the Fed charges banks for direct loans), and reserve requirements. When the Fed lowers rates (expansionary policy), borrowing becomes cheaper, stimulating growth but potentially increasing inflation. When the Fed raises rates (contractionary policy), borrowing becomes more expensive, slowing growth but controlling inflation.</p>
+<p>Inflation erodes purchasing power: the real rate of return = nominal return - inflation rate (approximation) or (1 + nominal) / (1 + inflation) - 1 (exact). The Consumer Price Index (CPI) is the primary measure of inflation. The yield curve plots Treasury yields across maturities. A normal (upward-sloping) curve indicates expectations of economic growth. An inverted curve has historically preceded recessions. The term spread (10-year minus 2-year Treasury yield) is a closely watched recession indicator.</p>
+<p>Behavioral finance concepts are increasingly tested on the CFP exam. Loss aversion means clients feel losses approximately twice as intensely as equivalent gains, leading to risk-averse behavior when facing gains and risk-seeking behavior when facing losses. Anchoring causes clients to fixate on irrelevant reference points (such as the purchase price of a stock). Confirmation bias leads clients to seek information that confirms existing beliefs while ignoring contradictory evidence.</p>
+<p>Recency bias causes clients to overweight recent events in their decision-making (e.g., avoiding stocks after a market crash). Mental accounting leads clients to treat money differently based on its source or intended use, even though money is fungible (e.g., treating a tax refund as &#x27;found money&#x27; and spending it frivolously). Overconfidence bias causes investors to overestimate their ability to pick stocks or time the market. Herding behavior causes investors to follow the crowd rather than conducting independent analysis.</p>
+<p>The 529 Qualified Tuition Plan is the primary education savings vehicle. Contributions are made with after-tax dollars (no federal deduction, but many states offer a state income tax deduction). Growth is tax-free, and withdrawals for qualified education expenses (tuition, fees, books, room and board, computers, up to $10,000/year for K-12 tuition) are tax-free. For 2026, the annual gift tax exclusion allows contributions of $19,000 per beneficiary ($38,000 for married couples) without gift tax implications.</p>
+<p>The 5-year gift tax averaging provision allows a lump-sum contribution of up to $95,000 ($190,000 for couples) without using any lifetime exemption, though no additional gifts can be made to that beneficiary during the 5-year period. If the donor dies during the 5-year period, a pro-rata portion of the contribution is included in the donor&#x27;s estate. The beneficiary can be changed to another family member at any time without tax consequences.</p>
+<p>Coverdell Education Savings Accounts (ESAs) allow $2,000 annual contributions per beneficiary with income limits ($110,000 MAGI for single filers, $220,000 for joint). Growth and withdrawals for qualified education expenses at any level (K-12 through graduate school) are tax-free. Coverdell ESAs offer more investment flexibility than 529 plans (individual stocks, bonds, ETFs) but have much lower contribution limits. The SECURE 2.0 Act provision allowing 529-to-Roth IRA rollovers (up to $35,000 lifetime, subject to annual Roth contribution limits, 529 must have been open 15+ years) provides an important safety valve for unused 529 funds.</p>
+<p>The Free Application for Federal Student Aid (FAFSA) determines eligibility for federal financial aid. The Student Aid Index (SAI, formerly EFC) considers parent income, parent assets, student income, and student assets. Parent assets are assessed at up to 5.64%, while student assets are assessed at 20%. This means $10,000 in a student&#x27;s name reduces aid by $2,000, while $10,000 in a parent&#x27;s name reduces aid by only $564. Assets in a 529 plan owned by the parent are treated as parent assets (5.64% assessment). Assets in a 529 owned by a grandparent are not reported on the FAFSA (as of the 2024-25 FAFSA simplification).</p>
+<p>The American Opportunity Tax Credit (AOTC) provides up to $2,500 per student for the first four years of post-secondary education (100% of first $2,000 + 25% of next $2,000 in qualified expenses). The AOTC is 40% refundable (up to $1,000). Income phase-outs: $80,000-$90,000 (single), $160,000-$180,000 (joint). The Lifetime Learning Credit provides up to $2,000 per tax return (20% of up to $10,000 in qualified expenses) with no limit on the number of years it can be claimed. Income phase-outs: $80,000-$90,000 (single), $160,000-$180,000 (joint). You cannot claim both credits for the same student in the same year.</p>
+<p>Student loan interest is deductible up to $2,500 per year (above-the-line deduction, available even if you do not itemize). Income phase-outs: $75,000-$90,000 (single), $155,000-$185,000 (joint). The deduction is per return, not per loan. Employer-provided educational assistance up to $5,250 per year is excluded from income. Tuition remission for employees of educational institutions is also excluded from income.</p>
+<p>The risk management process involves four steps: identify risks, evaluate risks (frequency and severity), select risk management techniques, and implement and monitor. Risk management techniques include avoidance (eliminating the activity that creates the risk), reduction (taking steps to minimize the frequency or severity of loss), retention (self-insuring, appropriate for high-frequency/low-severity risks), and transfer (purchasing insurance, appropriate for low-frequency/high-severity risks).</p>
+<p>The risk management matrix guides technique selection. High-severity/low-frequency risks (house fire, disability, premature death, lawsuit) should be transferred through insurance. Low-severity/high-frequency risks (minor car scratches, small medical expenses) should be retained through deductibles and self-insurance. The key insight is that insurance should protect against catastrophic losses that would derail the financial plan, not against small, predictable expenses.</p>
+<p>The human life value approach calculates the present value of the insured&#x27;s future earnings, adjusted for taxes, personal consumption, and inflation. The needs approach (more commonly tested) calculates the total financial obligations that would exist at the insured&#x27;s death: final expenses ($10,000-$25,000), outstanding debts (mortgage, student loans, auto loans), income replacement for dependents (present value of needed income stream), education funding for children, emergency fund for survivors, and any special needs.</p>
+<p>Existing resources are subtracted from total needs to determine the insurance gap: group life insurance, personal savings and investments, Social Security survivor benefits (present value), existing individual life insurance, and any other death benefits. The resulting gap is the amount of new life insurance needed. The needs approach is more precise than the human life value approach because it considers the specific financial obligations of the family rather than just the insured&#x27;s earning capacity.</p>
+<p>Term life insurance provides pure death protection for a specified period (10, 15, 20, or 30 years). It is the most cost-effective option for temporary needs: income replacement during working years, mortgage protection, and child dependency periods. Level term maintains a constant death benefit and premium. Decreasing term has a declining death benefit (used for mortgage protection). Annual renewable term (ART) renews annually with increasing premiums. Convertible term allows conversion to permanent insurance without evidence of insurability.</p>
+<p>Whole life (ordinary life) provides permanent coverage with guaranteed cash value, guaranteed death benefit, and level premiums. Cash value grows at a guaranteed minimum rate and can be accessed through policy loans (which accrue interest and reduce the death benefit if not repaid) or partial surrenders. Participating whole life policies pay dividends that can be taken in cash, used to reduce premiums, left to accumulate at interest, or used to purchase paid-up additions.</p>
+<p>Universal life (UL) offers flexible premiums and an adjustable death benefit. Cash value earns interest based on current rates with a guaranteed minimum. Option A (level death benefit) includes cash value within the death benefit. Option B (increasing death benefit) adds cash value on top of the face amount. Variable life (VL) and variable universal life (VUL) allow cash value investment in subaccounts — they are securities requiring a Series 6 or Series 7 license. Indexed universal life (IUL) credits interest based on a market index with a floor (0-2%) and cap (8-12%).</p>
+<p>The Modified Endowment Contract (MEC) rules are critical for the CFP exam. A life insurance policy becomes a MEC if cumulative premiums exceed the 7-pay test (the level premium that would pay up the policy in 7 years). MECs lose favorable FIFO taxation: withdrawals and loans are taxed LIFO (earnings first) with a 10% penalty before age 59 1/2. The death benefit remains income-tax-free. Single-premium life insurance policies are always MECs.</p>
+<p>Disability income insurance replaces a portion of income (typically 60-70%) when the insured cannot work. Own-occupation coverage pays if the insured cannot perform their specific occupation (a surgeon who cannot operate but could teach). Any-occupation coverage pays only if the insured cannot perform any occupation for which they are reasonably qualified. The elimination period (waiting period) is the time between disability onset and benefit commencement — 90 days is most common. Longer elimination periods reduce premiums significantly.</p>
+<p>Tax treatment of disability benefits depends on who paid the premiums: employer-paid premiums result in taxable benefits (the employer gets a deduction, the employee pays tax on benefits). Employee-paid (after-tax) premiums result in tax-free benefits. If the employer and employee share the premium cost, benefits are partially taxable in proportion to the employer&#x27;s share. This tax treatment is critical for determining the appropriate benefit amount — if benefits will be taxable, the client needs a higher gross benefit to achieve the same after-tax income replacement.</p>
+<p>Long-term care (LTC) insurance covers custodial care, assisted living, home health care, and skilled nursing facility care. Benefits are triggered when the insured cannot perform 2+ activities of daily living (ADLs: bathing, dressing, eating, toileting, transferring, continence) or has a cognitive impairment requiring substantial supervision. Tax-qualified LTC policies allow premium deductions as medical expenses (subject to age-based limits) and provide tax-free benefits up to a per-diem limit ($420/day in 2026). Partnership policies allow the insured to protect assets equal to the benefits received from Medicaid spend-down requirements.</p>
+<p>Hybrid life/LTC policies combine life insurance with long-term care benefits, addressing the &#x27;use it or lose it&#x27; concern with traditional LTC policies. If the insured needs LTC, the policy pays LTC benefits (accelerating or extending the death benefit). If the insured dies without needing LTC, the beneficiary receives the death benefit. These policies have become increasingly popular as standalone LTC premiums have risen significantly.</p>
+<p>Modern Portfolio Theory (MPT), developed by Harry Markowitz, demonstrates that diversification with imperfectly correlated assets can reduce portfolio risk without sacrificing expected return. The efficient frontier represents the set of portfolios offering the highest expected return for each level of risk. The Capital Market Line (CML) represents the risk-return trade-off for efficient portfolios combining the risk-free asset with the market portfolio. The Security Market Line (SML) represents the CAPM relationship between expected return and systematic risk (beta) for individual securities.</p>
+<p>The Capital Asset Pricing Model (CAPM) calculates the expected return of an asset: E(R) = Rf + beta(Rm - Rf), where Rf is the risk-free rate, beta is the asset&#x27;s systematic risk, and (Rm - Rf) is the market risk premium. Alpha measures the excess return above what CAPM predicts: positive alpha indicates outperformance (the manager added value), negative alpha indicates underperformance. Securities plotting above the SML have positive alpha (underpriced); securities below the SML have negative alpha (overpriced).</p>
+<p>Systematic risk (market risk, interest rate risk, inflation risk, exchange rate risk) cannot be diversified away and is measured by beta. A beta of 1.0 means the asset moves with the market. A beta of 1.5 means the asset is 50% more volatile than the market. A beta of 0.5 means the asset is 50% less volatile. Unsystematic risk (business risk, financial risk, default risk) can be eliminated through diversification. Total risk = systematic risk + unsystematic risk, measured by standard deviation.</p>
+<p>Equity securities represent ownership in a corporation. Common stock provides voting rights, dividend potential, and residual claim on assets. The dividend discount model (DDM) values a stock as the present value of expected future dividends: P = D1 / (r - g), where D1 is next year&#x27;s expected dividend, r is the required rate of return, and g is the constant growth rate. The P/E ratio is the most widely used relative valuation metric. Growth stocks have high P/E ratios and reinvest earnings; value stocks have low P/E ratios and pay higher dividends.</p>
+<p>Fixed-income securities represent a loan from the investor to the issuer. Bond prices and interest rates move inversely. Duration measures a bond&#x27;s sensitivity to interest rate changes: a duration of 7 means a 1% increase in rates causes approximately a 7% decrease in price. Modified duration adjusts Macaulay duration for the yield: Modified Duration = Macaulay Duration / (1 + y/n). Convexity measures the curvature of the price-yield relationship — positive convexity means the duration estimate understates price increases and overstates price decreases.</p>
+<p>Alternative investments include real estate (REITs, direct ownership, real estate limited partnerships), commodities (gold, oil, agricultural products), hedge funds (limited to accredited investors, use leverage, short selling, and derivatives), private equity (venture capital, leveraged buyouts), and structured products (collateralized debt obligations, mortgage-backed securities). These investments typically offer diversification benefits (low correlation with traditional assets) but carry higher fees, lower liquidity, and less regulatory oversight.</p>
+<p>Options provide leverage and risk management. A call option gives the buyer the right to buy at the strike price; a put gives the right to sell. Covered calls (owning the stock and selling calls) generate income but cap upside. Protective puts (owning the stock and buying puts) provide downside protection at the cost of the premium. Collars (covered call + protective put) limit both upside and downside. The CFP exam tests basic options strategies, not complex multi-leg positions.</p>
+<p>The Investment Policy Statement (IPS) documents the client&#x27;s return objectives, risk tolerance, time horizon, liquidity needs, tax situation, legal constraints, and unique circumstances. The IPS serves as the roadmap for all investment decisions and provides a benchmark for evaluating performance. It should be reviewed and updated at least annually or whenever the client&#x27;s circumstances change significantly.</p>
+<p>Strategic asset allocation establishes long-term target weights based on the client&#x27;s risk-return profile. Tactical asset allocation allows short-term deviations from strategic targets to capitalize on market opportunities. Core-satellite combines a passive core (index funds, 60-80% of portfolio) with active satellite positions (individual stocks, sector funds, alternative investments). Dollar-cost averaging invests a fixed amount at regular intervals, automatically buying more shares when prices are low and fewer when prices are high.</p>
+<p>Rebalancing returns the portfolio to target weights after market movements cause drift. Calendar rebalancing occurs at fixed intervals (quarterly, semi-annually, annually). Threshold rebalancing occurs when any asset class drifts beyond a specified tolerance band (typically +/- 5% from target). Tax-efficient rebalancing uses new contributions, dividend reinvestment, and tax-loss harvesting to minimize the tax impact of rebalancing trades. In taxable accounts, rebalancing by directing new money to underweight asset classes avoids triggering capital gains.</p>
+<p>The federal income tax system uses a progressive rate structure with seven brackets for 2026. Under the OBBBA (signed July 4, 2025), the individual tax rates are permanently set at: 10%, 12%, 22%, 24%, 32%, 35%, and 37%. The standard deduction for 2026 is $15,000 (single), $30,000 (MFJ), $22,500 (HOH). Taxpayers choose the higher of the standard deduction or itemized deductions. The personal exemption remains eliminated (set to $0 through the OBBBA).</p>
+<p>The marginal tax rate is the rate applied to the last dollar of income. The effective (average) tax rate is total tax / total income. The marginal rate is critical for planning decisions because it determines the tax impact of additional income or deductions. For example, a $10,000 deduction for a taxpayer in the 32% bracket saves $3,200 in federal taxes, while the same deduction for a taxpayer in the 12% bracket saves only $1,200.</p>
+<p>Itemized deductions under the OBBBA include: state and local taxes (SALT, capped at $40,400 — doubled from the TCJA&#x27;s $10,000 cap), mortgage interest (on up to $750,000 of acquisition indebtedness), charitable contributions (cash up to 60% of AGI, appreciated property up to 30% of AGI), medical expenses exceeding 7.5% of AGI, and casualty and theft losses from federally declared disasters. The SALT cap increase to $40,400 is a significant planning change — many more taxpayers in high-tax states will now benefit from itemizing.</p>
+<p>Above-the-line deductions (adjustments to income) reduce AGI and are available regardless of whether the taxpayer itemizes. Key above-the-line deductions include: traditional IRA contributions (if eligible), student loan interest (up to $2,500), HSA contributions, self-employment tax (50%), self-employed health insurance premiums, and alimony payments (for agreements before 2019). AGI is important because many tax benefits phase out based on AGI or MAGI.</p>
+<p>Long-term capital gains (assets held more than 12 months) are taxed at preferential rates: 0% (taxable income up to $48,475 single / $96,950 MFJ), 15% (up to $533,400 single / $600,050 MFJ), and 20% (above those thresholds). Short-term capital gains (assets held 12 months or less) are taxed as ordinary income. The 3.8% Net Investment Income Tax (NIIT) applies to the lesser of net investment income or MAGI exceeding $200,000 (single) / $250,000 (MFJ). Net investment income includes interest, dividends, capital gains, rental income, and passive activity income.</p>
+<p>Capital losses offset capital gains dollar-for-dollar (short-term losses first offset short-term gains, then long-term gains; long-term losses first offset long-term gains, then short-term gains). Up to $3,000 of net capital losses can be deducted against ordinary income annually. Unused losses carry forward indefinitely. Tax-loss harvesting involves selling securities at a loss to offset gains, then reinvesting in similar (but not substantially identical) securities. The wash sale rule disallows the loss if substantially identical securities are purchased within 30 days before or after the sale.</p>
+<p>Qualified dividends are taxed at long-term capital gains rates (0%, 15%, or 20%). To qualify, the stock must be held for more than 60 days during the 121-day period beginning 60 days before the ex-dividend date. Non-qualified (ordinary) dividends are taxed as ordinary income. Interest from municipal bonds is generally exempt from federal income tax and may be exempt from state tax if issued in the taxpayer&#x27;s state of residence. The tax-equivalent yield = municipal yield / (1 - marginal tax rate).</p>
+<p>Traditional IRA and 401(k) contributions are made with pre-tax dollars (tax deduction at contribution), growth is tax-deferred, and withdrawals are taxed as ordinary income. Roth IRA and Roth 401(k) contributions are made with after-tax dollars (no deduction), growth is tax-free, and qualified withdrawals are tax-free. A qualified Roth distribution requires the account to be open for at least 5 years AND the owner to be age 59 1/2, disabled, deceased, or a first-time homebuyer (up to $10,000).</p>
+<p>The Roth conversion strategy involves converting traditional IRA assets to Roth, paying ordinary income tax on the conversion amount, and then enjoying tax-free growth and withdrawals. Roth conversions are most beneficial when: the taxpayer expects to be in a higher bracket in retirement, the conversion can be done in a low-income year, or the taxpayer has a long time horizon for tax-free growth. The conversion amount is added to ordinary income, so bracket management is essential — convert up to the top of the current bracket.</p>
+<p>Required Minimum Distributions (RMDs) begin at age 73 (SECURE 2.0 Act). RMDs apply to traditional IRAs, 401(k)s, 403(b)s, and other pre-tax retirement accounts. Roth IRAs do NOT have RMDs during the owner&#x27;s lifetime. The RMD is calculated by dividing the prior year-end account balance by the life expectancy factor from the IRS Uniform Lifetime Table. Failure to take the full RMD results in a 25% excise tax on the shortfall (reduced to 10% if corrected within 2 years).</p>
+<p>Asset location strategy places tax-inefficient investments (bonds generating ordinary income, REITs, actively traded funds) in tax-advantaged accounts and tax-efficient investments (index funds, growth stocks, municipal bonds) in taxable accounts. This maximizes after-tax returns by sheltering the highest-taxed income in tax-deferred or tax-free accounts.</p>
+<p>Charitable giving strategies include: direct cash gifts (deductible up to 60% of AGI), gifts of appreciated property (deductible at FMV, avoid capital gains, limited to 30% of AGI), donor-advised funds (immediate deduction, distribute to charities over time), qualified charitable distributions (QCDs) from IRAs for taxpayers age 70 1/2+ (up to $105,000 in 2026, satisfies RMD, excluded from income), and charitable remainder trusts (income stream to donor, remainder to charity, immediate deduction for PV of remainder).</p>
+<p>The Health Savings Account (HSA) offers triple tax benefits: tax-deductible contributions ($4,400 individual / $8,750 family for 2026, plus $1,000 catch-up for age 55+), tax-free growth, and tax-free withdrawals for qualified medical expenses. The HSA is the only account type that provides a deduction on the way in AND tax-free treatment on the way out. After age 65, HSA withdrawals for non-medical expenses are taxed as ordinary income (no penalty), making the HSA function like a traditional IRA. Strategy: pay current medical expenses out of pocket, let the HSA grow tax-free, and use it as a supplemental retirement account.</p>
+<p>The 401(k) plan is the most common employer-sponsored defined contribution plan. For 2026, the employee elective deferral limit is $24,500 ($32,500 for age 50+, with an additional super catch-up of $11,250 for ages 60-63 under SECURE 2.0, bringing the total to $34,750). The total annual addition limit (employee + employer contributions) is $72,000. Employer matching contributions are subject to vesting schedules: cliff vesting (100% after 3 years) or graded vesting (20% per year over 2-6 years).</p>
+<p>Safe harbor 401(k) plans provide immediate vesting and satisfy nondiscrimination testing requirements. The employer must either match 100% of the first 3% plus 50% of the next 2% of compensation, or make a 3% non-elective contribution to all eligible employees. SECURE 2.0 added a starter 401(k) option for small employers with no existing plan, with a $6,000 employee deferral limit.</p>
+<p>Defined benefit (DB) plans promise a specific retirement benefit based on a formula (typically years of service x percentage x final average salary). The employer bears the investment risk and is responsible for funding the plan adequately. The maximum annual benefit from a DB plan is $280,000 (2026). Cash balance plans are a hybrid: legally defined benefit plans but function like defined contribution plans, with each participant having a hypothetical account balance that grows by a guaranteed crediting rate.</p>
+<p>Traditional IRA contributions are deductible if the taxpayer (and spouse) are not covered by an employer plan, or if covered, MAGI is below the phase-out range ($79,000-$89,000 single, $126,000-$146,000 MFJ for 2026). The annual contribution limit is $7,500 ($8,600 for age 50+). Non-deductible traditional IRA contributions are permitted regardless of income but provide no current tax benefit — only tax-deferred growth.</p>
+<p>Roth IRA contributions are not deductible but offer tax-free growth and qualified withdrawals. Roth IRA income limits for 2026: $155,000-$170,000 (single), $236,000-$246,000 (MFJ). The backdoor Roth strategy involves making a non-deductible traditional IRA contribution and immediately converting to Roth, effectively bypassing the income limits. The pro-rata rule requires that the conversion be taxed proportionally based on the ratio of pre-tax to after-tax IRA balances across ALL traditional IRAs (including SEP and SIMPLE IRAs).</p>
+<p>The Roth IRA ordering rules for distributions: (1) regular contributions (always tax-free and penalty-free), (2) conversion amounts (tax-free but subject to the 5-year rule for penalty-free treatment before age 59 1/2), (3) earnings (tax-free only if the distribution is qualified). Each conversion has its own 5-year clock for the penalty exception. After age 59 1/2, all distributions from a Roth IRA that has been open for 5+ years are tax-free and penalty-free.</p>
+<p>Social Security retirement benefits are based on the highest 35 years of indexed earnings. Full Retirement Age (FRA) is 67 for those born in 1960 or later. Benefits can be claimed as early as age 62 (with a permanent reduction of approximately 6.67% per year for the first 3 years before FRA and 5% per year for additional years) or delayed until age 70 (with an 8% per year increase for each year of delay beyond FRA). The maximum benefit at FRA for 2026 is approximately $4,018/month.</p>
+<p>Spousal benefits equal up to 50% of the higher-earning spouse&#x27;s FRA benefit. The spouse must be at least 62 to claim spousal benefits (or any age if caring for a child under 16). Survivor benefits equal up to 100% of the deceased spouse&#x27;s benefit (including any delayed retirement credits). A surviving spouse can claim survivor benefits as early as age 60 (50 if disabled). Divorced spouses are eligible for spousal or survivor benefits if the marriage lasted at least 10 years and the ex-spouse has not remarried (for spousal benefits).</p>
+<p>Social Security benefits are subject to federal income tax based on provisional income (AGI + tax-exempt interest + 50% of SS benefits): up to 50% of benefits are taxable if provisional income exceeds $25,000 (single) / $32,000 (MFJ), and up to 85% are taxable if provisional income exceeds $34,000 (single) / $44,000 (MFJ). These thresholds are NOT indexed for inflation, so more retirees become subject to taxation each year.</p>
+<p>The 4% rule (Bengen rule) suggests withdrawing 4% of the portfolio in the first year of retirement, adjusted annually for inflation. This historically sustained a 30-year retirement with a 95%+ success rate using a 50/50 stock/bond portfolio. However, lower expected future returns may require a more conservative withdrawal rate (3-3.5%). The guardrails approach adjusts withdrawals based on portfolio performance: increase withdrawals when the portfolio grows significantly, decrease when it declines.</p>
+<p>The sequence of returns risk is the danger that poor market returns early in retirement can permanently impair the portfolio, even if average returns over the full period are adequate. A 30% decline in year 1 of retirement is far more damaging than the same decline in year 20. Strategies to mitigate sequence risk include: maintaining 1-2 years of expenses in cash/short-term bonds (the bucket strategy), using a flexible withdrawal strategy, delaying Social Security to reduce early portfolio withdrawals, and considering a partial annuitization of the portfolio.</p>
+<p>Tax-efficient withdrawal sequencing generally follows: (1) RMDs from tax-deferred accounts (required), (2) taxable account withdrawals (to fill lower tax brackets), (3) tax-deferred account withdrawals (to fill remaining bracket space), (4) Roth account withdrawals (last, to maximize tax-free growth). However, strategic Roth conversions during low-income years can improve long-term tax efficiency. The goal is to minimize total lifetime taxes, not just current-year taxes.</p>
+<p>Essential estate planning documents include: a will (directs asset distribution, names executor, names guardians for minor children), a revocable living trust (avoids probate, manages assets during incapacity, provides privacy), a durable power of attorney (authorizes an agent to handle financial matters if the principal becomes incapacitated), a healthcare proxy (designates a healthcare decision-maker), a living will (specifies end-of-life treatment preferences), and a HIPAA authorization (allows designated individuals to access medical information).</p>
+<p>Probate is the court-supervised process of validating a will, paying debts and taxes, and distributing assets. Probate is public, potentially expensive (2-7% of estate value), and time-consuming (6-18 months). Assets that bypass probate include: jointly held property with right of survivorship, assets with beneficiary designations (retirement accounts, life insurance, TOD/POD accounts), assets held in trust, and community property with right of survivorship. A pour-over will directs any assets not already in the trust to be transferred to the trust at death.</p>
+<p>Property ownership forms determine how assets transfer at death. Joint tenancy with right of survivorship (JTWROS) automatically transfers to the surviving owner, bypassing probate. Tenancy in common (TIC) passes through the deceased owner&#x27;s estate. Community property (9 states) receives a full step-up in basis at the first spouse&#x27;s death (both halves), unlike JTWROS where only the deceased owner&#x27;s half receives a step-up. Tenancy by the entirety (available to married couples in some states) provides additional creditor protection.</p>
+<p>The OBBBA permanently set the federal estate and gift tax exemption at $15 million per person ($30 million for married couples using portability), indexed for inflation beginning in 2027. The top estate and gift tax rate is 40%. The annual gift tax exclusion is $19,000 per donee ($38,000 for married couples using gift-splitting) for 2026. Gifts within the annual exclusion do not reduce the lifetime exemption and do not require a gift tax return (unless gift-splitting is elected, which requires Form 709).</p>
+<p>The unlimited marital deduction allows unlimited transfers between U.S. citizen spouses without gift or estate tax. For non-citizen spouses, the annual exclusion is $185,000 (2026), and a Qualified Domestic Trust (QDOT) is required to qualify for the marital deduction at death. Portability allows a surviving spouse to use the deceased spouse&#x27;s unused exemption amount (DSUE). To elect portability, the executor must file a timely estate tax return (Form 706) even if no tax is due.</p>
+<p>The step-up in basis at death resets the cost basis of inherited assets to fair market value at the date of death, permanently eliminating unrealized capital gains. This is one of the most significant tax benefits in the entire tax code. For example, if a parent purchased stock for $50,000 and it is worth $500,000 at death, the heir&#x27;s basis is $500,000 — the $450,000 in unrealized gains is never taxed. The Generation-Skipping Transfer (GST) tax applies to transfers that skip a generation at a flat 40% rate with a $15 million exemption (2026).</p>
+<p>Revocable living trusts avoid probate but do NOT remove assets from the taxable estate (the grantor retains control). Irrevocable trusts remove assets from the taxable estate because the grantor relinquishes control. The transfer to an irrevocable trust is a completed gift, potentially subject to gift tax. Crummey withdrawal powers convert future interest gifts to present interest gifts, qualifying them for the annual gift tax exclusion.</p>
+<p>An Irrevocable Life Insurance Trust (ILIT) holds life insurance outside the estate, but the 3-year lookback rule includes transferred policies if the insured dies within 3 years of the transfer. Best practice: have the ILIT purchase a new policy rather than transferring an existing policy. A Grantor Retained Annuity Trust (GRAT) allows transfer of appreciating assets at reduced gift tax cost: if assets appreciate faster than the Section 7520 rate, the excess passes to beneficiaries gift-tax-free. A zeroed-out GRAT sets the annuity equal to the full value of contributed assets, resulting in approximately zero gift tax.</p>
+<p>A Charitable Remainder Trust (CRT) provides income to the donor for life or a term of years, with the remainder going to charity. The donor receives an immediate income tax deduction for the present value of the charitable remainder interest. CRTs are tax-exempt entities — they pay no tax on gains from selling appreciated assets, making them excellent vehicles for diversifying concentrated stock positions. A Charitable Lead Trust (CLT) provides income to charity with the remainder going to family members, reducing gift or estate tax on the remainder interest.</p>
+<p>A Qualified Personal Residence Trust (QPRT) transfers a home to beneficiaries at a discounted gift tax value, with the grantor retaining the right to live in the home for a specified term. If the grantor survives the term, the home passes to beneficiaries at the discounted value. If the grantor dies during the term, the home is included in the estate (the strategy fails, but the estate is no worse off than if no QPRT had been created). QPRTs are most effective when interest rates are high (increasing the discount) and the grantor is relatively young.</p>
+<p>Domain 9 tests your ability to synthesize all other domains into a comprehensive, coherent financial plan. The CFP exam presents complex case studies with multiple planning issues that span several domains. You must identify the most critical issues, prioritize recommendations, and recognize how decisions in one area affect other areas. For example, a Roth conversion (Domain 6: Tax) increases current-year taxes but reduces future RMDs (Domain 7: Retirement), reduces the taxable estate (Domain 8: Estate), and may affect financial aid eligibility (Domain 3: Education).</p>
+<p>The financial plan presentation must be clear, actionable, and prioritized. Recommendations should be organized by urgency: immediate actions (close insurance gaps, update beneficiary designations, establish emergency fund), short-term actions (implement investment strategy, begin Roth conversion plan, establish 529 plans), and long-term actions (monitor progress, adjust allocation as retirement approaches, review estate plan after life events). Each recommendation should include the rationale, expected outcome, cost or trade-off, and implementation steps.</p>
+<p>The case study approach requires systematic analysis: first gather all relevant data, then identify issues in each planning domain, then develop integrated recommendations that address multiple issues simultaneously. For example, establishing an ILIT addresses both the life insurance gap (Domain 4) and the estate planning gap (Domain 8). A Roth conversion strategy addresses both tax planning (Domain 6) and retirement planning (Domain 7). The best answers on the CFP exam recognize these cross-domain connections.</p>
+<h3>1.1 CFP Board Standards of Conduct</h3>
+<p>The CFP Board Standards of Conduct, effective October 2019, establish three components: the Code of Ethics, the Standards of Conduct, and the Disciplinary Rules and Procedures. The Code of Ethics sets forth the principles that define ethical behavior: act with honesty, integrity, competence, and diligence; act in the client&#x27;s best interest; exercise due care; avoid or disclose and manage conflicts of interest; maintain confidentiality; and act in a manner that reflects positively on the profession.</p>
+<p>The fiduciary duty applies at all times when providing Financial Advice (capital F, capital A — the CFP Board&#x27;s defined term). Financial Advice includes financial planning, the financial planning process, and financial advisory activities. A CFP professional providing Financial Advice must act as a fiduciary, meaning they must act in the client&#x27;s best interest, with the care, skill, prudence, and diligence that a prudent professional would exercise.</p>
+<p>The duty of loyalty requires placing the client&#x27;s interests above the CFP professional&#x27;s own interests and the interests of the firm. The duty of care requires providing advice with competence and thoroughness appropriate to the situation. The duty to follow client instructions requires the CFP professional to comply with reasonable client directives. These three duties form the foundation of the fiduciary relationship and are tested extensively on the exam.</p>
+<p>Material conflicts of interest must be disclosed to the client in writing before or at the time of the engagement. Conflicts include compensation arrangements (commissions, referral fees, revenue sharing), proprietary products, affiliations with other financial services firms, and any financial interest the CFP professional has in the recommended products or services. The CFP professional must manage conflicts so they do not compromise the ability to act in the client&#x27;s best interest. If a conflict cannot be managed, the CFP professional must avoid the conflict entirely.</p>
+<h3>1.2 The Financial Planning Process</h3>
+<p>The CFP Board defines financial planning as a collaborative process that helps maximize a client&#x27;s potential for meeting life goals through Financial Advice that integrates relevant elements of the client&#x27;s personal and financial circumstances. The seven-step process is: (1) Understanding the client&#x27;s personal and financial circumstances, (2) Identifying and selecting goals, (3) Analyzing the client&#x27;s current course of action and potential alternative courses, (4) Developing the financial planning recommendation(s), (5) Presenting the financial planning recommendation(s), (6) Implementing the financial planning recommendation(s), and (7) Monitoring progress and updating.</p>
+<p>Step 1 requires gathering both quantitative data (income, expenses, assets, liabilities, insurance coverage, tax returns, employee benefits, estate documents) and qualitative data (values, attitudes toward risk, family dynamics, health concerns, charitable interests, legacy goals). The scope of the engagement must be defined in writing, including the services to be provided, the compensation arrangement, the responsibilities of each party, and the duration of the engagement.</p>
+<p>Steps 3-5 represent the analytical core of financial planning. The CFP professional must analyze the client&#x27;s current financial position, identify gaps and opportunities, evaluate alternative strategies, and develop recommendations that are specific, actionable, and prioritized. Recommendations must be presented in a way the client can understand, with clear explanations of the rationale, expected outcomes, costs, risks, and trade-offs. The presentation should address how recommendations in one area affect other areas of the plan.</p>
+<p>Steps 6-7 ensure that the plan is implemented and monitored. Implementation may involve coordinating with other professionals (attorneys, CPAs, insurance agents) and executing specific transactions (opening accounts, purchasing insurance, updating estate documents). Monitoring requires regular reviews (at least annually) and updates triggered by life events (marriage, divorce, birth, death, job change, inheritance, health change). The financial plan is a living document, not a one-time deliverable.</p>
+<h3>1.3 Regulatory Framework</h3>
+<p>CFP professionals operate within a multi-layered regulatory framework. At the federal level, the SEC regulates investment advisers (Investment Advisers Act of 1940), broker-dealers (Securities Exchange Act of 1934), and securities offerings (Securities Act of 1933). FINRA regulates broker-dealers and their registered representatives. At the state level, state securities administrators regulate investment advisers and broker-dealers under the Uniform Securities Act. State insurance departments regulate insurance producers. The CFP Board provides an additional layer of professional regulation through its Standards of Conduct and disciplinary process.</p>
+<p>The Investment Advisers Act of 1940 requires investment advisers to register with the SEC (if AUM exceeds $100 million) or the state (if AUM is below $100 million). Form ADV is the registration document, with Part 2A (the brochure) describing services, fees, strategies, and conflicts. The Securities Exchange Act of 1934 requires broker-dealers to register with the SEC and join FINRA. Regulation Best Interest (Reg BI) requires broker-dealers to act in the customer&#x27;s best interest at the time of recommendation, but this is a lower standard than the CFP Board&#x27;s fiduciary duty.</p>
+<h3>2.1 Personal Financial Statements</h3>
+<p>The personal balance sheet (statement of financial position) lists all assets, liabilities, and net worth at a specific point in time. Assets are categorized as monetary (cash, checking, savings, money market), investment (stocks, bonds, mutual funds, retirement accounts at current value), and personal use (home at FMV, vehicles, personal property). Liabilities are current (due within 12 months: credit cards, current portion of loans) and long-term (mortgage, student loans, auto loans). Net worth = Total Assets - Total Liabilities.</p>
+<p>The personal income statement (cash flow statement) tracks income and expenses over a period. Gross income minus payroll taxes and deductions equals net income. Net income minus fixed expenses (mortgage, insurance, loan payments) and variable expenses (food, entertainment, clothing) equals discretionary income (savings capacity). The savings rate (savings / gross income) is a key metric — target 10-20%. A negative cash flow indicates the client is spending more than earning and accumulating debt.</p>
+<p>Key financial ratios for the CFP exam: Emergency fund ratio (liquid assets / monthly expenses, target 3-6 months). Savings ratio (savings / gross income, target 10-20%). Debt-to-income ratio (total debt payments / gross income, target below 36%). Housing ratio (housing costs / gross income, target below 28%). Current ratio (liquid assets / current liabilities, target above 1.0). These ratios provide a quick diagnostic of the client&#x27;s financial health and help identify areas that need attention.</p>
+<h3>2.2 Time Value of Money</h3>
+<p>Time value of money (TVM) calculations are foundational to the CFP exam. The five TVM variables are: N (number of periods), I/Y (interest rate per period), PV (present value), PMT (payment per period), and FV (future value). Given any four variables, you can solve for the fifth. The CFP exam requires proficiency with a financial calculator (HP 10bII+ or TI BAII Plus). Key applications include: calculating the future value of savings, determining the present value of a future obligation, computing loan payments, and determining the rate of return on an investment.</p>
+<p>Annuity calculations are critical. An ordinary annuity has payments at the end of each period (most common: loan payments, retirement withdrawals). An annuity due has payments at the beginning of each period (lease payments, insurance premiums). The annuity due is worth more because each payment earns one additional period of interest. On the HP 10bII+, set to BEG mode for annuity due calculations. Serial payments (payments that grow at a constant rate, such as inflation-adjusted retirement withdrawals) require the real rate of return: real rate = [(1 + nominal) / (1 + inflation)] - 1.</p>
+<p>The rule of 72 provides a quick estimate of doubling time: Years to Double = 72 / Rate of Return. At 8%, money doubles in approximately 9 years. At 6%, approximately 12 years. The rule of 72 also works in reverse: to double money in 10 years, you need approximately 72/10 = 7.2% return. For more precise calculations, always use the TVM functions on your financial calculator.</p>
+<h3>2.3 Economic Concepts</h3>
+<p>The CFP exam tests fundamental economic concepts that affect financial planning. The business cycle consists of expansion (rising GDP, falling unemployment), peak, contraction (falling GDP, rising unemployment), and trough. Fiscal policy (government spending and taxation) and monetary policy (Federal Reserve actions affecting money supply and interest rates) influence the economic environment.</p>
+<p>The Federal Reserve&#x27;s primary tools are the federal funds rate target (the rate banks charge each other for overnight loans), open market operations (buying and selling Treasury securities to expand or contract the money supply), the discount rate (the rate the Fed charges banks for direct loans), and reserve requirements. When the Fed lowers rates (expansionary policy), borrowing becomes cheaper, stimulating growth but potentially increasing inflation. When the Fed raises rates (contractionary policy), borrowing becomes more expensive, slowing growth but controlling inflation.</p>
+<p>Inflation erodes purchasing power: the real rate of return = nominal return - inflation rate (approximation) or (1 + nominal) / (1 + inflation) - 1 (exact). The Consumer Price Index (CPI) is the primary measure of inflation. The yield curve plots Treasury yields across maturities. A normal (upward-sloping) curve indicates expectations of economic growth. An inverted curve has historically preceded recessions. The term spread (10-year minus 2-year Treasury yield) is a closely watched recession indicator.</p>
+<h3>2.4 Behavioral Finance</h3>
+<p>Behavioral finance concepts are increasingly tested on the CFP exam. Loss aversion means clients feel losses approximately twice as intensely as equivalent gains, leading to risk-averse behavior when facing gains and risk-seeking behavior when facing losses. Anchoring causes clients to fixate on irrelevant reference points (such as the purchase price of a stock). Confirmation bias leads clients to seek information that confirms existing beliefs while ignoring contradictory evidence.</p>
+<p>Recency bias causes clients to overweight recent events in their decision-making (e.g., avoiding stocks after a market crash). Mental accounting leads clients to treat money differently based on its source or intended use, even though money is fungible (e.g., treating a tax refund as &#x27;found money&#x27; and spending it frivolously). Overconfidence bias causes investors to overestimate their ability to pick stocks or time the market. Herding behavior causes investors to follow the crowd rather than conducting independent analysis.</p>
+<h3>3.1 Education Funding Vehicles</h3>
+<p>The 529 Qualified Tuition Plan is the primary education savings vehicle. Contributions are made with after-tax dollars (no federal deduction, but many states offer a state income tax deduction). Growth is tax-free, and withdrawals for qualified education expenses (tuition, fees, books, room and board, computers, up to $10,000/year for K-12 tuition) are tax-free. For 2026, the annual gift tax exclusion allows contributions of $19,000 per beneficiary ($38,000 for married couples) without gift tax implications.</p>
+<p>The 5-year gift tax averaging provision allows a lump-sum contribution of up to $95,000 ($190,000 for couples) without using any lifetime exemption, though no additional gifts can be made to that beneficiary during the 5-year period. If the donor dies during the 5-year period, a pro-rata portion of the contribution is included in the donor&#x27;s estate. The beneficiary can be changed to another family member at any time without tax consequences.</p>
+<p>Coverdell Education Savings Accounts (ESAs) allow $2,000 annual contributions per beneficiary with income limits ($110,000 MAGI for single filers, $220,000 for joint). Growth and withdrawals for qualified education expenses at any level (K-12 through graduate school) are tax-free. Coverdell ESAs offer more investment flexibility than 529 plans (individual stocks, bonds, ETFs) but have much lower contribution limits. The SECURE 2.0 Act provision allowing 529-to-Roth IRA rollovers (up to $35,000 lifetime, subject to annual Roth contribution limits, 529 must have been open 15+ years) provides an important safety valve for unused 529 funds.</p>
+<h3>3.2 Financial Aid and Tax Credits</h3>
+<p>The Free Application for Federal Student Aid (FAFSA) determines eligibility for federal financial aid. The Student Aid Index (SAI, formerly EFC) considers parent income, parent assets, student income, and student assets. Parent assets are assessed at up to 5.64%, while student assets are assessed at 20%. This means $10,000 in a student&#x27;s name reduces aid by $2,000, while $10,000 in a parent&#x27;s name reduces aid by only $564. Assets in a 529 plan owned by the parent are treated as parent assets (5.64% assessment). Assets in a 529 owned by a grandparent are not reported on the FAFSA (as of the 2024-25 FAFSA simplification).</p>
+<p>The American Opportunity Tax Credit (AOTC) provides up to $2,500 per student for the first four years of post-secondary education (100% of first $2,000 + 25% of next $2,000 in qualified expenses). The AOTC is 40% refundable (up to $1,000). Income phase-outs: $80,000-$90,000 (single), $160,000-$180,000 (joint). The Lifetime Learning Credit provides up to $2,000 per tax return (20% of up to $10,000 in qualified expenses) with no limit on the number of years it can be claimed. Income phase-outs: $80,000-$90,000 (single), $160,000-$180,000 (joint). You cannot claim both credits for the same student in the same year.</p>
+<p>Student loan interest is deductible up to $2,500 per year (above-the-line deduction, available even if you do not itemize). Income phase-outs: $75,000-$90,000 (single), $155,000-$185,000 (joint). The deduction is per return, not per loan. Employer-provided educational assistance up to $5,250 per year is excluded from income. Tuition remission for employees of educational institutions is also excluded from income.</p>
+<h3>4.1 Risk Management Process</h3>
+<p>The risk management process involves four steps: identify risks, evaluate risks (frequency and severity), select risk management techniques, and implement and monitor. Risk management techniques include avoidance (eliminating the activity that creates the risk), reduction (taking steps to minimize the frequency or severity of loss), retention (self-insuring, appropriate for high-frequency/low-severity risks), and transfer (purchasing insurance, appropriate for low-frequency/high-severity risks).</p>
+<p>The risk management matrix guides technique selection. High-severity/low-frequency risks (house fire, disability, premature death, lawsuit) should be transferred through insurance. Low-severity/high-frequency risks (minor car scratches, small medical expenses) should be retained through deductibles and self-insurance. The key insight is that insurance should protect against catastrophic losses that would derail the financial plan, not against small, predictable expenses.</p>
+<h3>4.2 Life Insurance Needs Analysis</h3>
+<p>The human life value approach calculates the present value of the insured&#x27;s future earnings, adjusted for taxes, personal consumption, and inflation. The needs approach (more commonly tested) calculates the total financial obligations that would exist at the insured&#x27;s death: final expenses ($10,000-$25,000), outstanding debts (mortgage, student loans, auto loans), income replacement for dependents (present value of needed income stream), education funding for children, emergency fund for survivors, and any special needs.</p>
+<p>Existing resources are subtracted from total needs to determine the insurance gap: group life insurance, personal savings and investments, Social Security survivor benefits (present value), existing individual life insurance, and any other death benefits. The resulting gap is the amount of new life insurance needed. The needs approach is more precise than the human life value approach because it considers the specific financial obligations of the family rather than just the insured&#x27;s earning capacity.</p>
+<h3>4.3 Life Insurance Products</h3>
+<p>Term life insurance provides pure death protection for a specified period (10, 15, 20, or 30 years). It is the most cost-effective option for temporary needs: income replacement during working years, mortgage protection, and child dependency periods. Level term maintains a constant death benefit and premium. Decreasing term has a declining death benefit (used for mortgage protection). Annual renewable term (ART) renews annually with increasing premiums. Convertible term allows conversion to permanent insurance without evidence of insurability.</p>
+<p>Whole life (ordinary life) provides permanent coverage with guaranteed cash value, guaranteed death benefit, and level premiums. Cash value grows at a guaranteed minimum rate and can be accessed through policy loans (which accrue interest and reduce the death benefit if not repaid) or partial surrenders. Participating whole life policies pay dividends that can be taken in cash, used to reduce premiums, left to accumulate at interest, or used to purchase paid-up additions.</p>
+<p>Universal life (UL) offers flexible premiums and an adjustable death benefit. Cash value earns interest based on current rates with a guaranteed minimum. Option A (level death benefit) includes cash value within the death benefit. Option B (increasing death benefit) adds cash value on top of the face amount. Variable life (VL) and variable universal life (VUL) allow cash value investment in subaccounts — they are securities requiring a Series 6 or Series 7 license. Indexed universal life (IUL) credits interest based on a market index with a floor (0-2%) and cap (8-12%).</p>
+<p>The Modified Endowment Contract (MEC) rules are critical for the CFP exam. A life insurance policy becomes a MEC if cumulative premiums exceed the 7-pay test (the level premium that would pay up the policy in 7 years). MECs lose favorable FIFO taxation: withdrawals and loans are taxed LIFO (earnings first) with a 10% penalty before age 59 1/2. The death benefit remains income-tax-free. Single-premium life insurance policies are always MECs.</p>
+<h3>4.4 Disability and Long-Term Care Insurance</h3>
+<p>Disability income insurance replaces a portion of income (typically 60-70%) when the insured cannot work. Own-occupation coverage pays if the insured cannot perform their specific occupation (a surgeon who cannot operate but could teach). Any-occupation coverage pays only if the insured cannot perform any occupation for which they are reasonably qualified. The elimination period (waiting period) is the time between disability onset and benefit commencement — 90 days is most common. Longer elimination periods reduce premiums significantly.</p>
+<p>Tax treatment of disability benefits depends on who paid the premiums: employer-paid premiums result in taxable benefits (the employer gets a deduction, the employee pays tax on benefits). Employee-paid (after-tax) premiums result in tax-free benefits. If the employer and employee share the premium cost, benefits are partially taxable in proportion to the employer&#x27;s share. This tax treatment is critical for determining the appropriate benefit amount — if benefits will be taxable, the client needs a higher gross benefit to achieve the same after-tax income replacement.</p>
+<p>Long-term care (LTC) insurance covers custodial care, assisted living, home health care, and skilled nursing facility care. Benefits are triggered when the insured cannot perform 2+ activities of daily living (ADLs: bathing, dressing, eating, toileting, transferring, continence) or has a cognitive impairment requiring substantial supervision. Tax-qualified LTC policies allow premium deductions as medical expenses (subject to age-based limits) and provide tax-free benefits up to a per-diem limit ($420/day in 2026). Partnership policies allow the insured to protect assets equal to the benefits received from Medicaid spend-down requirements.</p>
+<p>Hybrid life/LTC policies combine life insurance with long-term care benefits, addressing the &#x27;use it or lose it&#x27; concern with traditional LTC policies. If the insured needs LTC, the policy pays LTC benefits (accelerating or extending the death benefit). If the insured dies without needing LTC, the beneficiary receives the death benefit. These policies have become increasingly popular as standalone LTC premiums have risen significantly.</p>
+<h3>5.1 Investment Theory and Portfolio Management</h3>
+<p>Modern Portfolio Theory (MPT), developed by Harry Markowitz, demonstrates that diversification with imperfectly correlated assets can reduce portfolio risk without sacrificing expected return. The efficient frontier represents the set of portfolios offering the highest expected return for each level of risk. The Capital Market Line (CML) represents the risk-return trade-off for efficient portfolios combining the risk-free asset with the market portfolio. The Security Market Line (SML) represents the CAPM relationship between expected return and systematic risk (beta) for individual securities.</p>
+<p>The Capital Asset Pricing Model (CAPM) calculates the expected return of an asset: E(R) = Rf + beta(Rm - Rf), where Rf is the risk-free rate, beta is the asset&#x27;s systematic risk, and (Rm - Rf) is the market risk premium. Alpha measures the excess return above what CAPM predicts: positive alpha indicates outperformance (the manager added value), negative alpha indicates underperformance. Securities plotting above the SML have positive alpha (underpriced); securities below the SML have negative alpha (overpriced).</p>
+<p>Systematic risk (market risk, interest rate risk, inflation risk, exchange rate risk) cannot be diversified away and is measured by beta. A beta of 1.0 means the asset moves with the market. A beta of 1.5 means the asset is 50% more volatile than the market. A beta of 0.5 means the asset is 50% less volatile. Unsystematic risk (business risk, financial risk, default risk) can be eliminated through diversification. Total risk = systematic risk + unsystematic risk, measured by standard deviation.</p>
+<h3>5.2 Asset Classes and Securities</h3>
+<p>Equity securities represent ownership in a corporation. Common stock provides voting rights, dividend potential, and residual claim on assets. The dividend discount model (DDM) values a stock as the present value of expected future dividends: P = D1 / (r - g), where D1 is next year&#x27;s expected dividend, r is the required rate of return, and g is the constant growth rate. The P/E ratio is the most widely used relative valuation metric. Growth stocks have high P/E ratios and reinvest earnings; value stocks have low P/E ratios and pay higher dividends.</p>
+<p>Fixed-income securities represent a loan from the investor to the issuer. Bond prices and interest rates move inversely. Duration measures a bond&#x27;s sensitivity to interest rate changes: a duration of 7 means a 1% increase in rates causes approximately a 7% decrease in price. Modified duration adjusts Macaulay duration for the yield: Modified Duration = Macaulay Duration / (1 + y/n). Convexity measures the curvature of the price-yield relationship — positive convexity means the duration estimate understates price increases and overstates price decreases.</p>
+<p>Alternative investments include real estate (REITs, direct ownership, real estate limited partnerships), commodities (gold, oil, agricultural products), hedge funds (limited to accredited investors, use leverage, short selling, and derivatives), private equity (venture capital, leveraged buyouts), and structured products (collateralized debt obligations, mortgage-backed securities). These investments typically offer diversification benefits (low correlation with traditional assets) but carry higher fees, lower liquidity, and less regulatory oversight.</p>
+<p>Options provide leverage and risk management. A call option gives the buyer the right to buy at the strike price; a put gives the right to sell. Covered calls (owning the stock and selling calls) generate income but cap upside. Protective puts (owning the stock and buying puts) provide downside protection at the cost of the premium. Collars (covered call + protective put) limit both upside and downside. The CFP exam tests basic options strategies, not complex multi-leg positions.</p>
+<h3>5.3 Investment Policy and Asset Allocation</h3>
+<p>The Investment Policy Statement (IPS) documents the client&#x27;s return objectives, risk tolerance, time horizon, liquidity needs, tax situation, legal constraints, and unique circumstances. The IPS serves as the roadmap for all investment decisions and provides a benchmark for evaluating performance. It should be reviewed and updated at least annually or whenever the client&#x27;s circumstances change significantly.</p>
+<p>Strategic asset allocation establishes long-term target weights based on the client&#x27;s risk-return profile. Tactical asset allocation allows short-term deviations from strategic targets to capitalize on market opportunities. Core-satellite combines a passive core (index funds, 60-80% of portfolio) with active satellite positions (individual stocks, sector funds, alternative investments). Dollar-cost averaging invests a fixed amount at regular intervals, automatically buying more shares when prices are low and fewer when prices are high.</p>
+<p>Rebalancing returns the portfolio to target weights after market movements cause drift. Calendar rebalancing occurs at fixed intervals (quarterly, semi-annually, annually). Threshold rebalancing occurs when any asset class drifts beyond a specified tolerance band (typically +/- 5% from target). Tax-efficient rebalancing uses new contributions, dividend reinvestment, and tax-loss harvesting to minimize the tax impact of rebalancing trades. In taxable accounts, rebalancing by directing new money to underweight asset classes avoids triggering capital gains.</p>
+<h3>6.1 Income Tax Fundamentals</h3>
+<p>The federal income tax system uses a progressive rate structure with seven brackets for 2026. Under the OBBBA (signed July 4, 2025), the individual tax rates are permanently set at: 10%, 12%, 22%, 24%, 32%, 35%, and 37%. The standard deduction for 2026 is $15,000 (single), $30,000 (MFJ), $22,500 (HOH). Taxpayers choose the higher of the standard deduction or itemized deductions. The personal exemption remains eliminated (set to $0 through the OBBBA).</p>
+<p>The marginal tax rate is the rate applied to the last dollar of income. The effective (average) tax rate is total tax / total income. The marginal rate is critical for planning decisions because it determines the tax impact of additional income or deductions. For example, a $10,000 deduction for a taxpayer in the 32% bracket saves $3,200 in federal taxes, while the same deduction for a taxpayer in the 12% bracket saves only $1,200.</p>
+<p>Itemized deductions under the OBBBA include: state and local taxes (SALT, capped at $40,400 — doubled from the TCJA&#x27;s $10,000 cap), mortgage interest (on up to $750,000 of acquisition indebtedness), charitable contributions (cash up to 60% of AGI, appreciated property up to 30% of AGI), medical expenses exceeding 7.5% of AGI, and casualty and theft losses from federally declared disasters. The SALT cap increase to $40,400 is a significant planning change — many more taxpayers in high-tax states will now benefit from itemizing.</p>
+<p>Above-the-line deductions (adjustments to income) reduce AGI and are available regardless of whether the taxpayer itemizes. Key above-the-line deductions include: traditional IRA contributions (if eligible), student loan interest (up to $2,500), HSA contributions, self-employment tax (50%), self-employed health insurance premiums, and alimony payments (for agreements before 2019). AGI is important because many tax benefits phase out based on AGI or MAGI.</p>
+<h3>6.2 Capital Gains and Investment Taxation</h3>
+<p>Long-term capital gains (assets held more than 12 months) are taxed at preferential rates: 0% (taxable income up to $48,475 single / $96,950 MFJ), 15% (up to $533,400 single / $600,050 MFJ), and 20% (above those thresholds). Short-term capital gains (assets held 12 months or less) are taxed as ordinary income. The 3.8% Net Investment Income Tax (NIIT) applies to the lesser of net investment income or MAGI exceeding $200,000 (single) / $250,000 (MFJ). Net investment income includes interest, dividends, capital gains, rental income, and passive activity income.</p>
+<p>Capital losses offset capital gains dollar-for-dollar (short-term losses first offset short-term gains, then long-term gains; long-term losses first offset long-term gains, then short-term gains). Up to $3,000 of net capital losses can be deducted against ordinary income annually. Unused losses carry forward indefinitely. Tax-loss harvesting involves selling securities at a loss to offset gains, then reinvesting in similar (but not substantially identical) securities. The wash sale rule disallows the loss if substantially identical securities are purchased within 30 days before or after the sale.</p>
+<p>Qualified dividends are taxed at long-term capital gains rates (0%, 15%, or 20%). To qualify, the stock must be held for more than 60 days during the 121-day period beginning 60 days before the ex-dividend date. Non-qualified (ordinary) dividends are taxed as ordinary income. Interest from municipal bonds is generally exempt from federal income tax and may be exempt from state tax if issued in the taxpayer&#x27;s state of residence. The tax-equivalent yield = municipal yield / (1 - marginal tax rate).</p>
+<h3>6.3 Retirement Account Taxation</h3>
+<p>Traditional IRA and 401(k) contributions are made with pre-tax dollars (tax deduction at contribution), growth is tax-deferred, and withdrawals are taxed as ordinary income. Roth IRA and Roth 401(k) contributions are made with after-tax dollars (no deduction), growth is tax-free, and qualified withdrawals are tax-free. A qualified Roth distribution requires the account to be open for at least 5 years AND the owner to be age 59 1/2, disabled, deceased, or a first-time homebuyer (up to $10,000).</p>
+<p>The Roth conversion strategy involves converting traditional IRA assets to Roth, paying ordinary income tax on the conversion amount, and then enjoying tax-free growth and withdrawals. Roth conversions are most beneficial when: the taxpayer expects to be in a higher bracket in retirement, the conversion can be done in a low-income year, or the taxpayer has a long time horizon for tax-free growth. The conversion amount is added to ordinary income, so bracket management is essential — convert up to the top of the current bracket.</p>
+<p>Required Minimum Distributions (RMDs) begin at age 73 (SECURE 2.0 Act). RMDs apply to traditional IRAs, 401(k)s, 403(b)s, and other pre-tax retirement accounts. Roth IRAs do NOT have RMDs during the owner&#x27;s lifetime. The RMD is calculated by dividing the prior year-end account balance by the life expectancy factor from the IRS Uniform Lifetime Table. Failure to take the full RMD results in a 25% excise tax on the shortfall (reduced to 10% if corrected within 2 years).</p>
+<h3>6.4 Tax Planning Strategies</h3>
+<p>Asset location strategy places tax-inefficient investments (bonds generating ordinary income, REITs, actively traded funds) in tax-advantaged accounts and tax-efficient investments (index funds, growth stocks, municipal bonds) in taxable accounts. This maximizes after-tax returns by sheltering the highest-taxed income in tax-deferred or tax-free accounts.</p>
+<p>Charitable giving strategies include: direct cash gifts (deductible up to 60% of AGI), gifts of appreciated property (deductible at FMV, avoid capital gains, limited to 30% of AGI), donor-advised funds (immediate deduction, distribute to charities over time), qualified charitable distributions (QCDs) from IRAs for taxpayers age 70 1/2+ (up to $105,000 in 2026, satisfies RMD, excluded from income), and charitable remainder trusts (income stream to donor, remainder to charity, immediate deduction for PV of remainder).</p>
+<p>The Health Savings Account (HSA) offers triple tax benefits: tax-deductible contributions ($4,400 individual / $8,750 family for 2026, plus $1,000 catch-up for age 55+), tax-free growth, and tax-free withdrawals for qualified medical expenses. The HSA is the only account type that provides a deduction on the way in AND tax-free treatment on the way out. After age 65, HSA withdrawals for non-medical expenses are taxed as ordinary income (no penalty), making the HSA function like a traditional IRA. Strategy: pay current medical expenses out of pocket, let the HSA grow tax-free, and use it as a supplemental retirement account.</p>
+<h3>7.1 Employer-Sponsored Retirement Plans</h3>
+<p>The 401(k) plan is the most common employer-sponsored defined contribution plan. For 2026, the employee elective deferral limit is $24,500 ($32,500 for age 50+, with an additional super catch-up of $11,250 for ages 60-63 under SECURE 2.0, bringing the total to $34,750). The total annual addition limit (employee + employer contributions) is $72,000. Employer matching contributions are subject to vesting schedules: cliff vesting (100% after 3 years) or graded vesting (20% per year over 2-6 years).</p>
+<p>Safe harbor 401(k) plans provide immediate vesting and satisfy nondiscrimination testing requirements. The employer must either match 100% of the first 3% plus 50% of the next 2% of compensation, or make a 3% non-elective contribution to all eligible employees. SECURE 2.0 added a starter 401(k) option for small employers with no existing plan, with a $6,000 employee deferral limit.</p>
+<p>Defined benefit (DB) plans promise a specific retirement benefit based on a formula (typically years of service x percentage x final average salary). The employer bears the investment risk and is responsible for funding the plan adequately. The maximum annual benefit from a DB plan is $280,000 (2026). Cash balance plans are a hybrid: legally defined benefit plans but function like defined contribution plans, with each participant having a hypothetical account balance that grows by a guaranteed crediting rate.</p>
+<h3>7.2 Individual Retirement Accounts</h3>
+<p>Traditional IRA contributions are deductible if the taxpayer (and spouse) are not covered by an employer plan, or if covered, MAGI is below the phase-out range ($79,000-$89,000 single, $126,000-$146,000 MFJ for 2026). The annual contribution limit is $7,500 ($8,600 for age 50+). Non-deductible traditional IRA contributions are permitted regardless of income but provide no current tax benefit — only tax-deferred growth.</p>
+<p>Roth IRA contributions are not deductible but offer tax-free growth and qualified withdrawals. Roth IRA income limits for 2026: $155,000-$170,000 (single), $236,000-$246,000 (MFJ). The backdoor Roth strategy involves making a non-deductible traditional IRA contribution and immediately converting to Roth, effectively bypassing the income limits. The pro-rata rule requires that the conversion be taxed proportionally based on the ratio of pre-tax to after-tax IRA balances across ALL traditional IRAs (including SEP and SIMPLE IRAs).</p>
+<p>The Roth IRA ordering rules for distributions: (1) regular contributions (always tax-free and penalty-free), (2) conversion amounts (tax-free but subject to the 5-year rule for penalty-free treatment before age 59 1/2), (3) earnings (tax-free only if the distribution is qualified). Each conversion has its own 5-year clock for the penalty exception. After age 59 1/2, all distributions from a Roth IRA that has been open for 5+ years are tax-free and penalty-free.</p>
+<h3>7.3 Social Security</h3>
+<p>Social Security retirement benefits are based on the highest 35 years of indexed earnings. Full Retirement Age (FRA) is 67 for those born in 1960 or later. Benefits can be claimed as early as age 62 (with a permanent reduction of approximately 6.67% per year for the first 3 years before FRA and 5% per year for additional years) or delayed until age 70 (with an 8% per year increase for each year of delay beyond FRA). The maximum benefit at FRA for 2026 is approximately $4,018/month.</p>
+<p>Spousal benefits equal up to 50% of the higher-earning spouse&#x27;s FRA benefit. The spouse must be at least 62 to claim spousal benefits (or any age if caring for a child under 16). Survivor benefits equal up to 100% of the deceased spouse&#x27;s benefit (including any delayed retirement credits). A surviving spouse can claim survivor benefits as early as age 60 (50 if disabled). Divorced spouses are eligible for spousal or survivor benefits if the marriage lasted at least 10 years and the ex-spouse has not remarried (for spousal benefits).</p>
+<p>Social Security benefits are subject to federal income tax based on provisional income (AGI + tax-exempt interest + 50% of SS benefits): up to 50% of benefits are taxable if provisional income exceeds $25,000 (single) / $32,000 (MFJ), and up to 85% are taxable if provisional income exceeds $34,000 (single) / $44,000 (MFJ). These thresholds are NOT indexed for inflation, so more retirees become subject to taxation each year.</p>
+<h3>7.4 Retirement Income Distribution Planning</h3>
+<p>The 4% rule (Bengen rule) suggests withdrawing 4% of the portfolio in the first year of retirement, adjusted annually for inflation. This historically sustained a 30-year retirement with a 95%+ success rate using a 50/50 stock/bond portfolio. However, lower expected future returns may require a more conservative withdrawal rate (3-3.5%). The guardrails approach adjusts withdrawals based on portfolio performance: increase withdrawals when the portfolio grows significantly, decrease when it declines.</p>
+<p>The sequence of returns risk is the danger that poor market returns early in retirement can permanently impair the portfolio, even if average returns over the full period are adequate. A 30% decline in year 1 of retirement is far more damaging than the same decline in year 20. Strategies to mitigate sequence risk include: maintaining 1-2 years of expenses in cash/short-term bonds (the bucket strategy), using a flexible withdrawal strategy, delaying Social Security to reduce early portfolio withdrawals, and considering a partial annuitization of the portfolio.</p>
+<p>Tax-efficient withdrawal sequencing generally follows: (1) RMDs from tax-deferred accounts (required), (2) taxable account withdrawals (to fill lower tax brackets), (3) tax-deferred account withdrawals (to fill remaining bracket space), (4) Roth account withdrawals (last, to maximize tax-free growth). However, strategic Roth conversions during low-income years can improve long-term tax efficiency. The goal is to minimize total lifetime taxes, not just current-year taxes.</p>
+<h3>8.1 Estate Planning Documents and Processes</h3>
+<p>Essential estate planning documents include: a will (directs asset distribution, names executor, names guardians for minor children), a revocable living trust (avoids probate, manages assets during incapacity, provides privacy), a durable power of attorney (authorizes an agent to handle financial matters if the principal becomes incapacitated), a healthcare proxy (designates a healthcare decision-maker), a living will (specifies end-of-life treatment preferences), and a HIPAA authorization (allows designated individuals to access medical information).</p>
+<p>Probate is the court-supervised process of validating a will, paying debts and taxes, and distributing assets. Probate is public, potentially expensive (2-7% of estate value), and time-consuming (6-18 months). Assets that bypass probate include: jointly held property with right of survivorship, assets with beneficiary designations (retirement accounts, life insurance, TOD/POD accounts), assets held in trust, and community property with right of survivorship. A pour-over will directs any assets not already in the trust to be transferred to the trust at death.</p>
+<p>Property ownership forms determine how assets transfer at death. Joint tenancy with right of survivorship (JTWROS) automatically transfers to the surviving owner, bypassing probate. Tenancy in common (TIC) passes through the deceased owner&#x27;s estate. Community property (9 states) receives a full step-up in basis at the first spouse&#x27;s death (both halves), unlike JTWROS where only the deceased owner&#x27;s half receives a step-up. Tenancy by the entirety (available to married couples in some states) provides additional creditor protection.</p>
+<h3>8.2 Gift and Estate Taxation (2026 OBBBA)</h3>
+<p>The OBBBA permanently set the federal estate and gift tax exemption at $15 million per person ($30 million for married couples using portability), indexed for inflation beginning in 2027. The top estate and gift tax rate is 40%. The annual gift tax exclusion is $19,000 per donee ($38,000 for married couples using gift-splitting) for 2026. Gifts within the annual exclusion do not reduce the lifetime exemption and do not require a gift tax return (unless gift-splitting is elected, which requires Form 709).</p>
+<p>The unlimited marital deduction allows unlimited transfers between U.S. citizen spouses without gift or estate tax. For non-citizen spouses, the annual exclusion is $185,000 (2026), and a Qualified Domestic Trust (QDOT) is required to qualify for the marital deduction at death. Portability allows a surviving spouse to use the deceased spouse&#x27;s unused exemption amount (DSUE). To elect portability, the executor must file a timely estate tax return (Form 706) even if no tax is due.</p>
+<p>The step-up in basis at death resets the cost basis of inherited assets to fair market value at the date of death, permanently eliminating unrealized capital gains. This is one of the most significant tax benefits in the entire tax code. For example, if a parent purchased stock for $50,000 and it is worth $500,000 at death, the heir&#x27;s basis is $500,000 — the $450,000 in unrealized gains is never taxed. The Generation-Skipping Transfer (GST) tax applies to transfers that skip a generation at a flat 40% rate with a $15 million exemption (2026).</p>
+<h3>8.3 Trusts and Advanced Techniques</h3>
+<p>Revocable living trusts avoid probate but do NOT remove assets from the taxable estate (the grantor retains control). Irrevocable trusts remove assets from the taxable estate because the grantor relinquishes control. The transfer to an irrevocable trust is a completed gift, potentially subject to gift tax. Crummey withdrawal powers convert future interest gifts to present interest gifts, qualifying them for the annual gift tax exclusion.</p>
+<p>An Irrevocable Life Insurance Trust (ILIT) holds life insurance outside the estate, but the 3-year lookback rule includes transferred policies if the insured dies within 3 years of the transfer. Best practice: have the ILIT purchase a new policy rather than transferring an existing policy. A Grantor Retained Annuity Trust (GRAT) allows transfer of appreciating assets at reduced gift tax cost: if assets appreciate faster than the Section 7520 rate, the excess passes to beneficiaries gift-tax-free. A zeroed-out GRAT sets the annuity equal to the full value of contributed assets, resulting in approximately zero gift tax.</p>
+<p>A Charitable Remainder Trust (CRT) provides income to the donor for life or a term of years, with the remainder going to charity. The donor receives an immediate income tax deduction for the present value of the charitable remainder interest. CRTs are tax-exempt entities — they pay no tax on gains from selling appreciated assets, making them excellent vehicles for diversifying concentrated stock positions. A Charitable Lead Trust (CLT) provides income to charity with the remainder going to family members, reducing gift or estate tax on the remainder interest.</p>
+<p>A Qualified Personal Residence Trust (QPRT) transfers a home to beneficiaries at a discounted gift tax value, with the grantor retaining the right to live in the home for a specified term. If the grantor survives the term, the home passes to beneficiaries at the discounted value. If the grantor dies during the term, the home is included in the estate (the strategy fails, but the estate is no worse off than if no QPRT had been created). QPRTs are most effective when interest rates are high (increasing the discount) and the grantor is relatively young.</p>
+<h3>9.1 Integrating the Plan</h3>
+<p>Domain 9 tests your ability to synthesize all other domains into a comprehensive, coherent financial plan. The CFP exam presents complex case studies with multiple planning issues that span several domains. You must identify the most critical issues, prioritize recommendations, and recognize how decisions in one area affect other areas. For example, a Roth conversion (Domain 6: Tax) increases current-year taxes but reduces future RMDs (Domain 7: Retirement), reduces the taxable estate (Domain 8: Estate), and may affect financial aid eligibility (Domain 3: Education).</p>
+<p>The financial plan presentation must be clear, actionable, and prioritized. Recommendations should be organized by urgency: immediate actions (close insurance gaps, update beneficiary designations, establish emergency fund), short-term actions (implement investment strategy, begin Roth conversion plan, establish 529 plans), and long-term actions (monitor progress, adjust allocation as retirement approaches, review estate plan after life events). Each recommendation should include the rationale, expected outcome, cost or trade-off, and implementation steps.</p>
+<h3>9.2 Comprehensive Case Study Approach</h3>
+<p>The case study approach requires systematic analysis: first gather all relevant data, then identify issues in each planning domain, then develop integrated recommendations that address multiple issues simultaneously. For example, establishing an ILIT addresses both the life insurance gap (Domain 4) and the estate planning gap (Domain 8). A Roth conversion strategy addresses both tax planning (Domain 6) and retirement planning (Domain 7). The best answers on the CFP exam recognize these cross-domain connections.</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-3', 3)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(3)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-4" class="section" style="display:none;">
+<h2>Practice Exam: CFP Comprehensive</h2>
+<h3>1. A CFP professional&#x27;s fiduciary duty applies:</h3>
+<p>A) Only when providing investment advice
+B) Only at the time of recommendation
+C) At all times when providing Financial Advice
+D) Only when compensation is fee-based</p>
+<h3>2. A client in the 32% tax bracket is considering a $10,000 deductible traditional IRA contribution vs. a Roth IRA contribution. If the client expects to be in the 24% bracket in retirement, which is more beneficial?</h3>
+<p>A) Traditional IRA (deduction worth more now)
+B) Roth IRA (tax-free withdrawals)
+C) They are equivalent
+D) Cannot determine without more information</p>
+<h3>3. The SECURE 2.0 Act allows 529-to-Roth IRA rollovers up to what lifetime limit?</h3>
+<p>A) $10,000
+B) $25,000
+C) $35,000
+D) $50,000</p>
+<h3>4. A bond has a modified duration of 7.5. If interest rates increase by 0.50%, the approximate price change is:</h3>
+<p>A) -3.75%
+B) -7.50%
+C) -15.00%
+D) +3.75%</p>
+<h3>5. The 2026 OBBBA estate tax exemption per person is:</h3>
+<p>A) $12,920,000
+B) $13,610,000
+C) $15,000,000
+D) $25,000,000</p>
+<h3>6. A client&#x27;s portfolio has a Sharpe ratio of 0.85 and a Treynor ratio of 12.5. Which measure is more appropriate if the portfolio is the client&#x27;s ONLY investment?</h3>
+<p>A) Sharpe ratio (uses total risk)
+B) Treynor ratio (uses systematic risk)
+C) Jensen&#x27;s alpha
+D) Information ratio</p>
+<h3>7. Social Security benefits can be delayed beyond FRA until age 70, earning what annual increase?</h3>
+<p>A) 4%
+B) 6%
+C) 8%
+D) 10%</p>
+<h3>8. Which trust removes assets from the taxable estate while providing income to charity?</h3>
+<p>A) Charitable Remainder Trust
+B) Charitable Lead Trust
+C) Revocable Living Trust
+D) Grantor Retained Annuity Trust</p>
+<h3>9. The wash sale rule disallows a loss if substantially identical securities are purchased within:</h3>
+<p>A) 15 days before or after the sale
+B) 30 days before or after the sale
+C) 60 days before or after the sale
+D) 90 days before or after the sale</p>
+<h3>10. A 401(k) participant age 61 in 2026 can contribute up to:</h3>
+<p>A) $24,500
+B) $32,500
+C) $34,750
+D) $72,000</p>
+<h3>11. The annual gift tax exclusion for 2026 is:</h3>
+<p>A) $17,000
+B) $18,000
+C) $19,000
+D) $20,000</p>
+<h3>12. Which of the following is NOT a qualified expense for a 529 plan withdrawal?</h3>
+<p>A) College tuition
+B) Room and board
+C) Transportation to campus
+D) Computer equipment</p>
+<h3>13. The HSA contribution limit for a family in 2026 is:</h3>
+<p>A) $4,400
+B) $8,750
+C) $9,550 (with catch-up)
+D) Both B and C depending on age</p>
+<h3>14. A life insurance policy becomes a Modified Endowment Contract (MEC) when:</h3>
+<p>A) The insured reaches age 65
+B) Cumulative premiums exceed the 7-pay test
+C) The policy has been in force for 7 years
+D) The cash value exceeds the death benefit</p>
+<h3>15. The pro-rata rule for Roth conversions considers:</h3>
+<p>A) Only the IRA being converted
+B) All traditional IRAs, SEP IRAs, and SIMPLE IRAs
+C) Only IRAs at the same custodian
+D) Only non-deductible contributions</p>
+<p>Understanding the different types of bond yields is essential for the CFP exam. The coupon rate (nominal yield) is the annual coupon payment divided by the par value. The current yield is the annual coupon payment divided by the current market price. The yield to maturity (YTM) is the internal rate of return that equates the present value of all future cash flows (coupons and par value) to the current market price. YTM assumes all coupons are reinvested at the YTM rate, which is a key assumption that may not hold in practice. The yield to call (YTC) is calculated similarly but uses the call price and call date instead of par value and maturity date.</p>
+<p>When a bond is trading at a premium (price above par), the relationship is: coupon rate &gt; current yield &gt; YTM &gt; YTC. When trading at a discount (price below par): coupon rate &lt; current yield &lt; YTM &lt; YTC. When trading at par: coupon rate = current yield = YTM. This hierarchy is a frequently tested concept. Remember: for premium bonds, the investor is paying more than par, so the effective yield is lower than the coupon rate. For discount bonds, the investor pays less than par, so the effective yield is higher.</p>
+<p>The holding period return (HPR) measures the total return over a specific period: HPR = (Ending Value - Beginning Value + Income) / Beginning Value. The time-weighted return (TWR) eliminates the impact of cash flows and measures the manager&#x27;s investment skill. It is calculated by linking sub-period returns: TWR = [(1 + R1) x (1 + R2) x ... x (1 + Rn)] - 1. The dollar-weighted return (DWR, or internal rate of return) accounts for the timing and size of cash flows and measures the investor&#x27;s actual experience.</p>
+<p>The TWR is the appropriate measure for evaluating investment managers because it isolates investment decisions from cash flow timing (which the manager typically does not control). The DWR is the appropriate measure for evaluating the investor&#x27;s actual experience because it reflects the impact of their contribution and withdrawal timing. If an investor adds money before a period of poor performance, their DWR will be lower than the TWR.</p>
+<p>The information ratio measures the consistency of a manager&#x27;s outperformance relative to a benchmark: IR = (Portfolio Return - Benchmark Return) / Tracking Error. A higher information ratio indicates more consistent alpha generation. An IR above 0.5 is considered good; above 1.0 is exceptional. Tracking error is the standard deviation of the difference between portfolio and benchmark returns — it measures how closely the portfolio follows the benchmark.</p>
+<p>R-squared (coefficient of determination) measures the percentage of a portfolio&#x27;s returns explained by the benchmark. An R-squared of 0.95 means 95% of the portfolio&#x27;s return variation is explained by the benchmark. High R-squared (&gt;0.70) indicates the portfolio is well-diversified relative to the benchmark, and the Treynor ratio and Jensen&#x27;s alpha are appropriate measures. Low R-squared indicates significant unsystematic risk, and the Sharpe ratio is more appropriate.</p>
+<p>The Alternative Minimum Tax (AMT) is a parallel tax system designed to ensure high-income taxpayers pay a minimum level of tax. AMT taxable income (AMTI) starts with regular taxable income and adds back certain deductions and preferences: state and local tax deductions, miscellaneous itemized deductions, private activity bond interest, incentive stock option (ISO) bargain element at exercise, and accelerated depreciation. The AMT exemption for 2026 is $88,100 (single) / $137,000 (MFJ), phasing out at $578,150 (single) / $1,156,300 (MFJ). AMT rates are 26% on the first $232,600 of AMTI above the exemption, and 28% on the excess.</p>
+<p>The OBBBA&#x27;s increase of the SALT deduction cap to $40,400 reduces AMT exposure for many taxpayers who were previously triggered by the $10,000 SALT cap. However, the AMT remains relevant for taxpayers who exercise incentive stock options (ISOs), have significant private activity bond income, or have large state tax deductions. The AMT credit allows taxpayers who paid AMT in prior years due to timing differences (such as ISO exercises) to recover the AMT paid as a credit against regular tax in future years.</p>
+<p>Net Unrealized Appreciation (NUA) is a powerful tax strategy for employees with highly appreciated employer stock in their 401(k). When the employee takes a lump-sum distribution of the entire 401(k) balance, the employer stock can be distributed in-kind to a taxable brokerage account. The cost basis of the stock is taxed as ordinary income at distribution, but the NUA (appreciation from cost basis to current value) is taxed at long-term capital gains rates when the stock is eventually sold, regardless of the holding period.</p>
+<p>The NUA strategy is most beneficial when: (1) the cost basis is low relative to the current value (large NUA), (2) the employee is in a high tax bracket (maximizing the spread between ordinary income and LTCG rates), (3) the employee plans to sell the stock relatively soon (capturing the LTCG rate benefit), and (4) the employee does not need the funds for immediate living expenses (allowing the stock to be held in the taxable account). The alternative — rolling the stock into an IRA — would result in all future withdrawals being taxed as ordinary income.</p>
+<p>Qualified Opportunity Zones (QOZs) provide tax incentives for investing capital gains in designated economically distressed communities. The investor must invest the capital gain amount into a Qualified Opportunity Fund (QOF) within 180 days of the sale. Benefits: (1) deferral of the original capital gain until December 31, 2026, or when the QOF investment is sold, whichever is earlier, (2) if the QOF investment is held for 10+ years, any appreciation in the QOF investment is permanently excluded from income (the basis is stepped up to FMV at sale). The original deferral benefit (basis step-up of 10% at 5 years and 15% at 7 years) has expired for new investments, but the 10-year exclusion of appreciation remains available.</p>
+<p>The SECURE 2.0 Act of 2022 made significant changes to retirement planning that are heavily tested on the CFP exam. Key provisions include: RMD age increased to 73 (2023) and will increase to 75 (2033). Roth 401(k) contributions no longer subject to RMDs during the owner&#x27;s lifetime (effective 2024). Employer matching contributions can now be made to Roth accounts (employee&#x27;s choice). The catch-up contribution limit for ages 60-63 is increased to $11,250 (the &#x27;super catch-up&#x27;). Student loan payments can be treated as elective deferrals for purposes of employer matching. 529-to-Roth IRA rollovers allowed (up to $35,000 lifetime, 529 must be open 15+ years).</p>
+<p>Additional SECURE 2.0 provisions: emergency savings accounts linked to retirement plans (up to $2,500, Roth treatment). Penalty-free withdrawals for domestic abuse victims (up to $10,000 or 50% of account, whichever is less). Penalty-free withdrawals for terminal illness. Automatic enrollment required for new 401(k) and 403(b) plans (3-10% initial deferral, 1% annual escalation up to 10-15%). The RMD penalty reduced from 50% to 25% (further reduced to 10% if corrected within 2 years). Part-time workers eligible for 401(k) after 2 consecutive years of 500+ hours (reduced from 3 years).</p>
+<p>The 10-year rule (SECURE Act) requires most non-spouse beneficiaries of inherited retirement accounts to fully distribute the account within 10 years of the original owner&#x27;s death. This replaced the stretch IRA for most beneficiaries. Eligible designated beneficiaries (EDBs) who can still use the stretch: surviving spouses, minor children of the deceased (until age 21, then 10-year rule applies), disabled or chronically ill individuals, and beneficiaries not more than 10 years younger than the deceased. Non-designated beneficiaries (estates, charities, non-qualifying trusts) must distribute within 5 years.</p>
+<p>The IRS has clarified that if the original owner died after their required beginning date (age 73), non-spouse beneficiaries subject to the 10-year rule must also take annual RMDs during the 10-year period (based on the beneficiary&#x27;s life expectancy), with the remaining balance distributed by the end of year 10. If the owner died before the required beginning date, no annual RMDs are required — only the 10-year deadline applies. This distinction is critical for planning inherited IRA distributions.</p>
+<p>Roth IRA inheritance rules: the 10-year rule applies to non-spouse beneficiaries, but because Roth distributions are tax-free, there is no income tax impact. The strategy is to let the inherited Roth grow tax-free for the full 10 years and take the entire distribution in year 10. Surviving spouses can roll an inherited Roth IRA into their own Roth IRA, eliminating RMDs entirely and allowing continued tax-free growth.</p>
+<p>Annuities provide guaranteed income for life, addressing longevity risk (the risk of outliving one&#x27;s assets). A Single Premium Immediate Annuity (SPIA) converts a lump sum into an immediate income stream. A Deferred Income Annuity (DIA) or Qualified Longevity Annuity Contract (QLAC) begins payments at a future date (typically age 80-85), providing longevity insurance at a lower cost than an immediate annuity. QLACs can be purchased within IRAs and 401(k)s, up to $200,000 (SECURE 2.0), and are excluded from the RMD calculation until payments begin.</p>
+<p>Variable annuities offer tax-deferred growth with investment subaccounts but carry higher fees (mortality and expense charges, administrative fees, subaccount management fees, and potential surrender charges). The total annual cost of a variable annuity is typically 2-3% per year. Withdrawals before age 59 1/2 are subject to a 10% penalty, and earnings are taxed as ordinary income (LIFO). The death benefit guarantees at least the original investment (or highest anniversary value) to beneficiaries, but this benefit comes at a cost. Variable annuities are generally appropriate only after all tax-advantaged accounts have been maximized.</p>
+<p>A dynasty trust is an irrevocable trust designed to last for multiple generations, leveraging the GST tax exemption to transfer wealth without estate or GST tax at each generational transfer. The trust is funded with the grantor&#x27;s GST exemption ($15 million in 2026). Assets in the trust grow and are distributed to beneficiaries across generations without further transfer tax. Dynasty trusts are most effective in states that have abolished the rule against perpetuities (such as South Dakota, Nevada, and Alaska), allowing the trust to last indefinitely.</p>
+<p>Family Limited Partnerships (FLPs) and Family Limited Liability Companies (FLLCs) are entities used to transfer wealth at discounted values. The senior generation contributes assets (real estate, investments, business interests) to the entity and then gifts limited partnership interests to the next generation. Because limited partners lack control and marketability, the interests are valued at a discount (typically 25-40% combined discount for lack of control and lack of marketability). A $1 million gift of limited partnership interests might be valued at $600,000-$750,000 for gift tax purposes, effectively transferring more wealth within the annual exclusion and lifetime exemption.</p>
+<p>A Spousal Lifetime Access Trust (SLAT) is an irrevocable trust created by one spouse for the benefit of the other spouse (and potentially descendants). The grantor spouse removes assets from their taxable estate while the beneficiary spouse retains access to the trust assets. This provides estate tax reduction while maintaining indirect access to the transferred wealth. SLATs became extremely popular during the period when the estate tax exemption was expected to sunset, and they remain useful for high-net-worth couples who want to use their exemptions while retaining some access.</p>
+<p>Key SLAT considerations: the reciprocal trust doctrine prevents both spouses from creating identical SLATs for each other (the IRS would collapse them as reciprocal). To avoid this, the trusts should have different terms (different trustees, different distribution standards, different beneficiaries). Divorce risk: if the couple divorces, the grantor spouse loses access to the trust assets. The trust must be carefully drafted to address this possibility. The grantor spouse should not be a beneficiary of the trust (this would cause estate inclusion).</p>
+<p>Beneficiary designations on retirement accounts, life insurance, and TOD/POD accounts supersede the will and trust provisions. This is one of the most common estate planning errors: a client updates their will but forgets to update beneficiary designations, resulting in assets passing to an ex-spouse or other unintended recipient. The CFP professional must review all beneficiary designations as part of the estate planning process.</p>
+<p>For retirement accounts, naming the surviving spouse as primary beneficiary provides the most flexibility: the spouse can roll the inherited account into their own IRA, delay RMDs until their own required beginning date, and name new beneficiaries. Naming a trust as beneficiary can provide asset protection and control over distributions, but the trust must qualify as a &#x27;see-through&#x27; trust to use the beneficiary&#x27;s life expectancy for RMDs. A conduit trust passes all RMDs through to the beneficiary; an accumulation trust can retain distributions in the trust (but at compressed trust tax rates).</p>
+<h3>A.1 Bond Yield Calculations</h3>
+<p>Understanding the different types of bond yields is essential for the CFP exam. The coupon rate (nominal yield) is the annual coupon payment divided by the par value. The current yield is the annual coupon payment divided by the current market price. The yield to maturity (YTM) is the internal rate of return that equates the present value of all future cash flows (coupons and par value) to the current market price. YTM assumes all coupons are reinvested at the YTM rate, which is a key assumption that may not hold in practice. The yield to call (YTC) is calculated similarly but uses the call price and call date instead of par value and maturity date.</p>
+<p>When a bond is trading at a premium (price above par), the relationship is: coupon rate &gt; current yield &gt; YTM &gt; YTC. When trading at a discount (price below par): coupon rate &lt; current yield &lt; YTM &lt; YTC. When trading at par: coupon rate = current yield = YTM. This hierarchy is a frequently tested concept. Remember: for premium bonds, the investor is paying more than par, so the effective yield is lower than the coupon rate. For discount bonds, the investor pays less than par, so the effective yield is higher.</p>
+<h3>A.2 Portfolio Return Calculations</h3>
+<p>The holding period return (HPR) measures the total return over a specific period: HPR = (Ending Value - Beginning Value + Income) / Beginning Value. The time-weighted return (TWR) eliminates the impact of cash flows and measures the manager&#x27;s investment skill. It is calculated by linking sub-period returns: TWR = [(1 + R1) x (1 + R2) x ... x (1 + Rn)] - 1. The dollar-weighted return (DWR, or internal rate of return) accounts for the timing and size of cash flows and measures the investor&#x27;s actual experience.</p>
+<p>The TWR is the appropriate measure for evaluating investment managers because it isolates investment decisions from cash flow timing (which the manager typically does not control). The DWR is the appropriate measure for evaluating the investor&#x27;s actual experience because it reflects the impact of their contribution and withdrawal timing. If an investor adds money before a period of poor performance, their DWR will be lower than the TWR.</p>
+<h3>A.3 Risk-Adjusted Performance Deep Dive</h3>
+<p>The information ratio measures the consistency of a manager&#x27;s outperformance relative to a benchmark: IR = (Portfolio Return - Benchmark Return) / Tracking Error. A higher information ratio indicates more consistent alpha generation. An IR above 0.5 is considered good; above 1.0 is exceptional. Tracking error is the standard deviation of the difference between portfolio and benchmark returns — it measures how closely the portfolio follows the benchmark.</p>
+<p>R-squared (coefficient of determination) measures the percentage of a portfolio&#x27;s returns explained by the benchmark. An R-squared of 0.95 means 95% of the portfolio&#x27;s return variation is explained by the benchmark. High R-squared (&gt;0.70) indicates the portfolio is well-diversified relative to the benchmark, and the Treynor ratio and Jensen&#x27;s alpha are appropriate measures. Low R-squared indicates significant unsystematic risk, and the Sharpe ratio is more appropriate.</p>
+<h3>B.1 Alternative Minimum Tax (AMT)</h3>
+<p>The Alternative Minimum Tax (AMT) is a parallel tax system designed to ensure high-income taxpayers pay a minimum level of tax. AMT taxable income (AMTI) starts with regular taxable income and adds back certain deductions and preferences: state and local tax deductions, miscellaneous itemized deductions, private activity bond interest, incentive stock option (ISO) bargain element at exercise, and accelerated depreciation. The AMT exemption for 2026 is $88,100 (single) / $137,000 (MFJ), phasing out at $578,150 (single) / $1,156,300 (MFJ). AMT rates are 26% on the first $232,600 of AMTI above the exemption, and 28% on the excess.</p>
+<p>The OBBBA&#x27;s increase of the SALT deduction cap to $40,400 reduces AMT exposure for many taxpayers who were previously triggered by the $10,000 SALT cap. However, the AMT remains relevant for taxpayers who exercise incentive stock options (ISOs), have significant private activity bond income, or have large state tax deductions. The AMT credit allows taxpayers who paid AMT in prior years due to timing differences (such as ISO exercises) to recover the AMT paid as a credit against regular tax in future years.</p>
+<h3>B.2 Net Unrealized Appreciation (NUA)</h3>
+<p>Net Unrealized Appreciation (NUA) is a powerful tax strategy for employees with highly appreciated employer stock in their 401(k). When the employee takes a lump-sum distribution of the entire 401(k) balance, the employer stock can be distributed in-kind to a taxable brokerage account. The cost basis of the stock is taxed as ordinary income at distribution, but the NUA (appreciation from cost basis to current value) is taxed at long-term capital gains rates when the stock is eventually sold, regardless of the holding period.</p>
+<p>The NUA strategy is most beneficial when: (1) the cost basis is low relative to the current value (large NUA), (2) the employee is in a high tax bracket (maximizing the spread between ordinary income and LTCG rates), (3) the employee plans to sell the stock relatively soon (capturing the LTCG rate benefit), and (4) the employee does not need the funds for immediate living expenses (allowing the stock to be held in the taxable account). The alternative — rolling the stock into an IRA — would result in all future withdrawals being taxed as ordinary income.</p>
+<h3>B.3 Qualified Opportunity Zones</h3>
+<p>Qualified Opportunity Zones (QOZs) provide tax incentives for investing capital gains in designated economically distressed communities. The investor must invest the capital gain amount into a Qualified Opportunity Fund (QOF) within 180 days of the sale. Benefits: (1) deferral of the original capital gain until December 31, 2026, or when the QOF investment is sold, whichever is earlier, (2) if the QOF investment is held for 10+ years, any appreciation in the QOF investment is permanently excluded from income (the basis is stepped up to FMV at sale). The original deferral benefit (basis step-up of 10% at 5 years and 15% at 7 years) has expired for new investments, but the 10-year exclusion of appreciation remains available.</p>
+<h3>C.1 SECURE 2.0 Act Key Provisions</h3>
+<p>The SECURE 2.0 Act of 2022 made significant changes to retirement planning that are heavily tested on the CFP exam. Key provisions include: RMD age increased to 73 (2023) and will increase to 75 (2033). Roth 401(k) contributions no longer subject to RMDs during the owner&#x27;s lifetime (effective 2024). Employer matching contributions can now be made to Roth accounts (employee&#x27;s choice). The catch-up contribution limit for ages 60-63 is increased to $11,250 (the &#x27;super catch-up&#x27;). Student loan payments can be treated as elective deferrals for purposes of employer matching. 529-to-Roth IRA rollovers allowed (up to $35,000 lifetime, 529 must be open 15+ years).</p>
+<p>Additional SECURE 2.0 provisions: emergency savings accounts linked to retirement plans (up to $2,500, Roth treatment). Penalty-free withdrawals for domestic abuse victims (up to $10,000 or 50% of account, whichever is less). Penalty-free withdrawals for terminal illness. Automatic enrollment required for new 401(k) and 403(b) plans (3-10% initial deferral, 1% annual escalation up to 10-15%). The RMD penalty reduced from 50% to 25% (further reduced to 10% if corrected within 2 years). Part-time workers eligible for 401(k) after 2 consecutive years of 500+ hours (reduced from 3 years).</p>
+<h3>C.2 Retirement Plan Distribution Rules</h3>
+<p>The 10-year rule (SECURE Act) requires most non-spouse beneficiaries of inherited retirement accounts to fully distribute the account within 10 years of the original owner&#x27;s death. This replaced the stretch IRA for most beneficiaries. Eligible designated beneficiaries (EDBs) who can still use the stretch: surviving spouses, minor children of the deceased (until age 21, then 10-year rule applies), disabled or chronically ill individuals, and beneficiaries not more than 10 years younger than the deceased. Non-designated beneficiaries (estates, charities, non-qualifying trusts) must distribute within 5 years.</p>
+<p>The IRS has clarified that if the original owner died after their required beginning date (age 73), non-spouse beneficiaries subject to the 10-year rule must also take annual RMDs during the 10-year period (based on the beneficiary&#x27;s life expectancy), with the remaining balance distributed by the end of year 10. If the owner died before the required beginning date, no annual RMDs are required — only the 10-year deadline applies. This distinction is critical for planning inherited IRA distributions.</p>
+<p>Roth IRA inheritance rules: the 10-year rule applies to non-spouse beneficiaries, but because Roth distributions are tax-free, there is no income tax impact. The strategy is to let the inherited Roth grow tax-free for the full 10 years and take the entire distribution in year 10. Surviving spouses can roll an inherited Roth IRA into their own Roth IRA, eliminating RMDs entirely and allowing continued tax-free growth.</p>
+<h3>C.3 Annuity Planning</h3>
+<p>Annuities provide guaranteed income for life, addressing longevity risk (the risk of outliving one&#x27;s assets). A Single Premium Immediate Annuity (SPIA) converts a lump sum into an immediate income stream. A Deferred Income Annuity (DIA) or Qualified Longevity Annuity Contract (QLAC) begins payments at a future date (typically age 80-85), providing longevity insurance at a lower cost than an immediate annuity. QLACs can be purchased within IRAs and 401(k)s, up to $200,000 (SECURE 2.0), and are excluded from the RMD calculation until payments begin.</p>
+<p>Variable annuities offer tax-deferred growth with investment subaccounts but carry higher fees (mortality and expense charges, administrative fees, subaccount management fees, and potential surrender charges). The total annual cost of a variable annuity is typically 2-3% per year. Withdrawals before age 59 1/2 are subject to a 10% penalty, and earnings are taxed as ordinary income (LIFO). The death benefit guarantees at least the original investment (or highest anniversary value) to beneficiaries, but this benefit comes at a cost. Variable annuities are generally appropriate only after all tax-advantaged accounts have been maximized.</p>
+<h3>D.1 Dynasty Trusts and Family Limited Partnerships</h3>
+<p>A dynasty trust is an irrevocable trust designed to last for multiple generations, leveraging the GST tax exemption to transfer wealth without estate or GST tax at each generational transfer. The trust is funded with the grantor&#x27;s GST exemption ($15 million in 2026). Assets in the trust grow and are distributed to beneficiaries across generations without further transfer tax. Dynasty trusts are most effective in states that have abolished the rule against perpetuities (such as South Dakota, Nevada, and Alaska), allowing the trust to last indefinitely.</p>
+<p>Family Limited Partnerships (FLPs) and Family Limited Liability Companies (FLLCs) are entities used to transfer wealth at discounted values. The senior generation contributes assets (real estate, investments, business interests) to the entity and then gifts limited partnership interests to the next generation. Because limited partners lack control and marketability, the interests are valued at a discount (typically 25-40% combined discount for lack of control and lack of marketability). A $1 million gift of limited partnership interests might be valued at $600,000-$750,000 for gift tax purposes, effectively transferring more wealth within the annual exclusion and lifetime exemption.</p>
+<h3>D.2 Spousal Lifetime Access Trust (SLAT)</h3>
+<p>A Spousal Lifetime Access Trust (SLAT) is an irrevocable trust created by one spouse for the benefit of the other spouse (and potentially descendants). The grantor spouse removes assets from their taxable estate while the beneficiary spouse retains access to the trust assets. This provides estate tax reduction while maintaining indirect access to the transferred wealth. SLATs became extremely popular during the period when the estate tax exemption was expected to sunset, and they remain useful for high-net-worth couples who want to use their exemptions while retaining some access.</p>
+<p>Key SLAT considerations: the reciprocal trust doctrine prevents both spouses from creating identical SLATs for each other (the IRS would collapse them as reciprocal). To avoid this, the trusts should have different terms (different trustees, different distribution standards, different beneficiaries). Divorce risk: if the couple divorces, the grantor spouse loses access to the trust assets. The trust must be carefully drafted to address this possibility. The grantor spouse should not be a beneficiary of the trust (this would cause estate inclusion).</p>
+<h3>D.3 Beneficiary Designation Planning</h3>
+<p>Beneficiary designations on retirement accounts, life insurance, and TOD/POD accounts supersede the will and trust provisions. This is one of the most common estate planning errors: a client updates their will but forgets to update beneficiary designations, resulting in assets passing to an ex-spouse or other unintended recipient. The CFP professional must review all beneficiary designations as part of the estate planning process.</p>
+<p>For retirement accounts, naming the surviving spouse as primary beneficiary provides the most flexibility: the spouse can roll the inherited account into their own IRA, delay RMDs until their own required beginning date, and name new beneficiaries. Naming a trust as beneficiary can provide asset protection and control over distributions, but the trust must qualify as a &#x27;see-through&#x27; trust to use the beneficiary&#x27;s life expectancy for RMDs. A conduit trust passes all RMDs through to the beneficiary; an accumulation trust can retain distributions in the trust (but at compressed trust tax rates).</p>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-4', 4)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(4)">Next Section →</button>
+        </div>
+        </div>
+<div id="section-5" class="section" style="display:none;">
+<h2>Additional Practice Questions</h2>
+<h3>16. A client has employer stock in their 401(k) with a cost basis of $50,000 and current FMV of $400,000. What strategy should be considered?</h3>
+<p>A) Roll the entire balance into a traditional IRA
+B) Convert the entire balance to a Roth IRA
+C) Use the Net Unrealized Appreciation (NUA) strategy
+D) Take a hardship withdrawal</p>
+<h3>17. Under SECURE 2.0, a non-spouse beneficiary who inherits a traditional IRA from an owner who died after their required beginning date must:</h3>
+<p>A) Distribute the entire balance within 5 years
+B) Take annual RMDs and distribute the balance within 10 years
+C) Take distributions over their own life expectancy
+D) Take no distributions until year 10</p>
+<h3>18. A QLAC purchased within an IRA can be up to what amount under SECURE 2.0?</h3>
+<p>A) $100,000
+B) $150,000
+C) $200,000
+D) $250,000</p>
+<h3>19. The OBBBA increased the SALT deduction cap to:</h3>
+<p>A) $10,000
+B) $20,000
+C) $30,000
+D) $40,400</p>
+<h3>20. Which of the following is an eligible designated beneficiary (EDB) who can use the stretch IRA?</h3>
+<p>A) An adult child of the deceased
+B) A sibling of the deceased
+C) A minor child of the deceased (until age 21)
+D) A friend named as beneficiary</p>
+<p>Figure 11: CFP Financial Planning Process Cycle</p>
+<p>Figure 12: Progressive Tax Bracket Waterfall (2026)</p>
+<div class="table-wrapper"><table>
+<tr><th></th><th>How to Use This Manual</th></tr>
+<tr><td></td><td>Exam Overview</td></tr>
+<tr><td>DOMAIN 1</td><td>Professional Conduct and Regulation</td></tr>
+<tr><td>DOMAIN 2</td><td>General Principles of Financial Planning</td></tr>
+<tr><td>DOMAIN 3</td><td>Education Planning</td></tr>
+<tr><td>DOMAIN 4</td><td>Risk Management and Insurance Planning</td></tr>
+<tr><td>DOMAIN 5</td><td>Investment Planning</td></tr>
+<tr><td>DOMAIN 6</td><td>Tax Planning</td></tr>
+<tr><td>DOMAIN 7</td><td>Retirement Savings and Income Planning</td></tr>
+<tr><td>DOMAIN 8</td><td>Estate Planning</td></tr>
+<tr><td>DOMAIN 9</td><td>Financial Plan Development</td></tr>
+<tr><td></td><td>Comprehensive Practice Exam</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Component</th><th>Detail</th></tr>
+<tr><td>Questions</td><td>170 multiple-choice (scored)</td></tr>
+<tr><td>Time</td><td>6 hours (two 3-hour sessions, with a 40-minute break)</td></tr>
+<tr><td>Passing Score</td><td>~65-70% (criterion-referenced, varies by administration)</td></tr>
+<tr><td>Prerequisites</td><td>Bachelor&#x27;s degree, CFP Board-registered education program, 6,000 hours experience (or 4,000 hours apprenticeship)</td></tr>
+<tr><td>Cost</td><td>$925 (2026)</td></tr>
+<tr><td>Exam Windows</td><td>March, July, November</td></tr>
+<tr><td>Pass Rate</td><td>~65% (first-time takers, 2024-2025)</td></tr>
+<tr><td>Calculator</td><td>HP 10bII+ or TI BAII Plus (provided at testing center)</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Domain</th><th>Weight</th><th>Questions (approx.)</th></tr>
+<tr><td>1. Professional Conduct and Regulation</td><td>8%</td><td>14</td></tr>
+<tr><td>2. General Principles of Financial Planning</td><td>15%</td><td>26</td></tr>
+<tr><td>3. Education Planning</td><td>6%</td><td>10</td></tr>
+<tr><td>4. Risk Management and Insurance</td><td>11%</td><td>19</td></tr>
+<tr><td>5. Investment Planning</td><td>17%</td><td>29</td></tr>
+<tr><td>6. Tax Planning</td><td>14%</td><td>24</td></tr>
+<tr><td>7. Retirement Savings and Income</td><td>13%</td><td>22</td></tr>
+<tr><td>8. Estate Planning</td><td>10%</td><td>17</td></tr>
+<tr><td>9. Financial Plan Development</td><td>6%</td><td>10</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Regulator</th><th>Jurisdiction</th><th>Key Rules</th></tr>
+<tr><td>SEC</td><td>Federal: RIAs, securities</td><td>Advisers Act, Reg BI, Form ADV</td></tr>
+<tr><td>FINRA</td><td>Federal: BDs, agents</td><td>Suitability, supervision, CE</td></tr>
+<tr><td>State Securities</td><td>State: IAs, BDs, agents</td><td>USA, registration, antifraud</td></tr>
+<tr><td>State Insurance</td><td>State: insurance producers</td><td>Licensing, unfair practices</td></tr>
+<tr><td>CFP Board</td><td>Professional: CFP certificants</td><td>Standards of Conduct, fiduciary</td></tr>
+<tr><td>IRS</td><td>Federal: tax compliance</td><td>IRC, tax penalties, PTIN requirements</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Ratio</th><th>Formula</th><th>Target</th><th>Significance</th></tr>
+<tr><td>Emergency Fund</td><td>Liquid Assets / Monthly Expenses</td><td>3-6 months</td><td>Liquidity cushion</td></tr>
+<tr><td>Savings Rate</td><td>Annual Savings / Gross Income</td><td>10-20%</td><td>Wealth accumulation pace</td></tr>
+<tr><td>Debt-to-Income</td><td>Total Debt Payments / Gross Income</td><td>&lt; 36%</td><td>Debt burden</td></tr>
+<tr><td>Housing Ratio</td><td>Housing Costs / Gross Income</td><td>&lt; 28%</td><td>Housing affordability</td></tr>
+<tr><td>Current Ratio</td><td>Liquid Assets / Current Liabilities</td><td>&gt; 1.0</td><td>Short-term solvency</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Vehicle</th><th>Contribution Limit</th><th>Tax Treatment</th><th>Qualified Expenses</th><th>Key Restriction</th></tr>
+<tr><td>529 Plan</td><td>No federal limit (gift tax)</td><td>Tax-free growth/withdrawals</td><td>Tuition, fees, R&amp;B, books, K-12</td><td>10% penalty on non-qualified</td></tr>
+<tr><td>Coverdell ESA</td><td>$2,000/year</td><td>Tax-free growth/withdrawals</td><td>K-12 and higher education</td><td>Income limits apply</td></tr>
+<tr><td>UTMA/UGMA</td><td>No limit</td><td>Kiddie tax applies</td><td>Any purpose</td><td>Irrevocable gift to minor</td></tr>
+<tr><td>Series EE/I Bonds</td><td>Purchase limits</td><td>Tax-free if for education</td><td>Tuition and fees only</td><td>Income limits apply</td></tr>
+<tr><td>529-to-Roth</td><td>$35,000 lifetime</td><td>Tax-free rollover</td><td>N/A (becomes Roth IRA)</td><td>529 open 15+ years</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th></th><th>Low Frequency</th><th>High Frequency</th></tr>
+<tr><td>Low Severity</td><td>Retention (self-insure)</td><td>Reduction (loss control)</td></tr>
+<tr><td>High Severity</td><td>Transfer (insurance)</td><td>Avoidance (eliminate risk)</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Product</th><th>Premiums</th><th>Cash Value</th><th>Death Benefit</th><th>Securities?</th></tr>
+<tr><td>Term</td><td>Level (for term)</td><td>None</td><td>Level or decreasing</td><td>No</td></tr>
+<tr><td>Whole Life</td><td>Level (guaranteed)</td><td>Guaranteed growth</td><td>Guaranteed level</td><td>No</td></tr>
+<tr><td>Universal Life</td><td>Flexible</td><td>Current rate (min guaranteed)</td><td>Adjustable (A or B)</td><td>No</td></tr>
+<tr><td>Variable Life</td><td>Fixed</td><td>Subaccount performance</td><td>Guaranteed min + variable</td><td>Yes</td></tr>
+<tr><td>Variable Universal</td><td>Flexible</td><td>Subaccount performance</td><td>Adjustable + variable</td><td>Yes</td></tr>
+<tr><td>Indexed Universal</td><td>Flexible</td><td>Index-linked (floor/cap)</td><td>Adjustable</td><td>No</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Measure</th><th>Formula</th><th>Uses</th><th>Risk Metric</th></tr>
+<tr><td>Sharpe Ratio</td><td>(Rp - Rf) / sigma_p</td><td>Compare portfolios, undiversified</td><td>Total risk (sigma)</td></tr>
+<tr><td>Treynor Ratio</td><td>(Rp - Rf) / beta_p</td><td>Compare portfolios, diversified</td><td>Systematic risk (beta)</td></tr>
+<tr><td>Jensen&#x27;s Alpha</td><td>Rp - [Rf + beta_p(Rm - Rf)]</td><td>Manager skill evaluation</td><td>Systematic risk (beta)</td></tr>
+<tr><td>Information Ratio</td><td>(Rp - Rb) / Tracking Error</td><td>Active manager evaluation</td><td>Active risk</td></tr>
+<tr><td>Sortino Ratio</td><td>(Rp - Rf) / Downside sigma</td><td>Downside risk focus</td><td>Downside deviation</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Rate</th><th>Single</th><th>MFJ</th></tr>
+<tr><td>10%</td><td>$0 - $11,925</td><td>$0 - $23,850</td></tr>
+<tr><td>12%</td><td>$11,926 - $48,475</td><td>$23,851 - $96,950</td></tr>
+<tr><td>22%</td><td>$48,476 - $103,350</td><td>$96,951 - $206,700</td></tr>
+<tr><td>24%</td><td>$103,351 - $197,300</td><td>$206,701 - $394,600</td></tr>
+<tr><td>32%</td><td>$197,301 - $250,525</td><td>$394,601 - $501,050</td></tr>
+<tr><td>35%</td><td>$250,526 - $626,350</td><td>$501,051 - $751,600</td></tr>
+<tr><td>37%</td><td>Over $626,350</td><td>Over $751,600</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Plan Type</th><th>2026 Employee Limit</th><th>Employer Limit</th><th>Total Limit</th><th>Key Feature</th></tr>
+<tr><td>401(k) / 403(b)</td><td>$24,500 ($32,500 age 50+)</td><td>Up to 25% of comp</td><td>$72,000</td><td>Most common DC plan</td></tr>
+<tr><td>SIMPLE IRA</td><td>$17,000 ($18,100 age 50+)</td><td>Match 3% or 2% NE</td><td>N/A</td><td>Small employers (&lt;100)</td></tr>
+<tr><td>SEP IRA</td><td>N/A (employer only)</td><td>25% of comp, max $72,000</td><td>$72,000</td><td>Self-employed, simple</td></tr>
+<tr><td>Solo 401(k)</td><td>$24,500 + 25% of net SE</td><td>Combined</td><td>$72,000</td><td>Self-employed, no employees</td></tr>
+<tr><td>Defined Benefit</td><td>N/A</td><td>Actuarially determined</td><td>$280,000 benefit</td><td>Guaranteed benefit</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Component</th><th>2026 Amount</th></tr>
+<tr><td>Estate/Gift Tax Exemption</td><td>$15,000,000 per person</td></tr>
+<tr><td>Portability (married)</td><td>$30,000,000 combined</td></tr>
+<tr><td>Annual Gift Exclusion</td><td>$19,000 per donee</td></tr>
+<tr><td>Non-Citizen Spouse Annual</td><td>$185,000</td></tr>
+<tr><td>Top Estate/Gift Tax Rate</td><td>40%</td></tr>
+<tr><td>GST Tax Exemption</td><td>$15,000,000</td></tr>
+<tr><td>GST Tax Rate</td><td>40% (flat)</td></tr>
+<tr><td>SALT Deduction Cap</td><td>$40,400 (OBBBA)</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Bond Price</th><th>Coupon vs. Current Yield</th><th>Yield Hierarchy</th></tr>
+<tr><td>Premium (&gt; par)</td><td>Coupon &gt; Current Yield</td><td>Coupon &gt; CY &gt; YTM &gt; YTC</td></tr>
+<tr><td>Par (= par)</td><td>Coupon = Current Yield</td><td>Coupon = CY = YTM</td></tr>
+<tr><td>Discount (&lt; par)</td><td>Coupon &lt; Current Yield</td><td>Coupon &lt; CY &lt; YTM &lt; YTC</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>Metric</th><th>Formula</th><th>Interpretation</th><th>When to Use</th></tr>
+<tr><td>Alpha (Jensen&#x27;s)</td><td>Rp - [Rf + B(Rm-Rf)]</td><td>Positive = outperformance</td><td>Diversified portfolios</td></tr>
+<tr><td>R-squared</td><td>Correlation^2</td><td>% of return explained by market</td><td>Diversification check</td></tr>
+<tr><td>Information Ratio</td><td>(Rp - Rb) / TE</td><td>Consistency of outperformance</td><td>Active manager evaluation</td></tr>
+<tr><td>Tracking Error</td><td>StdDev(Rp - Rb)</td><td>Deviation from benchmark</td><td>Index fund evaluation</td></tr>
+<tr><td>Beta</td><td>Cov(Rp,Rm) / Var(Rm)</td><td>Systematic risk measure</td><td>CAPM, Treynor, Alpha</td></tr>
+</table></div>
+<div class="table-wrapper"><table>
+<tr><th>SECURE 2.0 Provision</th><th>Effective Date</th><th>Impact</th></tr>
+<tr><td>RMD age 73</td><td>2023</td><td>Delays required distributions</td></tr>
+<tr><td>RMD age 75</td><td>2033</td><td>Further delays distributions</td></tr>
+<tr><td>Roth 401(k) no RMDs</td><td>2024</td><td>Roth 401(k) parity with Roth IRA</td></tr>
+<tr><td>Roth employer match</td><td>2023</td><td>Tax diversification in retirement</td></tr>
+<tr><td>Super catch-up (60-63)</td><td>2025</td><td>$11,250 additional deferral</td></tr>
+<tr><td>529-to-Roth rollover</td><td>2024</td><td>$35,000 lifetime, 15-year rule</td></tr>
+<tr><td>Auto-enrollment</td><td>2025 (new plans)</td><td>3-10% initial, 1% escalation</td></tr>
+<tr><td>RMD penalty reduction</td><td>2023</td><td>25% (10% if corrected in 2 years)</td></tr>
+<tr><td>Student loan match</td><td>2024</td><td>Employer match on loan payments</td></tr>
+</table></div>
+
+        <div class="section-footer">
+            <button class="btn-complete" onclick="markComplete('section-5', 5)">
+                Mark Section Complete ✓
+            </button>
+            <button class="btn-next" onclick="nextSection(5)">Next Section →</button>
+        </div>
+        </div>
+
+        
+        <div id="quiz" class="quiz-container">
+            <h2>Practice Quiz</h2>
+            <p>Test your knowledge with these practice questions. Select the best answer for each question.</p>
+            <div id="quizQuestions"></div>
+            <button class="btn-submit" onclick="submitQuiz()">Submit Answers</button>
+            <div id="quizScore" class="quiz-score" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SECTIONS = document.querySelectorAll('.section');
+const NAV_ITEMS = document.querySelectorAll('.nav-item');
+const TOTAL_SECTIONS = 6;
+let completedSections = new Set();
+const STORAGE_KEY = 'CFP_progress';
+
+// Load saved progress
+try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    saved.forEach(s => completedSections.add(s));
+    updateProgress();
+    NAV_ITEMS.forEach(item => {
+        if (completedSections.has(item.dataset.section)) item.classList.add('completed');
+    });
+} catch(e) {}
+
+function showSection(id) {
+    SECTIONS.forEach(s => s.style.display = 'none');
+    document.querySelector('.quiz-container').style.display = 'none';
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+    NAV_ITEMS.forEach(n => n.classList.remove('active'));
+    document.querySelector(`[data-section="${id}"]`)?.classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+function nextSection(currentIdx) {
+    const sectionIds = Array.from(SECTIONS).map(s => s.id).filter(id => id !== 'welcome');
+    const nextIdx = currentIdx + 1;
+    if (nextIdx < sectionIds.length) showSection(sectionIds[nextIdx]);
+}
+
+function markComplete(sectionId, idx) {
+    completedSections.add(sectionId);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedSections]));
+    updateProgress();
+    document.querySelector(`[data-section="${sectionId}"]`)?.classList.add('completed');
+    const btn = event.target;
+    btn.textContent = 'Completed ✓';
+    btn.classList.add('done');
+}
+
+function updateProgress() {
+    const pct = Math.round((completedSections.size / TOTAL_SECTIONS) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = pct + '% Complete (' + completedSections.size + '/' + TOTAL_SECTIONS + ' sections)';
+}
+
+// Quiz
+const questions = [{"question": "Which of the following best describes the key concept covered in 'Introduction'?", "options": ["A foundational concept in CFP", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the CFP curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Table of Contents'?", "options": ["A foundational concept in CFP", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the CFP curriculum."}, {"question": "Which of the following best describes the key concept covered in 'How to Use This Manual'?", "options": ["A foundational concept in CFP", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the CFP curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Exam Overview'?", "options": ["A foundational concept in CFP", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the CFP curriculum."}, {"question": "Which of the following best describes the key concept covered in 'Practice Exam: CFP Comprehensive'?", "options": ["A foundational concept in CFP", "An unrelated topic", "A deprecated practice", "None of the above"], "correct": 0, "explanation": "This topic is a core component of the CFP curriculum."}];
+
+function showQuiz() {
+    SECTIONS.forEach(s => s.style.display = 'none');
+    const qc = document.querySelector('.quiz-container');
+    qc.style.display = 'block';
+    NAV_ITEMS.forEach(n => n.classList.remove('active'));
+    
+    const container = document.getElementById('quizQuestions');
+    container.innerHTML = '';
+    
+    questions.forEach((q, i) => {
+        let html = `<div class="question" id="q${i}">`;
+        html += `<div class="question-text">${i+1}. ${q.question}</div>`;
+        q.options.forEach((opt, j) => {
+            html += `<div class="option" onclick="selectOption(${i}, ${j})" id="q${i}o${j}">${String.fromCharCode(65+j)}. ${opt}</div>`;
+        });
+        html += `<div class="explanation" id="exp${i}">${q.explanation}</div>`;
+        html += '</div>';
+        container.innerHTML += html;
+    });
+    
+    document.getElementById('quizScore').style.display = 'none';
+    window.scrollTo(0, 0);
+}
+
+let selectedAnswers = {};
+
+function selectOption(qIdx, oIdx) {
+    // Clear previous selection
+    for (let j = 0; j < 4; j++) {
+        const el = document.getElementById(`q${qIdx}o${j}`);
+        if (el) el.classList.remove('selected');
+    }
+    const el = document.getElementById(`q${qIdx}o${oIdx}`);
+    if (el) el.classList.add('selected');
+    selectedAnswers[qIdx] = oIdx;
+}
+
+function submitQuiz() {
+    let correct = 0;
+    questions.forEach((q, i) => {
+        const selected = selectedAnswers[i];
+        for (let j = 0; j < 4; j++) {
+            const el = document.getElementById(`q${i}o${j}`);
+            if (el) {
+                el.classList.remove('selected');
+                if (j === q.correct) el.classList.add('correct');
+                else if (j === selected) el.classList.add('incorrect');
+            }
+        }
+        if (selected === q.correct) correct++;
+        document.getElementById(`exp${i}`).style.display = 'block';
+    });
+    
+    const pct = Math.round((correct / questions.length) * 100);
+    const scoreEl = document.getElementById('quizScore');
+    scoreEl.style.display = 'block';
+    scoreEl.innerHTML = `<h3>${pct}% — ${correct}/${questions.length} Correct</h3><p>${pct >= 70 ? 'Great job! You passed!' : 'Keep studying and try again.'}</p>`;
+    scoreEl.style.borderColor = pct >= 70 ? '#27AE60' : '#E74C3C';
+    scoreEl.querySelector('h3').style.color = pct >= 70 ? '#27AE60' : '#E74C3C';
+}
+
+// Show welcome by default
+showSection('welcome');
+</script>
+</body>
+</html>
