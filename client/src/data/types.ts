@@ -162,7 +162,7 @@ export const SPECIALIZATION_DISCIPLINES = [
  * scripts/build_tracks_data.py into client/src/data/tracks_data.json.
  * ──────────────────────────────────────────────────────────────────────── */
 
-export type TrackCategory = 'securities' | 'planning' | 'insurance';
+export type TrackCategory = 'securities' | 'planning' | 'insurance' | 'emba';
 
 export interface TrackTable {
   rows: string[][];
@@ -314,6 +314,11 @@ export const TRACK_META: Record<
     color: '#A04000',
     tagline: 'Excess + non-admitted broker authority',
     emoji: '🌊',
+  },
+  emba: {
+    color: '#8B5CF6',
+    tagline: 'Comprehensive MBA curriculum — 8 core disciplines + specializations',
+    emoji: '🎓',
   },
 };
 

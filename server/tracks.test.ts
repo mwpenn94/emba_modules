@@ -69,8 +69,9 @@ describe('tracks_data.json', () => {
     expect(tracks.schema_version).toBeGreaterThanOrEqual(1);
   });
 
-  it('contains all 12 expected exam tracks', () => {
+  it('contains all 13 expected study tracks', () => {
     const expectedKeys = [
+      'emba',
       'sie',
       'series7',
       'series66',

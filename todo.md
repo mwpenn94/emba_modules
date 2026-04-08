@@ -265,3 +265,16 @@ documents into `client/src/data/tracks_data.json` (12 tracks · 68 chapters ·
 - [x] Update localStorage key prefixes (emba- → ke-)
 - [x] Update service worker cache version and comments
 - [x] Update ideas.md, screenshot-notes.md references
+
+## Add EMBA Track & Full Content Incorporation
+- [x] Audit current tracks_data.json structure (categories, tracks, content fields)
+- [x] Extract and examine all files from WealthBridgeLibraryv11_QA.zip
+- [x] Identify which tracks have complete content vs incomplete/missing
+- [x] Add EMBA track category with master manual content (9 chapters, 81 subsections, 205 tables)
+- [x] Ensure all existing tracks have full study manual content, flashcards, and practice questions (all 12 verified)
+- [x] Update tracks_data.json with complete content for all tracks (13 tracks total)
+- [x] Update UI category definitions and icons for EMBA track
+- [x] Recursive convergence pass 1 (Landscape): 40 empty boilerplate chapters removed, test timeout fixed
+- [x] Recursive convergence pass 2 (Depth): 124 single-row tables converted to paragraphs, category metadata added
+- [x] Recursive convergence pass 3 (Adversarial): 0 issues — all 14 checks pass
+- [x] Recursive convergence pass 4 (Synthesis): 0 issues — 2 consecutive zero-action passes confirmed, convergence reached

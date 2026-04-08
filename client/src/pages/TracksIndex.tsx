@@ -1,7 +1,7 @@
 /**
- * TracksIndex — landing page for the WealthBridge exam-prep library.
+ * TracksIndex — landing page for the exam-prep & study library.
  *
- * Displays all 12 study tracks grouped by category (Securities, Planning,
+ * Displays all 13 study tracks grouped by category (EMBA, Securities, Planning,
  * Insurance) with chapter / question / flashcard counts and direct links into
  * each track's reading view, practice quiz, and flashcard deck.
  */
@@ -26,9 +26,10 @@ import { useTracks } from '@/hooks/useTracks';
 import { useMastery } from '@/contexts/MasteryContext';
 import { TRACK_META, type TrackCategory } from '@/data/types';
 
-const CATEGORY_ORDER: TrackCategory[] = ['securities', 'planning', 'insurance'];
+const CATEGORY_ORDER: TrackCategory[] = ['emba', 'securities', 'planning', 'insurance'];
 
 const CATEGORY_ICONS: Record<TrackCategory, typeof GraduationCap> = {
+  emba: BookOpen,
   securities: GraduationCap,
   planning: Compass,
   insurance: Shield,

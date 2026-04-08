@@ -349,7 +349,7 @@ describe("selfDiscovery", () => {
       ).rejects.toThrow();
     });
 
-    it("accepts empty lastTopic without validation error", async () => {
+    it("accepts empty lastTopic without validation error", { timeout: 15000 }, async () => {
       const caller = appRouter.createCaller(createUserContext());
       // z.string() accepts empty strings; the LLM handles it gracefully
       try {
@@ -367,7 +367,7 @@ describe("selfDiscovery", () => {
       }
     });
 
-    it("accepts valid input with optional fields", async () => {
+    it("accepts valid input with optional fields", { timeout: 15000 }, async () => {
       const caller = appRouter.createCaller(createUserContext());
       // This will call the LLM, which may fail in test env
       // We just verify the procedure exists and accepts the input shape
